@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Layout from './ui/Layout';
 import MainPage from './components/main/MainPage';
 import GlobalStyles from './styles/GlobalStyles.styles';
+import CalendarWrite from './components/calendar/CalendarWrite';
 
 function App() {
 return (
@@ -12,6 +13,7 @@ return (
         <Route element={<Layout />} >
           <Route index element={<MainPage />} />
           <Route path="calendar" element={<MainPage />} />
+          <Route path='calendarWrite' element={<CalendarWrite />} />
         </Route>
       </Routes>
     </Router>
