@@ -89,7 +89,7 @@ const navItems = [
   },
   {
     name: "쪽지",
-    link: "/message",
+    link: "/chat",
   }
 ];
 
