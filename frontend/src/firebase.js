@@ -17,14 +17,4 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 
-const join = async (email, password) => {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-export { auth, join };
+export { auth, createUserWithEmailAndPassword };
