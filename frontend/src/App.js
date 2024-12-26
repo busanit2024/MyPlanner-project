@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Layout from './ui/Layout';
 import MainPage from './components/main/MainPage';
 import LoginPage from './components/user/LoginPage';
+import ChatPage from './components/chat/ChatPage';
+
 import GlobalStyles from './styles/GlobalStyles.styles';
 import CalendarPage from './components/calendar/CalendarPage';
 import RegisterPage from './components/user/RegisterPage';
@@ -17,6 +19,7 @@ return (
         <Route path='/register' element={<RegisterPage />} />
         <Route element={<Layout />} >
           <Route path="calendar" element={<CalendarPage />} />
+          <Route path="/chat" element={<ChatPage />} />
         </Route>
       </Routes>
     </Router>

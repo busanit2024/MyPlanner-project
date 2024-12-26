@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import SideNavbar from "./SideNavbar";
 import RightSidebar from "./RightSidebar";
 import { useState } from "react";
@@ -53,12 +53,32 @@ const Main = styled.main`
 
 export default function Layout() {
   const [open, setOpen] = useState(true);
+  const location = useLocation();
+  
+  const setPageName = () => {
+    const path = location.pathname;
+
+    const pageNames = {
+      "/": "캘린더",
+      "/calendar": "캘린더",
+      "/grid": "100그리드",
+      "/feed": "피드",
+      "/group": "그룹",
+      "/notification": "알림",
+      "/chat": "쪽지",
+      "/profile": "프로필"
+    };
+
+    return pageNames[path] || "캘린더";
+    
+  };
+  
   return (
     <Container className="layout">
       <SideNavbar />
       <InnerContainer className="inner-container" open={open}>
         <Topbar className="topbar" open={open}>
-          topbar
+          {setPageName()}
           <div className="sidebar-icon" onClick={() => setOpen(!open)}>
             <img src="images/icon/menu.svg" alt="sidebar open" />
           </div>
