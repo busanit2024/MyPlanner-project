@@ -70,7 +70,6 @@ const navItems = [
   {
     name: "캘린더",
     link: "/calendar",
-    // link: "/calendar",
   },
   {
     name: "100그리드",
