@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../../css/CalendarWrite.css';
+import { useNavigate } from 'react-router-dom';
 
 const CalendarWrite = () => {
   const [title, setTitle] = useState('');
@@ -15,6 +16,8 @@ const CalendarWrite = () => {
   const [checklist, setChecklist] = useState(['체크리스트1', '체크리스트2']);
   const [detail, setDetail] = useState('');
 
+  const navigate = useNavigate();
+
   const handleAddParticipant = () => {
     setParticipants([...participants, `참가자${participants.length + 1}`]);
   };
@@ -27,7 +30,10 @@ const CalendarWrite = () => {
     <div className="calendar-write">
       <div className='header'>
         <h2>일정 입력</h2>
-        <button className="submit-button">완료</button>
+        <button className="submit-button"
+          onClick={() => navigate('/calendar')}>
+          완료
+        </button>
       </div>
       <div className="input-section">
         <div className="image-placeholder">사진</div>

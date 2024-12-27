@@ -69,7 +69,7 @@ const ProfileImage = styled.div`
 const navItems = [
   {
     name: "캘린더",
-    link: "/calendarWrite",
+    link: "/calendar",
     // link: "/calendar",
   },
   {

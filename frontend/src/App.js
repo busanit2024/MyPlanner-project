@@ -15,6 +15,7 @@ return (
           <Route index element={<MainPage />} />
           <Route path="calendar" element={<MainPage />} />
           <Route path="/chat" element={<ChatPage />} />
+
           <Route path='calendarWrite' element={<CalendarWrite />} />
         </Route>
       </Routes>
