@@ -46,7 +46,7 @@ const Topbar = styled.header`
 const Main = styled.main`
   display: flex;
   flex-direction: column;
-  padding: 36px 48px;
+  padding: 36px 0;
   flex-grow: 1;
   overflow-y: auto;
 `;
