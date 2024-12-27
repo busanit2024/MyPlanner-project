@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
 const ModalOverlay = styled.div`
@@ -48,11 +48,52 @@ const ModalContent = styled.div`
         height: 100%;
       }
     }
-    
-    
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+    }    
+`;
+
+const ProfileImage = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+`;
+
+const UserInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const UserName = styled.span`
+  font-weight: bold;
+`;
+
+const UserEmail = styled.span`
+  color: #666;
+  font-size: 0.9em;
 `;
 
 const NewChatModal = ({ onClose }) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const users = [
+        { name: '호두', email: 'hodo@test.com', profileImage: 'images/default/defaultProfileImage.png'},
+        { name: '하츄핑', email: 'heartping@test.com', profileImage: 'images/default/defaultProfileImage.png'},
+        { name: '토코몬', email: 'tocomon@test.com', profileImage: 'images/default/defaultProfileImage.png'},
+    ];
+
+    const filteredUsers = users.filter(user =>
+        user.name.includes(searchTerm) || user.email.includes(searchTerm)
+    );
+
     return (
         <ModalOverlay>
             <ModalContent>
@@ -64,7 +105,20 @@ const NewChatModal = ({ onClose }) => {
                 </div>
                 <div className='search-user'>
                     <img src="images/icon/search.svg" alt="search" />                    
-                    <input style={{ marginLeft: '10px', fontSize: '22px', border: 'none' }} type="text" placeholder='사용자 검색' />
+                    <input style={{ marginLeft: '10px', fontSize: '22px', border: 'none' }} 
+                    type="text" placeholder='사용자 검색'
+                    value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                </div>
+                <div className='user-list'>
+                    {filteredUsers.map(user => (
+                        <div key={user.email} className='user-item'>
+                            <ProfileImage src={user.profileImage} alt="프로필 이미지" />
+                            <UserInfo style={{ marginLeft: '10px' }}>
+                                <UserName>{user.name}</UserName>
+                                <UserEmail>{user.email}</UserEmail>
+                            </UserInfo>
+                        </div>
+                    ))}
                 </div>
             </ModalContent>
         </ModalOverlay>
