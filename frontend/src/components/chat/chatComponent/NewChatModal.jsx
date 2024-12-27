@@ -18,12 +18,38 @@ const ModalContent = styled.div`
     padding: 20px;
     border-radius: 5px;
     width: 300px;
-`;
 
-const CloseButton = styled.button`
-    background: none;
-    border: none;
-    cursor: pointer;
+    .modal-header {
+      display: flex;
+      font-size: 20px;
+    }
+    
+    .cancel-icon {
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+
+      & img {
+      width: 100%;
+      height: 100%;
+      margin-top: 5px;
+      
+      }
+    }
+
+    .search-user {
+      display: flex;
+      width: 24px;
+      height: 24px;
+      margin-top: 15px;
+
+      & img {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    
+    
 `;
 
 const NewChatModal = ({ isOpen, onClose }) => {
@@ -32,9 +58,16 @@ const NewChatModal = ({ isOpen, onClose }) => {
     return (
         <ModalOverlay>
             <ModalContent>
-                <h2>새 쪽지</h2>
-                {/* 채팅방 만들기 관련 내용 추가 */}
-                <CloseButton onClick={onClose}>닫기</CloseButton>
+                <div className="modal-header">
+                    <div className="cancel-icon" onClick={onClose}>
+                        <img src="images/icon/cancel.svg" alt="cancel" />
+                    </div>
+                    <span style={{ marginLeft: '10px' }}>새 쪽지</span>
+                </div>
+                <div className='search-user'>
+                    <img src="images/icon/search.svg" alt="search" />                    
+                    <input style={{ marginLeft: '10px', fontSize: '22px', border: 'none' }} type="text" placeholder='사용자 검색' />
+                </div>
             </ModalContent>
         </ModalOverlay>
     );
