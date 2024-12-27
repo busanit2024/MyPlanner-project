@@ -2,9 +2,14 @@ import React from 'react';
 import styled from 'styled-components';
 
 const Button = styled.button`
-    background-color: none;
+    background: none;
     border: none;
     cursor: pointer;
+
+    & img {
+      width: 24%;
+      height: 24%;
+    }
 `
 const NewChatButton = ({ onClick }) => {
     return (
