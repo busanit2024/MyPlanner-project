@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import UserChip from './UserChip';
 
 const ModalOverlay = styled.div`
     position: fixed;
@@ -64,6 +65,12 @@ const ModalContent = styled.div`
     }    
 `;
 
+const ChipsContainer = styled.div`
+    display: flex;
+    flex-wrap: wrap; // 칩이 넘칠 경우 아래로 내려오도록 설정
+    gap: 5px; // 칩 간의 간격 설정
+`;
+
 const ProfileImage = styled.img`
   width: 40px;
   height: 40px;
@@ -86,6 +93,7 @@ const UserEmail = styled.span`
 
 const NewChatModal = ({ isOpen, onClose }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedUsers, setSelectedUsers] = useState([]);
     const users = [
         { name: '호두', email: 'hodo@test.com', profileImage: 'images/default/defaultProfileImage.png'},
         { name: '하츄핑', email: 'heartping@test.com', profileImage: 'images/default/defaultProfileImage.png'},
@@ -95,6 +103,14 @@ const NewChatModal = ({ isOpen, onClose }) => {
     const filteredUsers = users.filter(user =>
         user.name.includes(searchTerm) || user.email.includes(searchTerm)
     );
+
+    const handleUserSelect = (user) => {
+        setSelectedUsers([...selectedUsers, user]);
+    };
+
+    const handleUserRemove = (email) => {
+        setSelectedUsers(selectedUsers.filter(user => user.email !== email));
+    };
 
     if (!isOpen) return null;
 
@@ -113,9 +129,14 @@ const NewChatModal = ({ isOpen, onClose }) => {
                     type="text" placeholder='사용자 검색'
                     value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
+                <ChipsContainer>
+                    {selectedUsers.map(user => (
+                        <UserChip key={user.email} user={user} onRemove={() => handleUserRemove(user.email)} />
+                    ))}
+                </ChipsContainer>
                 <div className='user-list'>
                     {filteredUsers.map(user => (
-                        <div key={user.email} className='user-item'>
+                        <div key={user.email} className='user-item' onClick={() => handleUserSelect(user)}>
                             <ProfileImage src={user.profileImage} alt="프로필 이미지" />
                             <UserInfo style={{ marginLeft: '10px' }}>
                                 <UserName>{user.name}</UserName>
