@@ -10,9 +10,10 @@ const InputChatBox = styled.div`
     align-items: center;
     background-color: #F2F2F2; 
     border-radius: 50px;
-    padding: 8px 16px;
+    padding: 6px 16px;
     gap: 12px;
-    position : relative;
+    position: relative;
+    margin-right: 24px;
 `;
 
 const Input = styled.input`
@@ -20,7 +21,7 @@ const Input = styled.input`
     border: none;
     background: none;
     outline: none;
-    padding: 8px 0;
+    padding: 6px 0;
     font-size: 14px;
 
     &::placeholder {
@@ -33,12 +34,13 @@ const SendButton = styled.button`
     background: #FFAE00;
     border: none;
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    width: 25px;
+    height: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    flex-shrink: 0;
 
     img {
         width: 16px;
@@ -46,7 +48,7 @@ const SendButton = styled.button`
     }
 
     &:active {
-        box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+        opacity: 0.9;
     }
 `;
 
@@ -95,9 +97,7 @@ export default function InputChat() {
     return (
         <>
             <InputChatBox>
-                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="30" height="30" viewBox="0 0 24 24" onClick={toggleDropdown}>
-                    <path d="M 12 2 C 6.4889971 2 2 6.4889971 2 12 C 2 17.511003 6.4889971 22 12 22 C 17.511003 22 22 17.511003 22 12 C 22 6.4889971 17.511003 2 12 2 z M 12 4 C 16.430123 4 20 7.5698774 20 12 C 20 16.430123 16.430123 20 12 20 C 7.5698774 20 4 16.430123 4 12 C 4 7.5698774 7.5698774 4 12 4 z M 11 7 L 11 11 L 7 11 L 7 13 L 11 13 L 11 17 L 13 17 L 13 13 L 17 13 L 17 11 L 13 11 L 13 7 L 11 7 z"></path>
-                </svg>
+                <img src="images/icon/plus.svg" alt="plus" onClick={toggleDropdown} />
                 <Input 
                     type="text"
                     placeholder="메시지 보내기..."

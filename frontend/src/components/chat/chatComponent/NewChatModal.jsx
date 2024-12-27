@@ -52,7 +52,9 @@ const ModalContent = styled.div`
     
 `;
 
-const NewChatModal = ({ onClose }) => {
+const NewChatModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+
     return (
         <ModalOverlay>
             <ModalContent>

@@ -3,8 +3,6 @@ import { Outlet, useLocation } from "react-router-dom";
 import SideNavbar from "./SideNavbar";
 import RightSidebar from "./RightSidebar";
 import { useState } from "react";
-import NewChatModal from "../components/chat/chatComponent/NewChatModal";
-import NewChatButton from "../components/chat/chatComponent/NewChatButton";
 
 const Container = styled.div`
   display: flex;
@@ -55,16 +53,7 @@ const Main = styled.main`
 
 export default function Layout() {
   const [open, setOpen] = useState(true);
-  const [modalIsOpen, setModalIsOpen] = useState(false);
   const location = useLocation();
-
-  const handleOpenModal = () => {
-    setModalIsOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalIsOpen(false);
-  };
   
   const setPageName = () => {
     const path = location.pathname;
@@ -90,7 +79,6 @@ export default function Layout() {
       <InnerContainer className="inner-container" open={open}>
         <Topbar className="topbar" open={open}>
           {setPageName()}
-          {location.pathname === "/chat" && <NewChatButton onClick={handleOpenModal} />}
           <div className="sidebar-icon" onClick={() => setOpen(!open)}>
             <img src="images/icon/menu.svg" alt="sidebar open" />
           </div>
@@ -100,7 +88,6 @@ export default function Layout() {
       </Main>
     </InnerContainer>
     <RightSidebar open={open} setOpen={setOpen} />
-    {modalIsOpen && <NewChatModal onClose={handleCloseModal} />}
     </Container>
   );
 }
