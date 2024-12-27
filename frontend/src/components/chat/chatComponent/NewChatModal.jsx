@@ -26,7 +26,9 @@ const CloseButton = styled.button`
     cursor: pointer;
 `;
 
-const NewChatModal = ({ onClose }) => {
+const NewChatModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+
     return (
         <ModalOverlay>
             <ModalContent>
