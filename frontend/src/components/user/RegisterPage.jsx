@@ -417,7 +417,7 @@ export default function RegisterPage() {
 
   return (
     <FullPageContainer style={{ paddingTop: "80px" }}>
-      <Logo>
+      <Logo onClick={() => navigate("/")}>
         <img src="images/logo/textLogo.svg" alt="CiRCLE" />
       </Logo>
       {step === 1 && firstStep}

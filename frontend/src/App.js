@@ -9,6 +9,7 @@ import CalendarPage from './components/calendar/CalendarPage';
 import RegisterPage from './components/user/RegisterPage';
 import CalendarWrite from './components/calendar/CalendarWrite';
 import IndexPage from './components/main/IndexPage';
+import FindPage from './components/user/FindPage';
 
 
 function App() {
@@ -20,6 +21,7 @@ return (
         <Route index element={<IndexPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
+        <Route path='/find' element={<FindPage />} />
         <Route element={<Layout />} >
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="/chat" element={<ChatPage />} />

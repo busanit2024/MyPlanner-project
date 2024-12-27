@@ -21,6 +21,15 @@ public class UserRestController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping("/findEmail")
+  public ResponseEntity<String> findEmail(@RequestParam String phone) {
+    String foundEmail = userService.findEmailByPhone(phone);
+    if (foundEmail == null) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(foundEmail);
+  }
+
   @GetMapping("/find")
   public ResponseEntity<UserDTO> getUser(@RequestHeader("Authorization") String authHeader) {
     String token = authHeader.replace("Bearer ", "");
