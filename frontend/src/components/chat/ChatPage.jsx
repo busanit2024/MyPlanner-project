@@ -1,4 +1,7 @@
 import styled from "styled-components";
+import InputChat from "./chatComponent/InputChat";
+import ChatTitle from "./chatComponent/ChatTitle";
+import defaultProfile from "../../images/defaultProfile.png";
 
 const ChatContainer = styled.div`
   display: flex;
@@ -9,7 +12,7 @@ const ChatContainer = styled.div`
 `;
 
 const ChatList = styled.div`
-width: 30%;  
+width: 40%;  
 border-right: 1px solid #d9d9d9;
 padding: 24px;
 padding-right: 23px;
@@ -26,11 +29,6 @@ padding: 24px;
 height : 100%;
 `;
 
-const ChatTitle = styled.div`
-padding-bottom: 20px;
-border-bottom: 1px solid #d9d9d9;
-`;
-
 const ChatMessages = styled.div`
 flex: 1;
 overflow-y: auto;
@@ -44,22 +42,35 @@ const ChatInput = styled.div`
 
 
 export default function ChatPage() {
+    const profileImage = defaultProfile;
+    const userName = "닉네임";
+    const userEmail = "test@test.com";
+
     return (
         <ChatContainer>
             <ChatList>
                 <h2>채팅목록</h2>
             </ChatList>
             <ChatRoom>
-                <ChatTitle>
-                    <h3>채팅상대</h3>
-                </ChatTitle>
-
+                <ChatTitle 
+                    profileImage={profileImage} 
+                    userName={userName} 
+                    userEmail={userEmail}
+                    style={{
+                        paddingBottom: '20px',
+                        borderBottom: '1px solid #d9d9d9',
+                        width: 'calc(100% + 48px)',
+                        margin: '0 -24px',
+                        paddingLeft: '24px',
+                        paddingRight: '24px'
+                    }}
+                />
                 <ChatMessages>
                     <h4>채팅 내용</h4>
                 </ChatMessages>
 
                 <ChatInput>
-                    <h4>메시지 보내기</h4>
+                    <InputChat />
                 </ChatInput>
             </ChatRoom>
         </ChatContainer>
