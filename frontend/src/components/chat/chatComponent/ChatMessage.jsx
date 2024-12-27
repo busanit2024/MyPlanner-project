@@ -25,9 +25,22 @@ const TimeStamp = styled.span`
   margin-bottom: 4px;
 `;
 
+const ProfileImage = styled.img`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: ${props => props.isMine ? 'none' : 'block'};
+`;
+
 const ChatMessage = ({ message, time, isMine }) => {
   return (
     <MessageContainer isMine={isMine}>
+      <ProfileImage 
+        src="images/default/defaultProfileImage.png" 
+        alt="프로필" 
+        isMine={isMine}
+      />
       <MessageBubble isMine={isMine}>
         {message}
       </MessageBubble>

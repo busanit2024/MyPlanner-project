@@ -1,7 +1,4 @@
 import styled from "styled-components";
-import sendMsg from "../../../images/sendMsg_48.png";
-import chatImage from "../../../images/chatImage.png";
-import chatCal from "../../../images/chatCal.png";
 import { useState } from "react";
 import ImageUploadModal from '../../../ui/ImageUploadModal';
 
@@ -103,16 +100,16 @@ export default function InputChat() {
                     placeholder="메시지 보내기..."
                 />
                 <SendButton >
-                    <img src={sendMsg} alt="sent"/>
+                    <img src="images/icon/sendMsg_48.png" alt="sent"/>
                 </SendButton>
                 {isDropdownOpen && (
                     <Dropdown>
                          <DropdownItem onClick={attachImg}>
-                            <img src={chatImage} alt="이미지 추가" />
+                            <img src="images/icon/chatImage.png" alt="이미지 추가" />
                             <p>이미지 추가</p>
                         </DropdownItem>
                         <DropdownItem>
-                            <img src={chatCal} alt="일정 공유" />
+                            <img src="images/icon/chatCal.png" alt="일정 공유" />
                             <p>일정 공유</p>
                         </DropdownItem>
                     </Dropdown>

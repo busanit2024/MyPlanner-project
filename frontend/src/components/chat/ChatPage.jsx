@@ -2,7 +2,6 @@ import styled from "styled-components";
 import InputChat from "./chatComponent/InputChat";
 import ChatTitle from "./chatComponent/ChatTitle";
 import ChatListItem from "./chatComponent/ChatListItem";
-import defaultProfile from "../../images/defaultProfile.png";
 import ChatMessage from './chatComponent/ChatMessage';
 import NewChatButton from "./chatComponent/NewChatButton";
 
@@ -114,7 +113,7 @@ const ChatInput = styled.div`
 
 
 export default function ChatPage() {
-    const profileImage = defaultProfile;
+    const profileImage = "images/default/defaultProfileImage.png";
     const userName = "닉네임";
     const userEmail = "test@test.com";
 

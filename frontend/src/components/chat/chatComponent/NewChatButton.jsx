@@ -28,7 +28,7 @@ const NewChatButton = () => {
     return (
         <>
             <Button onClick={handleModalOpen}>
-                <img src="images/icon/newChat.png" alt="newChat open" />
+                <img src="images/icon/newChat.svg" alt="newChat open" />
             </Button>
             <NewChatModal 
                 isOpen={isModalOpen} 
