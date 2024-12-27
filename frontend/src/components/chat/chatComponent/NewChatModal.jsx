@@ -36,6 +36,20 @@ const ModalContent = styled.div`
       
       }
     }
+
+    .search-user {
+      display: flex;
+      width: 24px;
+      height: 24px;
+      margin-top: 15px;
+
+      & img {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    
+    
 `;
 
 const NewChatModal = ({ onClose }) => {
@@ -49,7 +63,8 @@ const NewChatModal = ({ onClose }) => {
                     <span style={{ marginLeft: '10px' }}>새 쪽지</span>
                 </div>
                 <div className='search-user'>
-                    
+                    <img src="images/icon/search.svg" alt="search" />                    
+                    <input style={{ marginLeft: '10px', fontSize: '22px', border: 'none' }} type="text" placeholder='사용자 검색' />
                 </div>
             </ModalContent>
         </ModalOverlay>
