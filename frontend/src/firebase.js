@@ -1,8 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { v4 as uuidv4 } from 'uuid';
 import imageCompression from 'browser-image-compression';
 
@@ -58,12 +57,13 @@ const getFilename = async (fileUrl) => {
 
 
 const imageFileUpload = async (file) => {
-  console.log("File received for upload: ", file);
+  // 이미지 파일을 firebase storage에 업로드, {url, filename} 객체 형식으로 반환
 
   if (!file) {
     return null;
   }
   if (typeof file === 'string') {
+    // 이미지 url이라면 url과 파일명을 반환
     const filename = await getFilename(file);
     return { url: file, filename: filename };
   }
@@ -90,6 +90,7 @@ const imageFileUpload = async (file) => {
 };
 
 const deleteFile = async (fileUrl) => {
+  //firebase storage url 받아서 버킷 파일 삭제
   if (!fileUrl || typeof fileUrl !== 'string') {
     return;
   }
@@ -111,4 +112,4 @@ const deleteFile = async (fileUrl) => {
 
 
 
-export { app as default, auth, storage, createUserWithEmailAndPassword, imageFileUpload, deleteFile };
+export { app as default, auth, storage, imageFileUpload, deleteFile };

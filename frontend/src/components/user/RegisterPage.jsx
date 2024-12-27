@@ -6,7 +6,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Textarea from "../../ui/Textarea";
-import { auth, createUserWithEmailAndPassword, imageFileUpload, deleteFile } from "../../firebase";
+import { auth, imageFileUpload, deleteFile } from "../../firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const InputWrap = styled.div`
   display : flex;
@@ -260,6 +261,7 @@ export default function RegisterPage() {
         setEmailCheck("no");
       }
     }).catch((e) => {
+      setInputError(prev => ({ ...prev, email: "이메일 중복확인에 실패했어요. 다시 시도해 주세요." }));
       console.error(e);
     });
   };
@@ -328,6 +330,7 @@ export default function RegisterPage() {
 
     } catch (e) {
       deleteFile(selectedImage);
+      alert("문제가 발생했어요. 다시 시도해 주세요.");
       console.error("가입 실패", e);
     }
 

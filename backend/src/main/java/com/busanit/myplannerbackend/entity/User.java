@@ -1,7 +1,7 @@
 package com.busanit.myplannerbackend.entity;
 
 
-import com.busanit.myplannerbackend.domain.UserDTO;
+import com.busanit.myplannerbackend.domain.UserJoinDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,7 +42,7 @@ public class User {
     ADMIN, USER
   }
 
-  public static User toEntity(UserDTO dto) {
+  public static User toEntity(UserJoinDTO dto) {
     UserBuilder builder = User.builder()
             .firebaseUid(dto.getFirebaseUid())
             .email(dto.getEmail())

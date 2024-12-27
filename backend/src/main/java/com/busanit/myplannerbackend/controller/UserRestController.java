@@ -1,12 +1,11 @@
 package com.busanit.myplannerbackend.controller;
 
 import com.busanit.myplannerbackend.domain.UserDTO;
+import com.busanit.myplannerbackend.domain.UserJoinDTO;
 import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.service.UserService;
 import com.google.firebase.auth.FirebaseAuthException;
-import lombok.Generated;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,9 +21,23 @@ public class UserRestController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping("/find")
+  public ResponseEntity<UserDTO> getUser(@RequestHeader("Authorization") String authHeader) {
+    String token = authHeader.replace("Bearer ", "");
+    try {
+      UserDTO user = userService.findByToken(token);
+      if (user == null) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.ok(user);
+    } catch (FirebaseAuthException e) {
+      return ResponseEntity.badRequest().build();
+    }
+  }
+
   @PostMapping("/join")
-  public ResponseEntity<String> joinUser(@RequestBody UserDTO userDTO) {
-    userService.saveUser(User.toEntity(userDTO));
+  public ResponseEntity<String> joinUser(@RequestBody UserJoinDTO userJoinDTO) {
+    userService.saveUser(User.toEntity(userJoinDTO));
     return ResponseEntity.ok("가입 성공");
   }
 }

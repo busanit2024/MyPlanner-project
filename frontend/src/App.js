@@ -8,9 +8,11 @@ import ChatPage from './components/chat/ChatPage';
 import GlobalStyles from './styles/GlobalStyles.styles';
 import CalendarPage from './components/calendar/CalendarPage';
 import RegisterPage from './components/user/RegisterPage';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
 return (
+  <AuthProvider>
     <Router>
       <GlobalStyles />
       <Routes>
@@ -23,7 +25,7 @@ return (
         </Route>
       </Routes>
     </Router>
-
+    </AuthProvider>
   );
 }
 

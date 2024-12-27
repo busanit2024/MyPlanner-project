@@ -1,5 +1,7 @@
 import styled from "styled-components";
 import { Link, useLocation } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const SidebarContainer = styled.aside`
   display: flex;
@@ -97,7 +99,7 @@ const defaultProfileImage = "images/default/defaultProfileImage.png";
 
 
 export default function SideNavbar() {
-
+  const { user } = useContext(AuthContext);
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -112,9 +114,9 @@ export default function SideNavbar() {
         <NavItem className="profile">
           <Link to="/profile">
             <ProfileImage>
-              <img src="images/profile.jpg" onError={(e) => e.target.src=defaultProfileImage} alt="Profile" />
+              <img src={user?.profileImageUrl} onError={(e) => e.target.src=defaultProfileImage} alt="Profile" />
             </ProfileImage>
-            {"프로필"}
+            {user?.username ?? "닉네임"}
           </Link>
         </NavItem>
         {navItems.map((item, index) => (
