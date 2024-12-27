@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import InputChat from "./chatComponent/InputChat";
 
 const ChatContainer = styled.div`
   display: flex;
@@ -59,7 +60,7 @@ export default function ChatPage() {
                 </ChatMessages>
 
                 <ChatInput>
-                    <h4>메시지 보내기</h4>
+                    <InputChat />
                 </ChatInput>
             </ChatRoom>
         </ChatContainer>
