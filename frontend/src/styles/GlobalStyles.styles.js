@@ -4,11 +4,12 @@ const GlobalStyles = createGlobalStyle`
 
   :root {
     --primary-color: #F9AD47;
-    --primary-text-color: #F79200;
+    --accent-text-color: #F79200;
     --danger-color: #EC3B40;
     --dark-gray: #333;
     --mid-gray: #666;
     --light-gray: #D9D9D9;
+    --layout-padding: 36px 48px;
   }
 
   /* 
@@ -25,7 +26,7 @@ const GlobalStyles = createGlobalStyle`
   }
 
   a {
-    color: var(--primary-text-color);
+    color: var(--accent-text-color);
   }
 
 `;

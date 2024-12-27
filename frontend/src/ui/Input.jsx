@@ -25,7 +25,7 @@ const StyledInput = styled.input`
 `;
 
 export default function Input(props) {
-  const { id, type, placeholder, value, onChange, underline, grow, size } = props;
+  const { id, type, placeholder, value, onChange, onInput, underline, grow, size } = props;
 
   return (
     <StyledInput
@@ -33,6 +33,7 @@ export default function Input(props) {
       placeholder={placeholder}
       value={value}
       onChange={onChange}
+      onInput={onInput}
       underline={underline}
       grow={grow}
       id={id}
