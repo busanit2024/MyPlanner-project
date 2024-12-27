@@ -53,6 +53,8 @@ const ModalContent = styled.div`
       display: flex;
       flex-direction: column;
       gap: 10px;
+      border-top: solid 1px #e0e0e0;
+      margin-top: 10px;
     }
 
     .user-item {
