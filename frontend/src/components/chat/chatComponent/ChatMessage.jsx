@@ -11,7 +11,7 @@ const MessageContainer = styled.div`
 
 const MessageBubble = styled.div`
   background-color: ${props => props.isMine ? '#FFE7BA' : '#f1f1f1'};
-  padding: 12px 16px;
+  padding: 10px 16px;
   border-radius: 16px;
   border-bottom-right-radius: ${props => props.isMine ? '4px' : '16px'};
   border-bottom-left-radius: ${props => !props.isMine ? '4px' : '16px'};
