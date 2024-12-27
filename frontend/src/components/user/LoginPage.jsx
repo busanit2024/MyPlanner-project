@@ -10,7 +10,7 @@ const InputWrap = styled.div`
   gap: 24px;
   align-items: center;
   width: 100%;
-  padding: 0 64px;
+  padding: 0 86px;
   box-sizing: border-box;
 `;
 
@@ -29,14 +29,15 @@ export default function LoginPage() {
           <Input size="large" id="password" type="password" grow placeholder="비밀번호를 입력하세요" />
         </InputWrap>
 
-        <TextAndLink>
+        <TextAndLink style={{marginBottom: "24px"}}>
           아이디 또는 비밀번호를 잃어버리셨나요?
           <Link to="/find">아이디/비밀번호 찾기</Link>
         </TextAndLink>
+
+        <Button color="primary" size="large">로그인</Button>
+
+
       </InputBox>
-
-      <Button color="primary" size="large">로그인</Button>
-
       <TextAndLink style={{ marginTop: "24px" }}>
         회원이 아니신가요?
         <Link to="/register">회원가입</Link>

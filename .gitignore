@@ -400,4 +400,3 @@ FodyWeavers.xsd
 backend/src/main/resources/application-secret.properties
 frontend/.env
 backend/src/main/resources/serviceAccountKey.json
-backend/src/main/resources/application.properties

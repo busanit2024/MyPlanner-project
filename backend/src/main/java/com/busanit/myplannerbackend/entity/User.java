@@ -29,9 +29,12 @@ public class User {
 
   private String username;
   private String bio;
+  private String phone;
 
   @CreationTimestamp
   private LocalDateTime regDate;
+
+  @Enumerated(EnumType.STRING)
   private Role role;
   private String profileImageUrl;
 
@@ -45,6 +48,7 @@ public class User {
             .email(dto.getEmail())
             .username(dto.getUsername())
             .bio(dto.getBio())
+            .phone(dto.getPhone())
             .role(dto.getRole())
             .profileImageUrl(dto.getProfileImageUrl());
 

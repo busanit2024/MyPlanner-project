@@ -23,6 +23,7 @@ public class UserDTO {
 
   private String username;
   private String bio;
+  private String phone;
 
   private User.Role role;
   private String profileImageUrl;
@@ -33,6 +34,7 @@ public class UserDTO {
             .email(user.getEmail())
             .username(user.getUsername())
             .bio(user.getBio())
+            .phone(user.getPhone())
             .role(user.getRole())
             .profileImageUrl(user.getProfileImageUrl());
 
