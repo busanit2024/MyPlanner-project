@@ -82,7 +82,7 @@ const UserEmail = styled.span`
   font-size: 0.9em;
 `;
 
-const NewChatModal = ({ onClose }) => {
+const NewChatModal = ({ isOpen, onClose }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const users = [
         { name: '호두', email: 'hodo@test.com', profileImage: 'images/default/defaultProfileImage.png'},
@@ -93,6 +93,8 @@ const NewChatModal = ({ onClose }) => {
     const filteredUsers = users.filter(user =>
         user.name.includes(searchTerm) || user.email.includes(searchTerm)
     );
+
+    if (!isOpen) return null;
 
     return (
         <ModalOverlay>
