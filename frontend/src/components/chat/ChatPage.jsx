@@ -7,18 +7,17 @@ import NewChatButton from "./chatComponent/NewChatButton";
 
 const ChatContainer = styled.div`
   display: flex;
-  width: calc(100% + 48px);
+  width: 100%;
   height: calc(100vh - 84px);
-  margin: -36px -48px; 
+  margin: -36px 0;
   padding: 0;
   overflow: hidden;
 `;
 
 const ChatList = styled.div`
   width: 40%;  
-  border-right: 1px solid #d9d9d9;
-  padding: 24px;
-  padding-right: 23px;
+  border-right: 1px solid var(--light-gray);
+  padding: 24px 23px 24px 24px;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -34,7 +33,7 @@ const ChatListScroll = styled.div`
     width: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background-color: #d9d9d9;
+    background-color:var(--light-gray);
     border-radius: 3px;
   }
 `;
@@ -62,7 +61,7 @@ const ChatRoom = styled.div`
   width: 70%; 
   display: flex;
   flex-direction: column;
-  padding: 10px 0 24px 24px;
+  padding: 10px 0 24px 12px;
   height: 100%;
   overflow: hidden;
 `;
@@ -71,10 +70,10 @@ const ChatTitleWrapper = styled.div`
   position: relative;
   z-index: 1;
   background: white;
-  margin: 0 -24px;
+  margin: 0 -12px;
   margin-right: 0;
-  padding: 0px 0 10px 24px;
-  border-bottom: 1px solid #d9d9d9;
+  padding: 0px 12px 10px 12px;
+  border-bottom: 1px solid var(--light-gray);
   width: 100%;
 `;
 
@@ -82,14 +81,14 @@ const ChatMessagesScroll = styled.div`
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  padding-right: 0;
+  padding-right: 12px;
   margin-right: 0;
 
   &::-webkit-scrollbar {
     width: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background-color: #d9d9d9;
+    background-color: var(--light-gray);
     border-radius: 3px;
   }
 `;
@@ -103,10 +102,9 @@ const ChatInput = styled.div`
   position: relative;
   z-index: 1;
   background: white;
-  margin: 0 -24px;
-  margin-right: 0;
-  padding: 12px 0 20px 24px;
-  border-top: 1px solid #d9d9d9;
+  margin: 0 -12px;
+  padding: 12px 12px 20px 12px;
+  border-top: 1px solid var(--light-gray);
   width: 100%;
 `;
 

@@ -42,7 +42,7 @@ const CloseButton = styled.button`
 `;
 
 const ImageBox = styled.div`
-  border: 2px dashed #d9d9d9;
+  border: 2px dashed var(--light-gray);
   border-radius: 8px;
   padding: 20px;
   text-align: center;
@@ -50,7 +50,7 @@ const ImageBox = styled.div`
   cursor: pointer;
 
   &:hover {
-    border-color: #FFAE00;
+    border-color: var(--primary-color);
   }
 `;
 
@@ -94,8 +94,8 @@ const RemoveButton = styled.button`
 `;
 
 const UploadButton = styled.button`
-  background-color: #FFAE00;
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--white);
   border: none;
   border-radius: 4px;
   padding: 8px 16px;
@@ -103,7 +103,7 @@ const UploadButton = styled.button`
   cursor: pointer;
 
   &:disabled {
-    background-color: #d9d9d9;
+    background-color:var(--light-gray);
     cursor: not-allowed;
   }
 `;

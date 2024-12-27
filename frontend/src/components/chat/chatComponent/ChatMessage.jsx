@@ -10,7 +10,7 @@ const MessageContainer = styled.div`
 `;
 
 const MessageBubble = styled.div`
-  background-color: ${props => props.isMine ? '#FFE7BA' : '#f1f1f1'};
+  background-color: ${props => props.isMine ? 'var(--light-primary)' : 'var(--chat-gray)'};
   padding: 10px 16px;
   border-radius: 16px;
   border-bottom-right-radius: ${props => props.isMine ? '4px' : '16px'};

@@ -5,7 +5,7 @@ import ImageUploadModal from '../../../ui/ImageUploadModal';
 const InputChatBox = styled.div`
     display: flex;
     align-items: center;
-    background-color: #F2F2F2; 
+    background-color: var(--chat-gray); 
     border-radius: 50px;
     padding: 6px 16px;
     gap: 12px;
@@ -28,7 +28,7 @@ const Input = styled.input`
 
 
 const SendButton = styled.button`
-    background: #FFAE00;
+    background: var(--primary-color);
     border: none;
     border-radius: 50%;
     width: 25px;
@@ -53,7 +53,7 @@ const Dropdown = styled.div`
     position : absolute;
     bottom: 100%;
     left : 0;
-    background: rgb(255, 253, 252);
+    background: var(--light-primary);
     border-radius:4px;
     padding : 10px;
     margin-bottom : 5px;
