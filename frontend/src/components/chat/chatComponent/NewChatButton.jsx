@@ -7,14 +7,14 @@ const Button = styled.button`
     cursor: pointer;
 
     & img {
-      width: 24%;
-      height: 24%;
+      width: 70%;
+      height: 70%;
     }
 `
 const NewChatButton = ({ onClick }) => {
     return (
         <Button onClick={onClick}>
-            <img src="images/icon/newChat.png" alt="newChat open" />
+            <img src="images/icon/newChat.svg" alt="newChat open" />
         </Button>
     );
 };
