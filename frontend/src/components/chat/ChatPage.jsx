@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import InputChat from "./chatComponent/InputChat";
 import ChatTitle from "./chatComponent/ChatTitle";
+import ChatListItem from "./chatComponent/ChatListItem";
 import defaultProfile from "../../images/defaultProfile.png";
 import ChatMessage from './chatComponent/ChatMessage';
 
@@ -74,7 +75,7 @@ export default function ChatPage() {
     return (
         <ChatContainer>
             <ChatList>
-                <h2>채팅목록</h2>
+                <ChatListItem />
             </ChatList>
             <ChatRoom>
                 <ChatTitle 
