@@ -3,7 +3,7 @@ import React from 'react';
 const ChatListItem = () => {
   // 더미 데이터
   const chatData = {
-    profileImage: 'images/profile.jpg',
+    profileImage: 'images/default/defaultProfileImage.png',
     name: '호두',
     date: '2024.11.09',
     message: '14일에 봐~',

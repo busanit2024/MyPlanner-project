@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import ChatListItem from './chatComponent/ChatListItem';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -48,6 +49,7 @@ export default function ChatPage() {
         <ChatContainer>
             <ChatList>
                 <h2>채팅목록</h2>
+                <ChatListItem />
             </ChatList>
             <ChatRoom>
                 <ChatTitle>

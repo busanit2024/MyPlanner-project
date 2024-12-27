@@ -4,7 +4,6 @@ import Layout from './ui/Layout';
 import MainPage from './components/main/MainPage';
 import ChatPage from './components/chat/ChatPage';
 import GlobalStyles from './styles/GlobalStyles.styles';
-import ChatPage from './components/chat/ChatPage';
 
 function App() {
 return (
