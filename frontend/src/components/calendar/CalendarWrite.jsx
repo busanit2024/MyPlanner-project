@@ -202,13 +202,16 @@ const CalendarWrite = () => {
           <button onClick={handleAddChecklist}>+ 체크리스트 추가</button>
         </div>
         <p />
-        <input 
-          type="text" 
-          className="textarea-placeholder" 
-          placeholder="일정 상세내용 입력..." 
-          value={detail}
-          onChange={(e) => setDetail(e.target.value)}
-        />
+        <pre>
+          <textarea 
+            type="text" 
+            className="textarea-placeholder" 
+            placeholder="일정 상세내용 입력..." 
+            value={detail}
+            onChange={(e) => setDetail(e.target.value)}
+            style={{ minHeight: "100px", fontFamily: "fantasy" }}
+          />
+        </pre>
       </div>
     </div>
   );
