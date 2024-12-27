@@ -1,5 +1,8 @@
 import styled from "styled-components";
+import { useState } from 'react';
 import ChatListItem from './chatComponent/ChatListItem';
+import NewChatModal from './chatComponent/NewChatModal';
+import NewChatButton from './chatComponent/NewChatButton';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -45,10 +48,19 @@ const ChatInput = styled.div`
 
 
 export default function ChatPage() {
+    const [modalIsOpen, setModalIsOpen] = useState(false);
+
+    const handleOpenModal = () => {
+        setModalIsOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setModalIsOpen(false);
+    };
+
     return (
         <ChatContainer>
             <ChatList>
-                <h2>채팅목록</h2>
                 <ChatListItem />
             </ChatList>
             <ChatRoom>

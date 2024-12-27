@@ -9,7 +9,6 @@ const ChatListItem = () => {
     message: '14일에 봐~',
   };
 
-  // 인라인 스타일
   const styles = {
     container: {
       display: 'flex',
