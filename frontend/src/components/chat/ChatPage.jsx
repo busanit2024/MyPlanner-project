@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import InputChat from "./chatComponent/InputChat";
 import ChatTitle from "./chatComponent/ChatTitle";
+import ChatListItem from "./chatComponent/ChatListItem";
 import defaultProfile from "../../images/defaultProfile.png";
 
 const ChatContainer = styled.div`
