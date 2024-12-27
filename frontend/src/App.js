@@ -4,6 +4,7 @@ import Layout from './ui/Layout';
 import MainPage from './components/main/MainPage';
 import ChatPage from './components/chat/ChatPage';
 import GlobalStyles from './styles/GlobalStyles.styles';
+import CalendarWrite from './components/calendar/CalendarWrite';
 
 function App() {
 return (
@@ -14,6 +15,8 @@ return (
           <Route index element={<MainPage />} />
           <Route path="calendar" element={<MainPage />} />
           <Route path="/chat" element={<ChatPage />} />
+
+          <Route path='calendarWrite' element={<CalendarWrite />} />
         </Route>
       </Routes>
     </Router>
