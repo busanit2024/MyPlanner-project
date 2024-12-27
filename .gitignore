@@ -396,5 +396,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
 backend/src/main/resources/application-secret.properties
-backend/src/main/resources/application.properties
+frontend/.env
+backend/src/main/resources/serviceAccountKey.json

@@ -1,5 +1,5 @@
 .calendar-page {
-    padding: 20px;
+    padding: var(--layout-padding);
     font-family: 'Arial', sans-serif;
 }
 
