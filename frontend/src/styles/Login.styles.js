@@ -3,8 +3,10 @@ import styled from "styled-components";
 export const FullPageContainer = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 64px 0;
   align-items: center;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 `;
 
 export const Logo = styled.div`

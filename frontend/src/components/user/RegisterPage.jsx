@@ -482,11 +482,10 @@ export default function RegisterPage() {
 
 
   return (
-    <FullPageContainer>
+    <FullPageContainer style={{paddingTop: "80px"}}>
       <Logo>
-        <img src="images/logo/logo.svg" alt="CiRCLE" />
+        <img src="images/logo/textLogo.svg" alt="CiRCLE" />
       </Logo>
-
       {step === 1 && firstStep}
       {step === 2 && secondStep}
       {step === 3 && thirdStep}

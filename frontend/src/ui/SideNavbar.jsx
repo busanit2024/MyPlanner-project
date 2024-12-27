@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
@@ -27,6 +27,7 @@ const NavList = styled.ul`
   list-style: none;
   padding: 0;
   margin-top: 36px;
+  flex-grow: 1;
 `;
 
 const NavItem = styled.li`
@@ -46,6 +47,12 @@ const NavItem = styled.li`
 
   & .active {
     font-weight: bold;
+  }
+
+  & .logout {
+    color: var(--dark-gray);
+    cursor: pointer;
+    text-decoration: underline;
   }
 
 
@@ -99,15 +106,21 @@ const defaultProfileImage = "images/default/defaultProfileImage.png";
 
 
 export default function SideNavbar() {
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <SidebarContainer className="sidebar">
       <Logo>
         <Link to="/">
-          <img src="images/logo/logo.svg" alt="Logo" />
+          <img src="images/logo/textLogo.svg" alt="Logo" />
         </Link>
       </Logo>
       <NavList>
@@ -126,6 +139,9 @@ export default function SideNavbar() {
             </Link>
           </NavItem>
         ))}
+        <NavItem style={{ justifySelf: "flex-end", marginTop: "auto"}}>
+          <a className="logout" onClick={handleLogout}>로그아웃</a>
+        </NavItem>
       </NavList>
 
 

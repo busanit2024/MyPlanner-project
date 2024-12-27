@@ -9,6 +9,60 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 
+const WelcomeContainer = styled.div`
+  display: flex;
+  box-sizing: border-box;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  height: 640px;
+  overflow: hidden;
+  width: 1280px;
+`;
+
+const LeftContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  width: 50%;
+  background-color: var(--primary-color);
+  box-sizing: border-box;
+
+  .logo {
+    width: 148px;
+  }
+
+  .logoText {
+    margin-top: 24px;
+    width: 240px;
+  }
+
+  img {
+    width: 100%;
+  }
+
+  .description {
+    font-size: 18px;
+    color: white;
+    text-align: center;
+    margin: 0;
+    margin-top: 16px;
+  }
+`;
+
+const RightContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  padding: 48px;
+  width: 50%;
+  box-sizing: border-box;
+
+`;
+
 const InputWrap = styled.div`
   display: flex;
   flex-direction: column;
@@ -33,7 +87,6 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
   const [inputData, setInputData] = useState({
     email: "",
     password: "",
@@ -80,7 +133,6 @@ export default function LoginPage() {
       if (user) {
         setLoginFail(false);
         const userToken = await user.getIdToken();
-        login(userToken);
         sessionStorage.setItem("userToken", userToken);
         navigate("/calendar");
       }
@@ -91,33 +143,43 @@ export default function LoginPage() {
   };
 
   return (
-    <FullPageContainer>
-      <Logo>
-        <img src="images/logo/logo.svg" alt="CiRCLE" />
-      </Logo>
-      <InputBox>
-        <Title>
-          로그인
-        </Title>
-        <InputWrap>
-          <Input size="large" id="email" grow placeholder="이메일을 입력하세요" onChange={(e) => setInputData({ ...inputData, email: e.target.value })} />
-          <Input size="large" id="password" type="password" grow placeholder="비밀번호를 입력하세요" onChange={(e) => setInputData({ ...inputData, password: e.target.value })} />
-          {error && <ErrorText>{error}</ErrorText>}
-        </InputWrap>
+    <FullPageContainer style={{justifyContent: "center", height: "100%"}} className="container">
+      <WelcomeContainer className="box">
+        <LeftContainer>
+          <div className="logo">
+            <img src="images/logo/logoWhite.svg" alt="CiRCLE" />
+          </div>
+          <div className="logoText">
+            <img src="images/logo/textLogoWhite.svg" alt="CiRCLE" />
+          </div>
+          <p className="description">
+            친구들과 공유하는 일정관리 SNS
+          </p>
+        </LeftContainer>
 
-        <TextAndLink style={{marginBottom: "24px"}}>
-          아이디 또는 비밀번호를 잃어버리셨나요?
-          <Link to="/find">아이디/비밀번호 찾기</Link>
-        </TextAndLink>
+        <RightContainer>
+          <Title className="title">
+            로그인
+          </Title>
+          <InputWrap>
+            <Input size="large" id="email" grow placeholder="이메일을 입력하세요" onChange={(e) => setInputData({ ...inputData, email: e.target.value })} />
+            <Input size="large" id="password" type="password" grow placeholder="비밀번호를 입력하세요" onChange={(e) => setInputData({ ...inputData, password: e.target.value })} />
+            {error && <ErrorText>{error}</ErrorText>}
+          </InputWrap>
 
-        <Button color="primary" size="large" onClick={handleLogin}>로그인</Button>
+          <TextAndLink style={{ marginBottom: "24px" }}>
+            아이디 또는 비밀번호를 잃어버리셨나요?
+            <Link to="/find">아이디/비밀번호 찾기</Link>
+          </TextAndLink>
 
+          <Button color="primary" size="large" onClick={handleLogin}>로그인</Button>
+          <TextAndLink>
+            회원이 아니신가요?
+            <Link to="/register">회원가입</Link>
+          </TextAndLink>
+        </RightContainer>
 
-      </InputBox>
-      <TextAndLink style={{ marginTop: "24px" }}>
-        회원이 아니신가요?
-        <Link to="/register">회원가입</Link>
-      </TextAndLink>
+      </WelcomeContainer>
 
     </FullPageContainer>
   );
