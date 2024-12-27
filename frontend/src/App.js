@@ -4,11 +4,12 @@ import Layout from './ui/Layout';
 import MainPage from './components/main/MainPage';
 import LoginPage from './components/user/LoginPage';
 import ChatPage from './components/chat/ChatPage';
-
+import { AuthProvider } from './context/AuthContext';
 import GlobalStyles from './styles/GlobalStyles.styles';
 import CalendarPage from './components/calendar/CalendarPage';
 import RegisterPage from './components/user/RegisterPage';
-import { AuthProvider } from './context/AuthContext';
+import CalendarWrite from './components/calendar/CalendarWrite';
+
 
 function App() {
 return (
@@ -22,6 +23,8 @@ return (
         <Route element={<Layout />} >
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="/chat" element={<ChatPage />} />
+
+          <Route path='calendarWrite' element={<CalendarWrite />} />
         </Route>
       </Routes>
     </Router>
