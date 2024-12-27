@@ -20,7 +20,7 @@ const CalendarPage = () => {
   };
 
   const renderCalendarDays = () => {
-    const daysInMonth = getDaysInMonth(2017, 3); // 4월 (0부터 시작)
+    const daysInMonth = getDaysInMonth(2024, 11); // 12월 달력
     const days = [];
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(
@@ -58,7 +58,7 @@ const CalendarPage = () => {
         </div>
         <button 
           className="add-event-button" 
-          onClick={() => navigate('/calendarWrite')} // 클릭 시 이동
+          onClick={() => navigate('/calendarWrite')}
           style={{ fontSize: '24px', marginLeft: '20px', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           📅+
