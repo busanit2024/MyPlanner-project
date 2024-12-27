@@ -113,6 +113,11 @@ const ImageUploadModal = ({ isOpen, onClose, onUpload }) => {
   const [previews, setPreviews] = useState([]);
   const fileInputRef = useRef(null);
 
+  const resetState = () => {
+    setSelectedImages([]);
+    setPreviews([]);
+  };
+
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
@@ -136,8 +141,14 @@ const ImageUploadModal = ({ isOpen, onClose, onUpload }) => {
   const handleUploadClick = () => {
     if (selectedImages.length > 0) {
       onUpload(selectedImages);
+      resetState();
       onClose();
     }
+  };
+
+  const handleModalClose = () => {
+    resetState();
+    onClose();
   };
 
   const handleAreaClick = () => {
@@ -147,11 +158,11 @@ const ImageUploadModal = ({ isOpen, onClose, onUpload }) => {
   if (!isOpen) return null;
 
   return (
-    <ModalOverlay onClick={onClose}>
+    <ModalOverlay onClick={handleModalClose}>
       <ModalContent onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <h2>이미지 업로드</h2>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
+          <CloseButton onClick={handleModalClose}>&times;</CloseButton>
         </ModalHeader>
 
         <ImageBox onClick={handleAreaClick}>
