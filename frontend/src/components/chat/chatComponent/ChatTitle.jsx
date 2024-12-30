@@ -31,7 +31,13 @@ const UserEmail = styled.span`
 const ChatTitle = ({ profileImage, userName, userEmail, ...props }) => {
   return (
     <TitleContainer {...props}>
-      <ProfileImage src={profileImage} alt="프로필 이미지" />
+      <ProfileImage 
+        src={profileImage || '/images/default/defaultProfileImage.png'} 
+        alt="프로필" 
+        onError={(e) => {
+          e.target.src = '/images/default/defaultProfileImage.png';
+        }}
+      />
       <UserInfo>
         <UserName>{userName}</UserName>
         <UserEmail>{userEmail}</UserEmail>

@@ -26,7 +26,6 @@ const Input = styled.input`
     }
 `;
 
-
 const SendButton = styled.button`
     background: var(--primary-color);
     border: none;
@@ -71,9 +70,10 @@ const DropdownItem = styled.div`
     }
 `;
 
-export default function InputChat() {
+export default function InputChat({ onSendMessage }) {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isImageModalOpen, setImageModalOpen] = useState(false);
+    const [message, setMessage] = useState('');
 
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -91,6 +91,20 @@ export default function InputChat() {
         });
     };
 
+    const handleSend = () => {
+        if (message.trim()) {
+            onSendMessage(message);
+            setMessage('');
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    };
+
     return (
         <>
             <InputChatBox>
@@ -98,13 +112,16 @@ export default function InputChat() {
                 <Input 
                     type="text"
                     placeholder="메시지 보내기..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
                 />
-                <SendButton >
+                <SendButton onClick={handleSend}>
                     <img src="images/icon/sendMsg_48.png" alt="sent"/>
                 </SendButton>
                 {isDropdownOpen && (
                     <Dropdown>
-                         <DropdownItem onClick={attachImg}>
+                        <DropdownItem onClick={attachImg}>
                             <img src="images/icon/chatImage.png" alt="이미지 추가" />
                             <p>이미지 추가</p>
                         </DropdownItem>

@@ -4,6 +4,9 @@ import ChatTitle from "./chatComponent/ChatTitle";
 import ChatListItem from "./chatComponent/ChatListItem";
 import ChatMessage from './chatComponent/ChatMessage';
 import NewChatButton from "./chatComponent/NewChatButton";
+import { useChat } from '../../hooks/useChat';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -111,31 +114,49 @@ const ChatInput = styled.div`
 
 
 export default function ChatPage() {
-    const profileImage = "images/default/defaultProfileImage.png";
-    const userName = "닉네임";
-    const userEmail = "test@test.com";
+    const { roomId } = useParams();
+    const [currentUser, setCurrentUser] = useState({
+        id: '',
+        email: '',
+        name: '',
+        profileImage: null
+    });
 
-    // 테스트용 메시지 
-    const messages = [
-        {
-            id: 1,
-            message: "안녕하세요!",
-            time: "오후 6:40",
-            isMine: false
-        },
-        {
-            id: 2,
-            message: "네 안녕하세요~",
-            time: "오후 6:49",
-            isMine: true
-        },
-        {
-            id: 3,
-            message: "오늘 일정 확인하셨나요?",
-            time: "오후 6:49",
-            isMine: false
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetch('/api/user/find', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                setCurrentUser({
+                    id: data.id,
+                    email: data.email,
+                    name: data.name,
+                    profileImage: data.profileImage || '/images/default/defaultProfileImage.png'
+                });
+            })
+            .catch(error => {
+                console.error('사용자 정보 로딩 실패:', error);
+                setCurrentUser(prev => ({
+                    ...prev,
+                    profileImage: '/images/default/defaultProfileImage.png'
+                }));
+            });
         }
-    ];
+    }, []);
+
+    const { messages, sendMessage, isConnected } = useChat(
+        roomId, 
+        currentUser.email
+    );
+
+    const handleSendMessage = (content) => {
+        sendMessage(content);
+    };
 
     return (
         <ChatContainer>
@@ -151,9 +172,9 @@ export default function ChatPage() {
             <ChatRoom>
                 <ChatTitleWrapper>
                     <ChatTitle 
-                        profileImage={profileImage} 
-                        userName={userName} 
-                        userEmail={userEmail}
+                        profileImage={currentUser.profileImage}
+                        userName={currentUser.name}
+                        userEmail={currentUser.email}
                     />
                 </ChatTitleWrapper>
                 <ChatMessagesScroll>
@@ -161,15 +182,15 @@ export default function ChatPage() {
                         {messages.map(msg => (
                             <ChatMessage
                                 key={msg.id}
-                                message={msg.message}
-                                time={msg.time}
-                                isMine={msg.isMine}
+                                message={msg.contents}
+                                time={msg.sendTime}
+                                isMine={msg.senderEmail === currentUser.email}
                             />
                         ))}
                     </ChatMessages>
                 </ChatMessagesScroll>
                 <ChatInput>
-                    <InputChat />
+                    <InputChat onSendMessage={handleSendMessage} />
                 </ChatInput>
             </ChatRoom>
         </ChatContainer>
