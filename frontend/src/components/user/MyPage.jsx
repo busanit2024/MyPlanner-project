@@ -23,20 +23,22 @@ export default function MyPage() {
       navigate("/login");
     }
     console.log(user);
-  }, [user]);
+  }, [user, loading]);
 
   useEffect(() => {
+    if (!loading && user) {
     setFollowList([]);
     setFollowerList([]);
     setPage(0);
     setHasNext(false);
     setListLoading(true);
     fetchFollowList(followType);
-  }, [followType]);
+  }
+  }, [followType, loading, user]);
 
   const fetchFollowList = (type) => {
     const size = 10;
-    const userId = user.id;
+    const userId = user?.id;
     const url = type === "follower" ? "/api/user/follower" : "/api/user/following";
     axios.get(url, { params: { userId, page, size } })
       .then(res => {
