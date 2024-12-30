@@ -19,12 +19,12 @@ public class Follow {
 
 
   @JsonIgnore
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "follow_from", nullable = false)
   private User followFrom;
 
   @JsonIgnore
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "follow_to", nullable = false )
   private User followTo;
 }
