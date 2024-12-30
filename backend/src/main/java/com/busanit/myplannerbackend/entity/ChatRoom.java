@@ -1,7 +1,7 @@
 package com.busanit.myplannerbackend.entity;
 
+import com.busanit.myplannerbackend.domain.Participant;
 import jakarta.persistence.Id;
-
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -12,14 +12,15 @@ import java.util.List;
 @Document
 @Getter
 @Setter
-public class Message {
+public class ChatRoom {
+
     @Id
     private String id;
-    private String chatRoomId;
-    private String messageId;
-    private String senderEmail;
-    private String receiverEmail;
-    private String contents;
-    private LocalDateTime sendTime;
-    private List<String> images;
+
+    private List<Participant> participants;
+    private String chatroomTitle;
+    private String chatRoomType;
+
+    private LocalDateTime createdAt;
+    private String lastMessage;
 }
