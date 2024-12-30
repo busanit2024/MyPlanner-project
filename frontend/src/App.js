@@ -10,26 +10,31 @@ import RegisterPage from './components/user/RegisterPage';
 import CalendarWrite from './components/calendar/CalendarWrite';
 import IndexPage from './components/main/IndexPage';
 import FindPage from './components/user/FindPage';
+import SearchPage from './components/search/SearchPage';
+import { SearchProvider } from './context/SearchContext';
 
 
 function App() {
-return (
-  <AuthProvider>
-    <Router>
-      <GlobalStyles />
-      <Routes>
-        <Route index element={<IndexPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path='/register' element={<RegisterPage />} />
-        <Route path='/find' element={<FindPage />} />
-        <Route element={<Layout />} >
-          <Route path="calendar" element={<CalendarPage />} />
-          <Route path="/chat" element={<ChatPage />} />
+  return (
+    <AuthProvider>
+      <Router>
+        <SearchProvider>
+          <GlobalStyles />
+          <Routes>
+            <Route index element={<IndexPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path='/register' element={<RegisterPage />} />
+            <Route path='/find' element={<FindPage />} />
+            <Route element={<Layout />} >
+              <Route path='/search' element={<SearchPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/chat" element={<ChatPage />} />
 
-          <Route path='calendarWrite' element={<CalendarWrite />} />
-        </Route>
-      </Routes>
-    </Router>
+              <Route path='calendarWrite' element={<CalendarWrite />} />
+            </Route>
+          </Routes>
+        </SearchProvider>
+      </Router>
     </AuthProvider>
   );
 }

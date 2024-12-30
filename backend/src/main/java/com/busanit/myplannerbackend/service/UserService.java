@@ -7,6 +7,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -50,5 +52,10 @@ public class UserService {
 
   public void saveUser(User user) {
     userRepository.save(user);
+  }
+
+  public Slice<UserDTO> searchUser(String searchText, Pageable pageable) {
+    Slice<User> userSlice = userRepository.findByEmailContainingOrUsernameContaining(searchText, searchText, pageable);
+    return UserDTO.toDTO(userSlice);
   }
 }
