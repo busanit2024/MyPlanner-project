@@ -11,6 +11,7 @@ export const FullPageContainer = styled.div`
 
 export const Logo = styled.div`
   width: 160px;
+  cursor: pointer;
   & img {
     width: 100%;
   }
@@ -25,10 +26,8 @@ export const Title = styled.h1`
 `;
 
 export const InputBox = styled.div`
-  border : 1px solid;
-  border-color: var(--light-gray);
   border-radius: 30px;
-  box-shadow: 0 2px 4px var(--light-gray);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
   width: 760px;
   height : auto;
   display :flex;
