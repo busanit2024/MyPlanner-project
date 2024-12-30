@@ -33,6 +33,7 @@ function App() {
               <Route path='/profile' element={<MyPage />} />
               <Route path='calendarWrite' element={<CalendarWrite />} />
             </Route>
+            <Route path="/chat/:roomId" element={<ChatPage />} />
           </Routes>
         </SearchProvider>
       </Router>

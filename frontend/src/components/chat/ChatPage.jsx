@@ -6,6 +6,7 @@ import ChatMessage from './chatComponent/ChatMessage';
 import NewChatButton from "./chatComponent/NewChatButton";
 import { useChat } from '../../hooks/useChat';
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -84,46 +85,61 @@ export default function ChatPage() {
         name: '',
         profileImage: null
     });
+    
+    const [chatPartner, setChatPartner] = useState({
+        email: '',
+        name: '',
+        profileImage: null
+    });
+
+    const { roomId } = useParams();  // URL에서 roomId 가져오기
 
     useEffect(() => {
-        // 토큰 키 이름 확인
-        console.log('모든 로컬스토리지 키:', Object.keys(localStorage));
-        
         const token = sessionStorage.getItem('userToken');
-        console.log('저장된 토큰:', token);
-        
         if (token) {
+            // 1. 현재 사용자 정보 가져오기
             fetch('/api/user/find', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             })
-            .then(res => {
-                console.log('응답 상태:', res.status);  // 응답 상태 코드 로그
-                return res.json();
-            })
+            .then(res => res.json())
             .then(data => {
-                console.log('사용자 정보:', data);  // 응답 데이터 로그
                 setCurrentUser({
                     email: data.email,
                     name: data.name,
                     profileImage: data.profileImage || '/images/default/defaultProfileImage.png'
                 });
+
+                // 2. 채팅방 정보 가져오기
+                return fetch(`/api/chat/rooms/${roomId}`);
+            })
+            .then(res => res.json())
+            .then(roomData => {
+                // 3. 채팅방 참여자 중 현재 사용자가 아닌 상대방 찾기
+                const partnerEmail = roomData.participants.find(
+                    email => email !== currentUser.email
+                );
+
+                // 4. 상대방 정보 가져오기
+                return fetch(`/api/user/profile/${partnerEmail}`);
+            })
+            .then(res => res.json())
+            .then(partnerData => {
+                setChatPartner({
+                    email: partnerData.email,
+                    name: partnerData.name,
+                    profileImage: partnerData.profileImage || '/images/default/defaultProfileImage.png'
+                });
             })
             .catch(error => {
-                console.error('API 호출 에러:', error);  // 자세한 에러 로그
-                setCurrentUser(prev => ({
-                    ...prev,
-                    profileImage: '/images/default/defaultProfileImage.png'
-                }));
+                console.error('데이터 로딩 실패:', error);
             });
-        } else {
-            console.log('토큰이 없습니다');
         }
-    }, []);
+    }, [roomId, currentUser.email]);
 
     const { messages, sendMessage, isConnected } = useChat(
-        "test-room-1",  // 테스트용 채팅방 ID
+        roomId,  // URL에서 가져온 roomId 사용
         currentUser.email
     );
 
@@ -145,9 +161,9 @@ export default function ChatPage() {
             <ChatRoom>
                 <ChatTitleWrapper>
                     <ChatTitle 
-                        profileImage={currentUser.profileImage}
-                        userName={currentUser.name}
-                        userEmail={currentUser.email}
+                        profileImage={chatPartner.profileImage}
+                        userName={chatPartner.name}
+                        userEmail={chatPartner.email}
                     />
                 </ChatTitleWrapper>
                 <ChatMessagesScroll>
