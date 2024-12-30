@@ -12,6 +12,7 @@ import IndexPage from './components/main/IndexPage';
 import FindPage from './components/user/FindPage';
 import SearchPage from './components/search/SearchPage';
 import { SearchProvider } from './context/SearchContext';
+import MyPage from './components/user/MyPage';
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
               <Route path='/search' element={<SearchPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/chat" element={<ChatPage />} />
+              <Route path='/profile' element={<MyPage />} />
               <Route path='calendarWrite' element={<CalendarWrite />} />
             </Route>
           </Routes>

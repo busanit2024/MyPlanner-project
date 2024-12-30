@@ -1,28 +1,118 @@
 import styled from "styled-components";
 import Button from "./Button";
+import { useAuth } from "../context/AuthContext";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import Modal from "./Modal";
+import Chip from "./Chip";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
-export default function UserListItem({ user }) {
+export default function UserListItem({ user: item }) {
+  const { user, loading } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followsMe, setFollowsMe] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      checkFollow();
+      checkFollowsMe();
+    }
+  }, [user]);
+
+  const onModalClose = () => {
+    setIsModalOpen(false);
+  }
+
+  const onFollow = () => {
+    if (loading || !user) {
+      return;
+    }
+
+    const userId = user?.id;
+    const targetUserId = item?.id;
+
+    if (isFollowing) {
+      return;
+    }
+
+    axios.get(`/api/user/follow`, { params: { userId, targetUserId } })
+      .then(res => {
+        console.log(`follow id ${targetUserId}`, res.data);
+        setIsFollowing(true);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+
+  const onUnfollow = () => {
+    if (loading || !user) {
+      return;
+    }
+
+    const userId = user?.id;
+    const targetUserId = item?.id;
+
+    if (!isFollowing) {
+      return;
+    }
+
+    axios.get(`/api/user/unfollow`, { params: { userId, targetUserId } })
+      .then(res => {
+        console.log(`unfollow id ${targetUserId}`, res.data);
+        setIsFollowing(false);
+        setIsModalOpen(false);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+
+  const checkFollow = () => {
+    const follows = user?.follows ?? [];
+    const isFollow = follows.some(follow => follow === item?.id);
+    setIsFollowing(isFollow);
+  }
+
+  const checkFollowsMe = () => {
+    const followers = user?.followers ?? [];
+    const follows = followers.some(follower => follower === item?.id);
+    setFollowsMe(follows);
+  }
+
+
   return (
     <Container className="user-list-item">
+      <Modal title={"언팔로우하기"} isOpen={isModalOpen} onClose={onModalClose}>
+        <div className="subtitle">이 회원을 언팔로우하시겠어요?</div>
+        <div className="button-group">
+          <Button onClick={onUnfollow} color="danger">언팔로우</Button>
+          <Button onClick={onModalClose}>취소</Button>
+        </div>
+      </Modal>
       <div className="left">
         <Avatar>
-          <img src={user?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => e.target.src={defaultProfileImageUrl} } />
+          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => e.target.src = { defaultProfileImageUrl }} />
         </Avatar>
         <Info>
-          <span className="name">{user?.username}</span>
-          <span className="email">{user?.email}</span>
+          <span className="name">{item?.username}
+            {followsMe && <Chip color="primary" size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip> }
+          </span>
+          <span className="email">{item?.email}</span>
 
         </Info>
 
       </div>
 
       <div className="right">
-        <div className="message-icon">
-          <img src="/images/icon/message.svg" alt="message" />
-        </div>
-        <Button color="primary">팔로우하기</Button>
+        {isFollowing &&
+          <div className="message-icon">
+            <img src="/images/icon/message.svg" alt="message" />
+          </div>
+        }
+        {isFollowing ? <Button onClick={() => setIsModalOpen(true)} >팔로잉</Button> : <Button color="primary" onClick={onFollow}>팔로우하기</Button>}
       </div>
     </Container>
   );
@@ -38,6 +128,7 @@ const Container = styled.div`
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
   }
 
   & .right {
@@ -67,6 +158,7 @@ const Avatar = styled.div`
   & img {
     width: 100%;
     height: 100%;
+    object-fit: cover;
     border-radius: 50%;
   }
 `;
@@ -78,6 +170,9 @@ const Info = styled.div`
   margin-left: 12px;
 
   & .name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 18px;
     font-weight: bold;
   }
