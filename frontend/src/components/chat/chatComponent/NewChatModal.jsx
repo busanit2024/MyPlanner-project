@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import UserChip from './UserChip';
 
@@ -126,7 +125,25 @@ const NewChatModal = ({ isOpen, onClose }) => {
                 </div>
                 <div className='search-user'>
                     <img src="images/icon/search.svg" alt="search" />                    
-                    <input style={{ marginLeft: '10px', fontSize: '22px', border: 'none' }} type="text" placeholder='사용자 검색' />
+                    <input style={{ marginLeft: '10px', fontSize: '22px', border: 'none' }} 
+                    type="text" placeholder='사용자 검색'
+                    value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                </div>
+                <ChipsContainer>
+                    {selectedUsers.map(user => (
+                        <UserChip key={user.email} user={user} onRemove={() => handleUserRemove(user.email)} />
+                    ))}
+                </ChipsContainer>
+                <div className='user-list'>
+                    {filteredUsers.map(user => (
+                        <div key={user.email} className='user-item' onClick={() => handleUserSelect(user)}>
+                            <ProfileImage src={user.profileImage} alt="프로필 이미지" />
+                            <UserInfo style={{ marginLeft: '10px' }}>
+                                <UserName>{user.name}</UserName>
+                                <UserEmail>{user.email}</UserEmail>
+                            </UserInfo>
+                        </div>
+                    ))}
                 </div>
             </ModalContent>
         </ModalOverlay>
