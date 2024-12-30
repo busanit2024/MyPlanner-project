@@ -6,11 +6,6 @@ import UserListItem from "../../ui/UserListItem";
 import axios from "axios";
 import Button from "../../ui/Button";
 
-const dummyUser = {
-  username: "닉네임",
-  email: "email@test.com",
-}
-
 export default function SearchPage() {
   const { searchText, setOnSearch, searchType, setSearchType } = useSearch();
   const [page, setPage] = useState(0);
@@ -66,7 +61,6 @@ export default function SearchPage() {
         </div>
       </SearchTypeWrap>
       <UserList>
-        <UserListItem user={dummyUser} />
         {users && users.map((user, index) => (
           <UserListItem key={index} user={user} />
         ))}
@@ -91,6 +85,8 @@ const SearchTypeWrap = styled.div`
   gap: 4px;
   height: 64px;
   border-bottom: 1px solid var(--light-gray);
+  flex-shrink: 0;
+  width: 100%;
 
   & .search-type {
     display: flex;

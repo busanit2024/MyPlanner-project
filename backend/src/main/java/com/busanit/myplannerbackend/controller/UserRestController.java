@@ -65,4 +65,26 @@ public class UserRestController {
     Pageable pageable = PageRequest.of(page, size);
     return userService.searchUser(searchText, pageable);
   }
+
+  @GetMapping("/follower")
+  public Slice<UserDTO> getFollower(@RequestParam Long userId, @RequestParam int page, @RequestParam int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return userService.getFollowers(userId, pageable);
+  }
+
+  @GetMapping("/following")
+  public Slice<UserDTO> getFollowing(@RequestParam Long userId, @RequestParam int page, @RequestParam int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return userService.getFollowing(userId, pageable);
+  }
+
+  @GetMapping("/follow")
+  public void follow(@RequestParam Long userId, @RequestParam Long targetUserId) {
+    userService.follow(userId, targetUserId);
+  }
+
+  @GetMapping("/unfollow")
+  public void unfollow(@RequestParam Long userId, @RequestParam Long targetUserId) {
+    userService.unfollow(userId, targetUserId);
+  }
 }
