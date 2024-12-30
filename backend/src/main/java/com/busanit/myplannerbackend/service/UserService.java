@@ -32,8 +32,20 @@ public class UserService {
     return UserDTO.toDTO(user);
   }
 
+  public String findEmailByPhone(String phone) {
+    User user = userRepository.findByPhone(phone).orElse(null);
+    if (user == null) {
+      return null;
+    }
+    return user.getEmail();
+  }
+
   public boolean checkEmailExist(String email) {
     return userRepository.findByEmail(email).isPresent();
+  }
+
+  public boolean checkPhoneExist(String phone) {
+    return userRepository.findByPhone(phone).isPresent();
   }
 
   public void saveUser(User user) {

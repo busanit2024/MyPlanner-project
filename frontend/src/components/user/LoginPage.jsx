@@ -99,8 +99,8 @@ export default function LoginPage() {
           </InputWrap>
 
           <TextAndLink style={{ marginBottom: "24px" }}>
-            아이디 또는 비밀번호를 잃어버리셨나요?
-            <Link to="/find">아이디/비밀번호 찾기</Link>
+            이메일 또는 비밀번호를 잊어버리셨나요?
+            <Link to="/find">이메일/비밀번호 찾기</Link>
           </TextAndLink>
 
           <Button color="primary" size="large" onClick={handleLogin}>로그인</Button>
