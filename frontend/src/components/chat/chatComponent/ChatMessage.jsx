@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 const MessageContainer = styled.div`
   display: flex;
-  flex-direction: ${props => props.isMine ? 'row-reverse' : 'row'};
+  flex-direction: ${props => props.$isMine ? 'row-reverse' : 'row'};
   align-items: flex-end;
   margin: 16px 0;
   gap: 8px;
@@ -35,7 +35,7 @@ const ProfileImage = styled.img`
 
 const ChatMessage = ({ message, time, isMine }) => {
   return (
-    <MessageContainer isMine={isMine}>
+    <MessageContainer $isMine={isMine}>
       <ProfileImage 
         src="images/default/defaultProfileImage.png" 
         alt="프로필" 

@@ -25,6 +25,7 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
         //메시지 구독 요청 엔드포인트
         registry.enableSimpleBroker("/sub");
 
+
         // 메시지 발행 엔드포인트
         registry.setApplicationDestinationPrefixes("/pub");
     }

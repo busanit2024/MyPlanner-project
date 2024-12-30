@@ -36,8 +36,11 @@ public class ChatController {
     @MessageMapping("/chat/rooms/{chatRoomId}/send")
     public void sendMessage(@DestinationVariable String chatRoomId,
                             @Payload Message message) {
+        System.out.println("메시지 수신: " + message.getContents());
+        
         UserDTO sender = userService.findByEmail(message.getSenderEmail());
         if (sender == null) {
+            System.out.println("발신자를 찾을 수 없음: " + message.getSenderEmail());
             return;
         }
 
@@ -46,6 +49,7 @@ public class ChatController {
         message.setSenderEmail(sender.getEmail());
 
         Message savedMessage = messageService.saveMessage(message);
+        System.out.println("메시지 저장 완료: " + savedMessage.getId());
 
         MessageResponseDTO response = MessageResponseDTO.builder()
                 .id(savedMessage.getId())

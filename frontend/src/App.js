@@ -29,7 +29,6 @@ function App() {
               <Route path='/search' element={<SearchPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/chat" element={<ChatPage />} />
-
               <Route path='calendarWrite' element={<CalendarWrite />} />
             </Route>
           </Routes>
