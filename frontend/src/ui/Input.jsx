@@ -13,7 +13,8 @@ const StyledInput = styled.input`
 
   ${props => props.underline && `
     border: none;
-    border-bottom: 2px solid;
+    border-bottom: 1px solid;
+    border-color: var(--light-gray);
     border-radius: 0;
   `}
 

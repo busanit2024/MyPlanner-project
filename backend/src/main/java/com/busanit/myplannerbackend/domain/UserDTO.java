@@ -6,12 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Slice;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {
+  private Long id;
 
   private String email;
 
@@ -23,6 +25,7 @@ public class UserDTO {
 
   public static UserDTO toDTO(User user) {
     UserDTOBuilder builder = UserDTO.builder()
+            .id(user.getId())
             .email(user.getEmail())
             .username(user.getUsername())
             .bio(user.getBio())
@@ -31,4 +34,9 @@ public class UserDTO {
 
     return builder.build();
   }
-}
+
+  public static Slice<UserDTO> toDTO(Slice<User> slice) {
+    return slice.map(UserDTO::toDTO);
+    }
+
+  }

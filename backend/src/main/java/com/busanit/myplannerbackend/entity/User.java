@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -56,5 +57,11 @@ public class User {
 
     return builder.build();
   }
+
+  @OneToMany(mappedBy = "followFrom")
+  private List<Follow> follows;
+
+  @OneToMany(mappedBy = "followTo")
+  private List<Follow> followers;
 
 }
