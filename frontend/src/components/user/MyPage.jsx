@@ -27,13 +27,13 @@ export default function MyPage() {
 
   useEffect(() => {
     if (!loading && user) {
-    setFollowList([]);
-    setFollowerList([]);
-    setPage(0);
-    setHasNext(false);
-    setListLoading(true);
-    fetchFollowList(followType);
-  }
+      setFollowList([]);
+      setFollowerList([]);
+      setPage(0);
+      setHasNext(false);
+      setListLoading(true);
+      fetchFollowList(followType);
+    }
   }, [followType, loading, user]);
 
   const fetchFollowList = (type) => {
@@ -61,19 +61,25 @@ export default function MyPage() {
     <Container>
       <ProfileContainer>
         <div className="left">
-          <ProfileImage>
-            <img src={user?.profileImageUrl ?? defaultProfileImage} alt="profile" onError={(e) => e.target.src = { defaultProfileImage }} />
-          </ProfileImage>
-
-          <div className="info">
-            <span className="name">{user?.username}</span>
-            <span className="email">{user?.email}</span>
+          <div className="inner-container">
+            <ProfileImage>
+              <img src={user?.profileImageUrl ?? defaultProfileImage} alt="profile" onError={(e) => e.target.src = { defaultProfileImage }} />
+            </ProfileImage>
+            <div className="info">
+              <span className="name">{user?.username}</span>
+              <span className="email">{user?.email}</span>
+            </div>
           </div>
+          <div className="bio">
+            {user?.bio}
+          </div>
+
         </div>
 
         <div className="right">
           <Button >프로필 수정</Button>
         </div>
+
       </ProfileContainer>
 
       <FollowTypeWrap>
@@ -89,20 +95,20 @@ export default function MyPage() {
 
       <UserList>
         {listLoading && <p className="no-list">로딩 중...</p>}
-        {followType === "follower" && 
+        {followType === "follower" &&
           <>
-            {(!listLoading && followerList.length === 0)&& <p className="no-list">아직 당신을 팔로우하는 사람이 없어요.</p>}
+            {(!listLoading && followerList.length === 0) && <p className="no-list">아직 당신을 팔로우하는 사람이 없어요.</p>}
             {followerList.map((follower) => (
               <UserListItem key={follower.id} user={follower} />
             ))}
           </>}
         {followType === "following" &&
-        <>
-          {(!listLoading && followList.length === 0) && <p className="no-list">아직 팔로잉 중인 이용자가 없어요.</p>}
-          {followList.map((follow) => (
-            <UserListItem key={follow.id} user={follow} />
-          ))}
-        </>}
+          <>
+            {(!listLoading && followList.length === 0) && <p className="no-list">아직 팔로잉 중인 이용자가 없어요.</p>}
+            {followList.map((follow) => (
+              <UserListItem key={follow.id} user={follow} />
+            ))}
+          </>}
         {hasNext && <Button onClick={() => setPage(page + 1)}>더 불러오기</Button>}
       </UserList>
     </Container>
@@ -122,13 +128,20 @@ const ProfileContainer = styled.div`
   width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: end;
-  padding: 64px 128px;
+    align-items: end;
+  padding: 48px 128px;
   box-sizing: border-box;
 
   & .left {
     display: flex;
+    flex-direction: column;
+    gap: 32px;
+
+    & .inner-container {
+    display: flex;
     gap: 24px;
+    width: 100%;
+  }
 
     & .info {
       display: flex;
@@ -150,6 +163,10 @@ const ProfileContainer = styled.div`
   & .right {
     display: flex;
     gap: 12px;
+  }
+
+  & .bio {
+    font-size: 18px;
   }
 `;
 
