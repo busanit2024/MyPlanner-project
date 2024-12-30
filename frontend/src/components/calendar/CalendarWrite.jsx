@@ -124,6 +124,7 @@ const CalendarWrite = () => {
             <span className="slider"></span>
           </label>
         </div>
+        <p/>
         <div>
           <span>시작 날짜</span>
           <input 
@@ -164,6 +165,7 @@ const CalendarWrite = () => {
             />
           )}
         </div>
+        <p/>
         <div className="toggle-container">
           <span>🔁 반복 안함</span>
           <label className="toggle">
@@ -175,6 +177,7 @@ const CalendarWrite = () => {
             <span className="slider"></span>
           </label>
         </div>
+        <p/>
         <div className="toggle-container">
           <span>🔔 5분 전 알람</span>
           <label className="toggle">
@@ -186,6 +189,7 @@ const CalendarWrite = () => {
             <span className="slider"></span>
           </label>
         </div>
+        <p/>
         <div className="toggle-container">
           <span>
             {viewBefore ? '🔒︎ 나만 보기' : '🔓︎ 나만 보기'}
@@ -211,7 +215,7 @@ const CalendarWrite = () => {
                 type="text" 
                 value={item} 
                 onChange={(e) => handleChecklistChange(index, e.target.value)} 
-                style={{ flex: 1 }} // 입력 필드가 남은 공간을 차지하도록 설정
+                style={{ flex: 1 }} // 입력 필드가 남은 공간을 차지하게 한다
               />
             </div>
           ))}
