@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -29,6 +30,8 @@ public class User {
 
   private String username;
   private String bio;
+
+  @Column(unique = true, nullable = false)
   private String phone;
 
   @CreationTimestamp
@@ -54,5 +57,11 @@ public class User {
 
     return builder.build();
   }
+
+  @OneToMany(mappedBy = "followFrom")
+  private List<Follow> follows;
+
+  @OneToMany(mappedBy = "followTo")
+  private List<Follow> followers;
 
 }
