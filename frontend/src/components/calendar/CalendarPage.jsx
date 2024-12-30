@@ -5,8 +5,6 @@ import '../../css/CalendarPage.css';
 const CalendarPage = () => {
   const navigate = useNavigate(); // useNavigate 훅 사용
 
-  // 커밋 테스트
-  
   // 더미 데이터
   const events = [
     { date: '2017-04-03', title: '1주간 프로젝트', time: '10:00' },

@@ -35,7 +35,15 @@ const CalendarWrite = () => {
   };
 
   const handleAddChecklist = () => {
-    setChecklist([...checklist, `체크리스트${checklist.length + 1}`]);
+    if (checklist.length < 10) {
+      setChecklist([...checklist, '']); // 체크리스트가 10개 미만일 때 빈 문자열 추가
+    }
+  };
+
+  const handleChecklistChange = (index, value) => {
+    const updatedChecklist = [...checklist];
+    updatedChecklist[index] = value; // 해당 인덱스의 값을 업데이트
+    setChecklist(updatedChecklist);
   };
 
   const handleImageUpload = (e) => {
@@ -195,11 +203,26 @@ const CalendarWrite = () => {
         <div className="checklist-section">
           {checklist.map((item, index) => (
             <div className="checklist-item" key={index}>
-              <input type="checkbox" />
-              {item}
+              <input 
+                type="checkbox" 
+                style={{ marginRight: '10px' }} 
+              />
+              <input 
+                type="text" 
+                value={item} 
+                onChange={(e) => handleChecklistChange(index, e.target.value)} 
+                style={{ flex: 1 }} // 입력 필드가 남은 공간을 차지하도록 설정
+              />
             </div>
           ))}
-          <button onClick={handleAddChecklist}>+ 체크리스트 추가</button>
+          {checklist.length < 10 && (
+            <button 
+              className="add-checklist-button" 
+              onClick={handleAddChecklist}
+            >
+              + 체크리스트 추가
+            </button>
+          )}
         </div>
         <p />
         <pre>
