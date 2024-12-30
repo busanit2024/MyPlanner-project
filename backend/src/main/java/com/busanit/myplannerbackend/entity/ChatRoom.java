@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.entity;
 
+import com.busanit.myplannerbackend.domain.Participant;
 import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +17,7 @@ public class ChatRoom {
     @Id
     private String id;
 
-    private List<String> participants;
+    private List<Participant> participants;
     private String chatroomTitle;
     private String chatRoomType;
 

@@ -3,7 +3,7 @@
 public class MessageResponseDTO {
     private String id;
     private String contents;
-    private String senderId;
+    private String senderEmail;
     private String senderName;
     private LocalDateTime sendTime;
 } 
