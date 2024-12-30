@@ -37,13 +37,11 @@ const RemoveButton = styled.span`
 `;
 
 const UserChip = ({ user, onRemove }) => {
-    console.log('Rendering UserChip for:', user.name);
     return (
         <ChipContainer>
             <ProfileImage src={user.profileImage} alt="프로필 이미지" />
             <UserName>{user.name}</UserName>
             <RemoveButton onClick={() => {
-                console.log('Removing user:', user.email);
                 onRemove();
             }}>
                 <img src="images/icon/cancel.svg" alt="cancel" />

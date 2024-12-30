@@ -18,12 +18,10 @@ const NewChatButton = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleModalOpen = () => {
-        console.log('Opening modal');
         setIsModalOpen(true);
     };
 
     const handleModalClose = () => {
-        console.log('Modal is closing');
         setIsModalOpen(false);
     };
 

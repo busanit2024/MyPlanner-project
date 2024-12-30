@@ -18,7 +18,7 @@ const ModalContent = styled.div`
     background: white;
     padding: 20px;
     border-radius: 5px;
-    width: 300px;
+    width: 600px;
 
     .modal-header {
       display: flex;
@@ -91,9 +91,7 @@ const UserEmail = styled.span`
   font-size: 0.9em;
 `;
 
-const NewChatModal = ({ isOpen, onClose }) => {
-    console.log('NewChatModal rendered, isOpen:', isOpen);
-    
+const NewChatModal = ({ isOpen, onClose }) => {   
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUsers, setSelectedUsers] = useState([]);
 
@@ -103,7 +101,6 @@ const NewChatModal = ({ isOpen, onClose }) => {
     }
 
     useEffect(() => {
-      console.log('isOpen', isOpen);
       if (isOpen) {
         resetState();
       }
@@ -129,7 +126,6 @@ const NewChatModal = ({ isOpen, onClose }) => {
 
     const handleModalClose = (e) => {
       e.stopPropagation();
-      console.log('Selected users before close:', selectedUsers);
       resetState();
       onClose();
     };
@@ -153,7 +149,6 @@ const NewChatModal = ({ isOpen, onClose }) => {
                 </div>
                 <ChipsContainer>
                   {selectedUsers.map(user => {
-                      console.log('Rendering UserChip for:', user);
                       return (
                           <UserChip key={user.email} user={user} onRemove={() => handleUserRemove(user.email)} />
                       );
