@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import UserChip from './UserChip';
 
@@ -92,8 +92,23 @@ const UserEmail = styled.span`
 `;
 
 const NewChatModal = ({ isOpen, onClose }) => {
+    console.log('NewChatModal rendered, isOpen:', isOpen);
+    
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUsers, setSelectedUsers] = useState([]);
+
+    const resetState = () => {
+      setSelectedUsers([]);
+      setSearchTerm('');
+    }
+
+    useEffect(() => {
+      console.log('isOpen', isOpen);
+      if (isOpen) {
+        resetState();
+      }
+    }, [isOpen]);
+
     const users = [
         { name: '호두', email: 'hodo@test.com', profileImage: 'images/default/defaultProfileImage.png'},
         { name: '하츄핑', email: 'heartping@test.com', profileImage: 'images/default/defaultProfileImage.png'},
@@ -109,14 +124,21 @@ const NewChatModal = ({ isOpen, onClose }) => {
     };
 
     const handleUserRemove = (email) => {
-        setSelectedUsers(selectedUsers.filter(user => user.email !== email));
+        setSelectedUsers(prevSelectedUsers => prevSelectedUsers.filter(user => user.email !== email));
+    };
+
+    const handleModalClose = (e) => {
+      e.stopPropagation();
+      console.log('Selected users before close:', selectedUsers);
+      resetState();
+      onClose();
     };
 
     if (!isOpen) return null;
 
     return (
-        <ModalOverlay>
-            <ModalContent>
+        <ModalOverlay onClick={handleModalClose}>
+            <ModalContent onClick={(e) => e.stopPropagation()}> {/* 클릭 이벤트 전파 방지 */}
                 <div className="modal-header">
                     <div className="cancel-icon" onClick={onClose}>
                         <img src="images/icon/cancel.svg" alt="cancel" />
@@ -130,9 +152,12 @@ const NewChatModal = ({ isOpen, onClose }) => {
                     value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
                 <ChipsContainer>
-                    {selectedUsers.map(user => (
-                        <UserChip key={user.email} user={user} onRemove={() => handleUserRemove(user.email)} />
-                    ))}
+                  {selectedUsers.map(user => {
+                      console.log('Rendering UserChip for:', user);
+                      return (
+                          <UserChip key={user.email} user={user} onRemove={() => handleUserRemove(user.email)} />
+                      );
+                  })}
                 </ChipsContainer>
                 <div className='user-list'>
                     {filteredUsers.map(user => (
