@@ -31,9 +31,9 @@ function App() {
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/chat" element={<ChatPage />} />
               <Route path='/profile' element={<MyPage />} />
-
               <Route path='calendarWrite' element={<CalendarWrite />} />
             </Route>
+            <Route path="/chat/:roomId" element={<ChatPage />} />
           </Routes>
         </SearchProvider>
       </Router>

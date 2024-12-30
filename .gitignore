@@ -398,6 +398,7 @@ FodyWeavers.xsd
 *.sln.iml
 
 backend/src/main/resources/application-secret.properties
+backend/src/main/resources/application.properties
 frontend/.env
 backend/src/main/resources/serviceAccountKey.json
 .env
