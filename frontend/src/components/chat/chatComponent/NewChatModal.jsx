@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import UserChip from './UserChip';
 
 const ModalOverlay = styled.div`
     position: fixed;
@@ -49,34 +50,67 @@ const ModalContent = styled.div`
         height: 100%;
       }
     }
-    
-    
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-top: solid 1px #e0e0e0;
+      margin-top: 10px;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+    }    
 `;
 
-const ButtonContainer = styled.div`
+const ChipsContainer = styled.div`
     display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
+    flex-wrap: wrap; // 칩이 넘칠 경우 아래로 내려오도록 설정
+    gap: 5px; // 칩 간의 간격 설정
 `;
 
-const Button = styled.button`
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
+const ProfileImage = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
 `;
 
-const NewChatModal = ({ isOpen, onClose, otherUserEmail }) => {
-    const navigate = useNavigate();
+const UserInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
 
-    const handleStartChat = () => {
-        // 테스트용 채팅방 ID 생성 (실제로는 서버에서 생성해야 함)
-        const chatRoomId = 'test-room-1';
-        
-        // 채팅방으로 이동
-        navigate(`/chat/rooms/${chatRoomId}`);
-        onClose();
+const UserName = styled.span`
+  font-weight: bold;
+`;
+
+const UserEmail = styled.span`
+  color: #666;
+  font-size: 0.9em;
+`;
+
+const NewChatModal = ({ isOpen, onClose }) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedUsers, setSelectedUsers] = useState([]);
+    const users = [
+        { name: '호두', email: 'hodo@test.com', profileImage: 'images/default/defaultProfileImage.png'},
+        { name: '하츄핑', email: 'heartping@test.com', profileImage: 'images/default/defaultProfileImage.png'},
+        { name: '토코몬', email: 'tocomon@test.com', profileImage: 'images/default/defaultProfileImage.png'},
+    ];
+
+    const filteredUsers = users.filter(user =>
+        user.name.includes(searchTerm) || user.email.includes(searchTerm)
+    );
+
+    const handleUserSelect = (user) => {
+        setSelectedUsers([...selectedUsers, user]);
+    };
+
+    const handleUserRemove = (email) => {
+        setSelectedUsers(selectedUsers.filter(user => user.email !== email));
     };
 
     if (!isOpen) return null;
@@ -84,13 +118,16 @@ const NewChatModal = ({ isOpen, onClose, otherUserEmail }) => {
     return (
         <ModalOverlay>
             <ModalContent>
-                <h2>새로운 채팅</h2>
-                <p>채팅을 시작하시겠습니까?</p>
-                <p>상대방: {otherUserEmail}</p>
-                <ButtonContainer>
-                    <Button onClick={handleStartChat}>시작하기</Button>
-                    <Button onClick={onClose}>취소</Button>
-                </ButtonContainer>
+                <div className="modal-header">
+                    <div className="cancel-icon" onClick={onClose}>
+                        <img src="images/icon/cancel.svg" alt="cancel" />
+                    </div>
+                    <span style={{ marginLeft: '10px' }}>새 쪽지</span>
+                </div>
+                <div className='search-user'>
+                    <img src="images/icon/search.svg" alt="search" />                    
+                    <input style={{ marginLeft: '10px', fontSize: '22px', border: 'none' }} type="text" placeholder='사용자 검색' />
+                </div>
             </ModalContent>
         </ModalOverlay>
     );
