@@ -5,27 +5,82 @@ import { useEffect, useState } from "react";
 import Input from "../../ui/Input";
 import Button from "../../ui/Button";
 import axios from "axios";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../firebase";
 
 export default function FindPage() {
   const navigate = useNavigate();
   const [type, setType] = useState("email");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [input, setInput] = useState({
+    phone: "",
+    email: "",
+  });
   const [foundEmail, setFoundEmail] = useState("");
   const [inputStart, setInputStart] = useState(false);
   const [errorMessege, setErrorMessege] = useState("");
 
+
+  useEffect(() => {
+    const inputs = document.querySelectorAll("input");
+    inputs.forEach((input) => {
+      input.addEventListener("change", handleChangeInput);
+      input.addEventListener("input", handleChangeInput);
+    });
+
+    // Cleanup event listeners on unmount
+    return () => {
+      inputs.forEach((input) => {
+        input.removeEventListener("change", handleChangeInput);
+        input.removeEventListener("input", handleChangeInput);
+      });
+    };
+  }, []);
+
+
+  useEffect(() => {
+    const inputs = document.querySelectorAll("input");
+    inputs.forEach((input) => {
+      input.addEventListener("change", handleChangeInput);
+      input.addEventListener("input", handleChangeInput);
+    });
+
+    // Cleanup event listeners on unmount
+    return () => {
+      inputs.forEach((input) => {
+        input.removeEventListener("change", handleChangeInput);
+        input.removeEventListener("input", handleChangeInput);
+      });
+    };
+  }, []);
+
+
+  useEffect(() => {
+    // Detect autofill changes after component mounts
+    setTimeout(() => {
+      const inputs = document.querySelectorAll("input");
+      inputs.forEach((input) => {
+        if (input.value) {
+          handleChangeInput({ target: input });
+        }
+      });
+    }, 0);
+  }, []);
+
+
   useEffect(() => {
     setErrorMessege("");
-    setEmail("");
-    setPhone("");
+    if (type === "email") {
+      setInput({ phone: "" });
+    } else if (type === "password") {
+      setInput({ email: "" });
+    }
   }, [type]);
 
   useEffect(() => {
     setInputStart(false);
 
     if (type === "email") {
-      if (phone.length > 0) {
+      if (input.phone?.length > 0) {
         setInputStart(true);
       }
       if (inputStart) {
@@ -34,7 +89,7 @@ export default function FindPage() {
     }
 
     if (type === "password") {
-      if (email.length > 0) {
+      if (input.email?.length > 0) {
         setInputStart(true);
       }
 
@@ -43,13 +98,18 @@ export default function FindPage() {
       }
     }
 
-  }, [type, phone, email]);
+  }, [type, input]);
+
+  const handleChangeInput = (e) => {
+    const { id, value } = e.target;
+    setInput((prev) => ({ ...prev, [id]: value }));
+  };
 
 
   const checkPhone = () => {
     const phonePattern = /^\d{3}\d{3,4}\d{4}$/;
-    if (!phonePattern.test(phone)) {
-      if (phone === "") {
+    if (!phonePattern.test(input.phone)) {
+      if (input.phone === "") {
         setErrorMessege("전화번호를 입력해주세요.");
       } else {
         setErrorMessege("'-' 없이 숫자만 입력해주세요.");
@@ -62,8 +122,8 @@ export default function FindPage() {
 
   const checkEmail = () => {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-      if (email === "") {
+    if (!emailPattern.test(input.email)) {
+      if (input.email === "") {
         setErrorMessege("이메일을 입력해주세요.");
       } else {
         setErrorMessege("유효한 이메일 형식을 입력해주세요.");
@@ -77,7 +137,7 @@ export default function FindPage() {
     if (errorMessege) {
       return;
     }
-    axios.get("/api/user/findEmail", { params: { phone: phone } })
+    axios.get("/api/user/findEmail", { params: { phone: input.phone } })
       .then((res) => {
         const email = res.data;
         const emailArr = email.split("@");
@@ -95,11 +155,25 @@ export default function FindPage() {
       });
   };
 
-
+  const handleSendMail = () => {
+    if (errorMessege) {
+      return;
+    }
+    sendPasswordResetEmail(auth, input.email)
+      .then(() => {
+        setType("mailSent");
+      }).catch((error) => {
+        if (error.code === "auth/user-not-found") {
+          setErrorMessege("등록되지 않은 이메일입니다.");
+        } else {
+          console.error(error);
+        }
+      });
+  };
 
   const findEmail = (
     <InputWrap>
-      <Input id="phone" type="tel" size="large" grow placeholder="가입시 등록한 전화번호를 입력하세요." value={phone} onChange={(e) => setPhone(e.target.value)} onInput={(e) => setPhone(e.target.value)} />
+      <Input id="phone" type="tel" size="large" grow placeholder="가입시 등록한 전화번호를 입력하세요." value={input.phone} onChange={handleChangeInput} onInput={handleChangeInput} />
       {errorMessege && <ErrorText>{errorMessege}</ErrorText>}
       <Button onClick={handleFindEmail} color="primary">이메일 찾기</Button>
     </InputWrap>
@@ -107,9 +181,9 @@ export default function FindPage() {
 
   const findPassword = (
     <InputWrap>
-      <Input id="email" type="email" size="large" grow placeholder="내 계정 이메일을 입력하세요." value={email} onChange={(e) => setEmail(e.target.value)} onInput={(e) => setEmail(e.target.value)} />
+      <Input id="email" type="email" size="large" grow placeholder="내 계정 이메일을 입력하세요." value={input.email} onChange={handleChangeInput} onInput={handleChangeInput} />
       {errorMessege && <ErrorText>{errorMessege}</ErrorText>}
-      <Button color="primary">비밀번호 재설정 메일 전송</Button>
+      <Button color="primary" onClick={handleSendMail}>비밀번호 재설정 메일 전송</Button>
     </InputWrap>
   );
 
@@ -135,7 +209,7 @@ export default function FindPage() {
   const mailSent = (
     <InputWrap>
       <p className="emailSent">
-        <span> {email} </span> 로
+        <span> {input.email} </span> 로
         비밀번호 재설정 메일이 전송되었어요.</p>
       <Button onClick={() => navigate("/login")}>로그인하기</Button>
     </InputWrap>
@@ -207,6 +281,14 @@ const InputWrap = styled.div`
 
   & .emailfound { 
     font-size: 18px;
+  }
+
+  & .emailSent {
+    font-size: 18px;
+
+    & span {
+      font-weight: bold;
+    }
   }
 `;
 
