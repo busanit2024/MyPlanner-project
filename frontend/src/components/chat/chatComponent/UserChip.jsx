@@ -41,7 +41,9 @@ const UserChip = ({ user, onRemove }) => {
         <ChipContainer>
             <ProfileImage src={user.profileImage} alt="프로필 이미지" />
             <UserName>{user.name}</UserName>
-            <RemoveButton onClick={onRemove}>
+            <RemoveButton onClick={() => {
+                onRemove();
+            }}>
                 <img src="images/icon/cancel.svg" alt="cancel" />
             </RemoveButton>
         </ChipContainer>
