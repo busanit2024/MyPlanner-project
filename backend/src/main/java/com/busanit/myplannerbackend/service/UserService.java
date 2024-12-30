@@ -44,6 +44,10 @@ public class UserService {
     return userRepository.findByEmail(email).isPresent();
   }
 
+  public boolean checkPhoneExist(String phone) {
+    return userRepository.findByPhone(phone).isPresent();
+  }
+
   public void saveUser(User user) {
     userRepository.save(user);
   }

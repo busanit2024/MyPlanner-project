@@ -29,6 +29,8 @@ public class User {
 
   private String username;
   private String bio;
+
+  @Column(unique = true, nullable = false)
   private String phone;
 
   @CreationTimestamp

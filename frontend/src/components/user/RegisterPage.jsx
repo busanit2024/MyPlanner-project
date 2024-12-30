@@ -28,6 +28,7 @@ export default function RegisterPage() {
   });
   const [selectedImage, setSelectedImage] = useState(null);
   const [emailCheck, setEmailCheck] = useState("notyet");
+  const [phoneCheck, setPhoneCheck] = useState("notyet");
   const [inputError, setInputError] = useState({
     email: "",
     password: "",
@@ -60,7 +61,7 @@ export default function RegisterPage() {
     };
   }, []);
 
-  
+
   useEffect(() => {
     // Detect autofill changes after component mounts
     setTimeout(() => {
@@ -130,8 +131,10 @@ export default function RegisterPage() {
   const checkPassword = async () => {
     if (userInfo.password.length < 6) {
       if (userInfo.password === "") {
+        
         setInputError(prev => ({ ...prev, password: "비밀번호를 입력해주세요." }));
       } else {
+        
         setInputError(prev => ({ ...prev, password: "비밀번호는 6자 이상이어야 해요." }));
       }
     } else {
@@ -153,10 +156,15 @@ export default function RegisterPage() {
     const phonePattern = /^\d{3}\d{3,4}\d{4}$/;
     if (!phonePattern.test(userInfo.phone)) {
       if (userInfo.phone === "") {
+        setPhoneCheck("notyet");
         setInputError(prev => ({ ...prev, phone: "전화번호를 입력해주세요." }));
       } else {
+        setPhoneCheck("notyet");
         setInputError(prev => ({ ...prev, phone: "'-' 없이 숫자만 입력해주세요." }));
       }
+    } else if (phoneCheck !== "ok" && phoneCheck !== "no") {
+      setPhoneCheck("valid")
+      setInputError(prev => ({ ...prev, phone: "전화번호 중복확인을 해주세요." }));
     } else {
       setInputError(prev => ({ ...prev, phone: "" }));
     }
@@ -187,6 +195,24 @@ export default function RegisterPage() {
       }
     }).catch((e) => {
       setInputError(prev => ({ ...prev, email: "이메일 중복확인에 실패했어요. 다시 시도해 주세요." }));
+      console.error(e);
+    });
+  };
+
+  const handleCheckPhone = async () => {
+    if (phoneCheck !== "valid") {
+      return;
+    }
+    axios.get(`/api/user/checkPhone?phone=${userInfo.phone}`).then((res) => {
+      setInputError(prev => ({ ...prev, phone: "" }));
+      if (res.data === false) {
+        setPhoneCheck("ok");
+      }
+      if (res.data === true) {
+        setPhoneCheck("no");
+      }
+    }).catch((e) => {
+      setInputError(prev => ({ ...prev, phone: "전화번호 중복확인에 실패했어요. 다시 시도해 주세요." }));
       console.error(e);
     });
   };
@@ -288,10 +314,10 @@ export default function RegisterPage() {
           <div className="input">
             <label htmlFor="password">비밀번호</label>
             <PasswordInputWrap>
-            <input type={viewPassword.password ? "text" : "password"} id="password" grow placeholder="비밀번호를 입력하세요." value={userInfo.password} onChange={handleChangeInput} onInput={handleChangeInput} />
-            <div className="password-view" onClick={() => handleViewPassword("password")}>
-              { viewPassword.password ? <FaEye /> : <FaEyeSlash /> }
-            </div>
+              <input type={viewPassword.password ? "text" : "password"} id="password" grow placeholder="비밀번호를 입력하세요." value={userInfo.password} onChange={handleChangeInput} onInput={handleChangeInput} />
+              <div className="password-view" onClick={() => handleViewPassword("password")}>
+                {viewPassword.password ? <FaEye /> : <FaEyeSlash />}
+              </div>
             </PasswordInputWrap>
           </div>
           {inputError.password && <ErrorText>{inputError.password}</ErrorText>}
@@ -300,13 +326,13 @@ export default function RegisterPage() {
 
         <InputWrap className="input-wrap">
           <div className="input">
-            
+
             <label htmlFor="passwordConfirm">비밀번호 확인</label>
             <PasswordInputWrap>
-            <input type={viewPassword.passwordConfirm ? "text" : "password"} id="passwordConfirm" grow placeholder="비밀번호를 다시 한 번 입력하세요." value={userInfo.passwordConfirm} onChange={handleChangeInput} onInput={handleChangeInput} />
-            <span className="password-view" onClick={() => handleViewPassword("passwordConfirm")}>
-            { viewPassword.passwordConfirm ? <FaEye /> : <FaEyeSlash /> }
-            </span>
+              <input type={viewPassword.passwordConfirm ? "text" : "password"} id="passwordConfirm" grow placeholder="비밀번호를 다시 한 번 입력하세요." value={userInfo.passwordConfirm} onChange={handleChangeInput} onInput={handleChangeInput} />
+              <span className="password-view" onClick={() => handleViewPassword("passwordConfirm")}>
+                {viewPassword.passwordConfirm ? <FaEye /> : <FaEyeSlash />}
+              </span>
             </PasswordInputWrap>
           </div>
           {inputError.passwordConfirm && <ErrorText>{inputError.passwordConfirm}</ErrorText>}
@@ -316,8 +342,12 @@ export default function RegisterPage() {
           <div className="input">
             <label htmlFor="phone">전화번호</label>
             <Input type="tel" id="phone" grow placeholder="전화번호는 아이디/비밀번호 찾기에 사용돼요." value={userInfo.phone} onChange={handleChangeInput} onInput={handleChangeInput} />
+            <Button rect onClick={handleCheckPhone} >중복확인</Button>
           </div>
           {inputError.phone && <ErrorText>{inputError.phone}</ErrorText>}
+          {(phoneCheck === "ok" || phoneCheck === "no") && <EmailCheck check={phoneCheck}>
+            {phoneCheck === "ok" ? "사용 가능한 전화번호입니다." : phoneCheck === "no" ? "이미 사용 중인 전화번호입니다." : ""}
+          </EmailCheck>}
         </InputWrap>
       </InputBox>
 

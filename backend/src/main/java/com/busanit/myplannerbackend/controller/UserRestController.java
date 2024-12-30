@@ -21,6 +21,12 @@ public class UserRestController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping("/checkPhone")
+  public ResponseEntity<Boolean> checkPhone(@RequestParam String phone) {
+    boolean response = userService.checkPhoneExist(phone);
+    return ResponseEntity.ok(response);
+  }
+
   @GetMapping("/findEmail")
   public ResponseEntity<String> findEmail(@RequestParam String phone) {
     String foundEmail = userService.findEmailByPhone(phone);
