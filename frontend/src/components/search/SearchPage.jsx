@@ -5,9 +5,11 @@ import styled from "styled-components";
 import UserListItem from "../../ui/UserListItem";
 import axios from "axios";
 import Button from "../../ui/Button";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SearchPage() {
   const { searchText, setOnSearch, searchType, setSearchType } = useSearch();
+  const { user, loading } = useAuth();
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [users, setUsers] = useState([]);
@@ -30,9 +32,14 @@ export default function SearchPage() {
 
   const onSearch = (searchText, searchType) => {
     const size = 10;
-    console.log(searchText, searchType);
+    console.log("user", user);
+    const userId = user?.id;
+    if (!userId, !searchText) {
+      return;
+    }
+    
     if (searchType === 'user') {
-    axios.get(`/api/user/search`, {params: {searchText, page, size}})
+    axios.get(`/api/user/search`, {params: {searchText, userId, page, size}})
       .then(res => {
         console.log(res.data);
         const data = res.data.content;

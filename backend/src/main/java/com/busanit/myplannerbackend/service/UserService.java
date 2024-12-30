@@ -57,8 +57,8 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public Slice<UserDTO> searchUser(String searchText, Pageable pageable) {
-    Slice<User> userSlice = userRepository.findByEmailContainingOrUsernameContaining(searchText, searchText, pageable);
+  public Slice<UserDTO> searchUser(Long userId, String searchText, Pageable pageable) {
+    Slice<User> userSlice = userRepository.findByIdNotAndEmailContainingOrUsernameContaining(userId, searchText, searchText,  pageable);
     return UserDTO.toDTO(userSlice);
   }
 
@@ -86,6 +86,9 @@ public class UserService {
     User user = userRepository.findById(userId).orElse(null);
     User targetUser = userRepository.findById(targetUserId).orElse(null);
     if (user == null || targetUser == null) {
+      return;
+    }
+    if (userId.equals(targetUserId)) {
       return;
     }
     Follow follow = new Follow();

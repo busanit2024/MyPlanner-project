@@ -61,9 +61,9 @@ public class UserRestController {
   }
 
   @GetMapping("/search")
-  public Slice<UserDTO> searchUser(@RequestParam String searchText, @RequestParam int page, @RequestParam int size) {
+  public Slice<UserDTO> searchUser(@RequestParam String searchText, @RequestParam Long userId, @RequestParam int page, @RequestParam int size) {
     Pageable pageable = PageRequest.of(page, size);
-    return userService.searchUser(searchText, pageable);
+    return userService.searchUser(userId, searchText, pageable);
   }
 
   @GetMapping("/follower")

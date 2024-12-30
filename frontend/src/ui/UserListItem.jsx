@@ -13,11 +13,13 @@ export default function UserListItem({ user: item }) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followsMe, setFollowsMe] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMyAccount, setIsMyAccount] = useState(false);
 
   useEffect(() => {
     if (user) {
       checkFollow();
       checkFollowsMe();
+      checkMyAccount();
     }
   }, [user]);
 
@@ -82,6 +84,12 @@ export default function UserListItem({ user: item }) {
     setFollowsMe(follows);
   }
 
+  const checkMyAccount = () => {
+    if (user?.id === item?.id) {
+      setIsMyAccount(true);
+    }
+  }
+
 
   return (
     <Container className="user-list-item">
@@ -98,7 +106,7 @@ export default function UserListItem({ user: item }) {
         </Avatar>
         <Info>
           <span className="name">{item?.username}
-            {followsMe && <Chip color="primary" size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip> }
+            {(!isMyAccount && followsMe) && <Chip size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip> }
           </span>
           <span className="email">{item?.email}</span>
 
@@ -107,12 +115,15 @@ export default function UserListItem({ user: item }) {
       </div>
 
       <div className="right">
+        { !isMyAccount && 
+        <>
         {isFollowing &&
           <div className="message-icon">
             <img src="/images/icon/message.svg" alt="message" />
           </div>
         }
         {isFollowing ? <Button onClick={() => setIsModalOpen(true)} >팔로잉</Button> : <Button color="primary" onClick={onFollow}>팔로우하기</Button>}
+        </> }
       </div>
     </Container>
   );

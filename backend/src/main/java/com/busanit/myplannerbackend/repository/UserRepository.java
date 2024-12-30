@@ -14,6 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByFirebaseUid(String firebaseUid);
   Optional<User> findByPhone(String phone);
 
-  Slice<User> findByEmailContainingOrUsernameContaining(String email, String username, Pageable pageable);
+  Slice<User> findByIdNotAndEmailContainingOrUsernameContaining(Long id, String email, String username,  Pageable pageable);
 
 }
