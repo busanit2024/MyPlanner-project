@@ -11,14 +11,13 @@ const NewChatButton = () => {
     return (
         <>
             <img 
-                src="images/icon/plus.svg" 
+                src="images/icon/newChat.svg" 
                 alt="새 채팅" 
                 onClick={handleClick}
             />
             <NewChatModal 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
-                otherUserEmail="tokomon@test.com"  // 테스트용 상대방 이메일
             />
         </>
     );

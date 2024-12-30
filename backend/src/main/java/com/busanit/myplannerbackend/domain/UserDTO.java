@@ -15,7 +15,6 @@ import org.springframework.data.domain.Slice;
 public class UserDTO {
   private Long id;
 
-  private Long id;
   private String email;
 
   private String username;

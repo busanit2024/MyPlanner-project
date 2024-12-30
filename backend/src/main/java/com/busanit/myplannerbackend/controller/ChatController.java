@@ -51,8 +51,8 @@ public class ChatController {
         MessageResponseDTO response = MessageResponseDTO.builder()
                 .id(savedMessage.getId())
                 .contents(savedMessage.getContents())
-                .senderEmail(sender.getEmail())  
-                .senderName(sender.getName())
+                .senderEmail(sender.getEmail())
+                .senderName(sender.getUsername())
                 .sendTime(savedMessage.getSendTime())
                 .build();
 

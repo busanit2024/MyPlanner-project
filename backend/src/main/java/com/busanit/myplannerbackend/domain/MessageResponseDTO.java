@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class MessageResponseDTO {
     private String id;
     private String contents;
-    private Long senderId;
+    private String senderEmail;
+    private String senderName;
     private LocalDateTime sendTime;
 }

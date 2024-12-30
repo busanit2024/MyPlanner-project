@@ -11,8 +11,8 @@ import { useParams } from 'react-router-dom';
 const ChatContainer = styled.div`
   display: flex;
   width: 100%;
-  height: calc(100vh - 84px);
-  margin: -36px 0;
+  height: 100vh;
+  margin: 0;
   padding: 0;
   overflow: hidden;
 `;
