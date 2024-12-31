@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import NewChatModal from './NewChatModal';
 
-const NewChatButton = () => {
+const NewChatButton = ({ currentUser }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleClick = () => {
@@ -18,6 +18,7 @@ const NewChatButton = () => {
             <NewChatModal 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
+                currentUser={currentUser} 
             />
         </>
     );

@@ -1,89 +1,91 @@
-import { useEffect, useRef, useState } from 'react';
-import { Client } from '@stomp/stompjs';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
 
-export function useChat(roomId, userEmail) {
+export const useChat = (roomId, userEmail) => {
     const [messages, setMessages] = useState([]);
-    const [isConnected, setIsConnected] = useState(false);
-    const clientRef = useRef(null);
+    const client = useRef(null);
 
-    // 채팅 이력 가져오기
-    useEffect(() => {
-        if (roomId) {
-            fetch(`/api/chat/rooms/${roomId}/messages`)
-                .then(res => res.json())
-                .then(data => {
-                    setMessages(data);
-                })
-                .catch(error => {
-                    console.error('채팅 이력 로딩 실패:', error);
-                });
+    const connect = useCallback(() => {
+        if (client.current) {
+            client.current.deactivate();
         }
-    }, [roomId]);
 
-    useEffect(() => {
-        if (!roomId || !userEmail) return;
-
-        const client = new Client({
+        const stompClient = new Client({
             webSocketFactory: () => new SockJS('http://localhost:8080/chat'),
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
             onConnect: () => {
-                console.log('WebSocket 연결 성공');
-                setIsConnected(true);
-                client.subscribe(`/sub/chat/rooms/${roomId}`, message => {
-                    console.log('새 메시지 수신:', message);
+                console.log("웹소켓 연결 성공");
+                stompClient.subscribe(`/sub/chat/rooms/${roomId}`, (message) => {
+                    console.log('메시지 수신:', message);
                     const newMessage = JSON.parse(message.body);
                     setMessages(prev => [...prev, newMessage]);
                 });
             },
             onStompError: (frame) => {
                 console.error('STOMP 에러:', frame);
-            },
-            onWebSocketError: (event) => {
-                console.error('WebSocket 에러:', event);
-            },
-            debug: function (str) {
-                console.log('STOMP: ' + str);
-            },
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000
+            }
         });
 
-        clientRef.current = client;
-        client.activate();
+        stompClient.activate();
+        client.current = stompClient;
+    }, [roomId]);
 
-        return () => {
-            client.deactivate();
-        };
-    }, [roomId, userEmail]);
-
-    const sendMessage = (content) => {
-        if (clientRef.current?.connected) {
-            console.log('메시지 전송 시도:', {
-                destination: `/pub/chat/rooms/${roomId}/send`,
-                body: {
-                    senderEmail: userEmail,
-                    contents: content,
-                    sendTime: new Date()
-                }
+    useEffect(() => {
+        if (roomId) {
+            // 채팅방 데이터 가져오기
+            fetch(`/api/chat/rooms/${roomId}`)
+            .then(res => {
+                if (!res.ok) throw new Error(`Status: ${res.status}`);
+                return res.json();
+            })
+            .then(roomData => {
+                console.log('채팅방 데이터:', roomData);
+                const partnerEmail = roomData.participants.find(
+                    participant => participant.email !== userEmail
+                )?.email;
+            })
+            .catch(error => {
+                console.error('채팅방 정보 로딩 실패:', error);
             });
 
-            clientRef.current.publish({
-                destination: `/pub/chat/rooms/${roomId}/send`,
-                body: JSON.stringify({
-                    senderEmail: userEmail,
-                    contents: content,
-                    sendTime: new Date()
-                })
+            // 대화내역 가져오기    
+            fetch(`/api/chat/rooms/${roomId}/messages`)
+            .then(res => {
+                if (!res.ok) throw new Error(`Status: ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                setMessages(data);
+            })
+            .catch(error => {
+                console.error('채팅 이력 로딩 실패:', error);
             });
-        } else {
-            console.error('웹소켓 연결이 되어있지 않습니다.');
         }
-    };
+    }, [roomId, userEmail]);  
 
-    return {
-        messages,
-        sendMessage,
-        isConnected
-    };
-} 
+    const sendMessage = useCallback((content) => {
+        if (!client.current?.connected) {
+            console.log('연결되지 않음, 재연결 시도');  
+            connect();
+            return;
+        }
+    
+        const message = {
+            senderEmail: userEmail,
+            contents: content,
+            chatRoomId: roomId  
+        };
+    
+        console.log('메시지 전송 시도:', message);  
+    
+        client.current.publish({
+            destination: `/chat/rooms/${roomId}/send`,
+            body: JSON.stringify(message)
+        });
+    }, [roomId, userEmail, connect]);
+
+    return { messages, sendMessage };
+}; 

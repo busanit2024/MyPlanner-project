@@ -103,29 +103,41 @@ export default function ChatPage() {
                     'Authorization': `Bearer ${token}`
                 }
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error(`Status: ${res.status}`);
+                return res.json();
+            })
             .then(data => {
+                console.log('현재 사용자 데이터:', data);
                 setCurrentUser({
                     email: data.email,
                     name: data.name,
                     profileImage: data.profileImage || '/images/default/defaultProfileImage.png'
                 });
-
+    
                 // 2. 채팅방 정보 가져오기
                 return fetch(`/api/chat/rooms/${roomId}`);
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error(`채팅방 정보 로드 실패: ${res.status}`);
+                return res.json();
+            })
             .then(roomData => {
+                console.log('채팅방 데이터:', roomData);
                 // 3. 채팅방 참여자 중 현재 사용자가 아닌 상대방 찾기
                 const partnerEmail = roomData.participants.find(
                     email => email !== currentUser.email
                 );
-
+    
                 // 4. 상대방 정보 가져오기
                 return fetch(`/api/user/profile/${partnerEmail}`);
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error(`상대방 정보 로드 실패: ${res.status}`);
+                return res.json();
+            })
             .then(partnerData => {
+                console.log('상대방 데이터:', partnerData);
                 setChatPartner({
                     email: partnerData.email,
                     name: partnerData.name,
@@ -133,12 +145,12 @@ export default function ChatPage() {
                 });
             })
             .catch(error => {
-                console.error('데이터 로딩 실패:', error);
+                console.error('데이터 로딩 실패 상세:', error);
             });
         }
     }, [roomId, currentUser.email]);
 
-    const { messages, sendMessage, isConnected } = useChat(
+    const { messages, sendMessage } = useChat(
         roomId,  // URL에서 가져온 roomId 사용
         currentUser.email
     );
@@ -154,7 +166,7 @@ export default function ChatPage() {
                     <ChatListItem /> 
                 </ChatListScroll>
                 <NewChatButtonContainer>
-                    <NewChatButton />
+                    <NewChatButton currentUser={currentUser} /> 
                 </NewChatButtonContainer>
             </ChatList>
 

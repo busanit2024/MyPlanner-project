@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import UserChip from './UserChip';
+import { useAuth } from '../../../context/AuthContext';
 
 const ModalOverlay = styled.div`
     position: fixed;
@@ -92,8 +93,10 @@ const UserEmail = styled.span`
 `;
 
 const NewChatModal = ({ isOpen, onClose }) => {   
+    const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUsers, setSelectedUsers] = useState([]);
+    const [follows, setFollows] = useState([]);
 
     const resetState = () => {
       setSelectedUsers([]);
@@ -101,23 +104,42 @@ const NewChatModal = ({ isOpen, onClose }) => {
     }
 
     useEffect(() => {
-      if (isOpen) {
-        resetState();
+      if (isOpen && user?.id) {  // user.id가 있을 때만 실행
+          resetState();
+          console.log('현재 사용자 ID:', user.id);  // user.id 로그 추가
+
+          // 바로 following 목록 조회
+          fetch(`/api/user/following?userId=${user.id}&page=0&size=20`)
+              .then(res => {
+                  if (!res.ok) {
+                      console.error('응답 상태:', res.status);
+                      throw new Error('팔로우 목록 로드 실패');
+                  }
+                  return res.json();
+              })
+              .then(followData => {
+                  console.log('팔로우 목록:', followData);
+                  setFollows(followData.content);
+              })
+              .catch(error => {
+                  console.error('데이터 로드 중 에러:', error);
+              });
       }
-    }, [isOpen]);
+    }, [isOpen, user]);
 
-    const users = [
-        { name: '호두', email: 'hodo@test.com', profileImage: 'images/default/defaultProfileImage.png'},
-        { name: '하츄핑', email: 'heartping@test.com', profileImage: 'images/default/defaultProfileImage.png'},
-        { name: '토코몬', email: 'tocomon@test.com', profileImage: 'images/default/defaultProfileImage.png'},
-    ];
-
-    const filteredUsers = users.filter(user =>
-        user.name.includes(searchTerm) || user.email.includes(searchTerm)
+    // chip
+    const filteredUsers = follows.filter(user =>
+        user.username?.includes(searchTerm) || user.email?.includes(searchTerm)
     );
 
     const handleUserSelect = (user) => {
-        setSelectedUsers([...selectedUsers, user]);
+      if (!selectedUsers.some(selectedUser => selectedUser.email === user.email)) {
+        setSelectedUsers([...selectedUsers, {
+            name: user.username, 
+            email: user.email,
+            profileImage: user.profileImageUrl || 'images/default/defaultProfileImage.png'
+        }]);
+      }
     };
 
     const handleUserRemove = (email) => {
@@ -148,18 +170,20 @@ const NewChatModal = ({ isOpen, onClose }) => {
                     value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
                 <ChipsContainer>
-                  {selectedUsers.map(user => {
-                      return (
-                          <UserChip key={user.email} user={user} onRemove={() => handleUserRemove(user.email)} />
-                      );
-                  })}
+                    {selectedUsers.map(user => (
+                        <UserChip 
+                            key={user.email} 
+                            user={user} 
+                            onRemove={() => handleUserRemove(user.email)} 
+                        />
+                    ))}
                 </ChipsContainer>
                 <div className='user-list'>
                     {filteredUsers.map(user => (
                         <div key={user.email} className='user-item' onClick={() => handleUserSelect(user)}>
-                            <ProfileImage src={user.profileImage} alt="프로필 이미지" />
+                            <ProfileImage src={user.profileImageUrl|| 'images/default/defaultProfileImage.png'} alt="프로필 이미지" />
                             <UserInfo style={{ marginLeft: '10px' }}>
-                                <UserName>{user.name}</UserName>
+                                <UserName>{user.username}</UserName>
                                 <UserEmail>{user.email}</UserEmail>
                             </UserInfo>
                         </div>
