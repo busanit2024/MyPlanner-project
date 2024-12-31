@@ -1,11 +1,12 @@
 package com.busanit.myplannerbackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Time;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "schedule")
@@ -23,17 +24,20 @@ public class Schedule {
     @Column(name = "title")
     private String title;   // 일정 제목
 
+    @Column(name = "detail")
+    private String detail;  // 상세 내용
+
     @Column(name = "start_date", nullable = false)
     private Date startDate; // 시작일
 
     @Column(name = "start_time", nullable = false)
-    private Time startTime; // 시작 시간
+    private String startTime; // 시작 시간
 
     @Column(name = "end_date", nullable = false)
     private Date endDate;   // 종료일
 
     @Column(name = "end_time", nullable = false)
-    private Time endTime;   // 종료 시간
+    private String endTime;   // 종료 시간
 
     @Column(name = "all_day", nullable = false)
     private Boolean allDay; // 종일 여부
@@ -52,7 +56,7 @@ public class Schedule {
 
     @Column(name = "created_at", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private java.util.Date createdAt;   // 등록 날짜
+    private Date createdAt;   // 등록 날짜
 
     @Column(name = "checkList")
     private String checkList;   // 체크리스트
@@ -60,11 +64,13 @@ public class Schedule {
     @Column(name = "done", nullable = false)
     private Boolean done;  // 완료 여부
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false)
     private User user;    // 사용자 아이디
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "category_id")
     private Category category;  // 카테고리 (Category 엔티티와의 관계)
 

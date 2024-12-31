@@ -41,6 +41,11 @@ const CalendarWrite = () => {
     }
   };
 
+  const handleDeleteChecklist = (index) => {
+    const updatedChecklist = checklist.filter((_, i) => i !== index);
+    setChecklist(updatedChecklist);
+  }
+
   const handleChecklistChange = (index, value) => {
     const updatedChecklist = [...checklist];
     updatedChecklist[index] = value; // 해당 인덱스의 값을 업데이트
@@ -61,27 +66,32 @@ const CalendarWrite = () => {
   const handleSubmit = async () => {
     // 전송할 데이터 객체 생성
     const scheduleData = {
-      title,
-      category,
-      participants,
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-      allDay,
-      repeat,
-      reminder,
-      viewOnlyMe,
-      checklist,
-      detail,
-      image,
+      title: title,
+      category: category === '카테고리' ? '카테고리 없음' : category,
+      // participants: participants.length > 0 ? participants : [''],
+      startDate: startDate || date,
+      endDate: endDate || date,
+      startTime: startTime,
+      endTime: endTime,
+      allDay: allDay,
+      isRepeat: repeat,
+      isAlarm: reminder,
+      isPrivate: viewOnlyMe,
+      // checkList: checklist,
+      detail: detail,
+      // imageUrl: image,
+      done: true,      
     };
 
     console.log("전송할 데이터: ", scheduleData);
 
     try {
       // POST 요청
-      const response = await axios.post('http://localhost:3000/api/schedules', scheduleData);
+      const response = await axios.post('/api/schedules', scheduleData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       console.log('일정이 저장되었습니다:', response.data);
       navigate('/calendar');
     } catch (error) {
@@ -248,8 +258,13 @@ const CalendarWrite = () => {
                 type="text" 
                 value={item} 
                 onChange={(e) => handleChecklistChange(index, e.target.value)} 
-                style={{ flex: 1 }} // 입력 필드가 남은 공간을 차지하게 한다
+                style={{ flex: 1 }}
               />
+              <button 
+                className='delete-checklist-button'
+                onClick={() => {handleDeleteChecklist(index)}}
+                style={{ marginLeft: "10px" }}
+              >X</button>
             </div>
           ))}
           {checklist.length < 10 && (

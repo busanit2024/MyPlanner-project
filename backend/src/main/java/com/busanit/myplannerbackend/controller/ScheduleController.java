@@ -1,6 +1,7 @@
 package com.busanit.myplannerbackend.controller;
 
 import com.busanit.myplannerbackend.entity.Schedule;
+import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,14 @@ public class ScheduleController {
     // 일정 추가
     @PostMapping
     public ResponseEntity<Schedule> createSchedule(@RequestBody Schedule schedule) {
+        // 유저정보 강제 입력(추후 db에서 불러옴)
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("sorimchuku@gmail.com");
+        user.setFirebaseUid("WtYjJSX3FPQAuA47TXYTG7PI8w52");
+        user.setPhone("01011112222");
+
+        schedule.setUser(user);
         Schedule createdSchedule = scheduleService.createSchedule(schedule);
         return ResponseEntity.ok(createdSchedule);
     }
