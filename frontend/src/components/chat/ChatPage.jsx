@@ -94,6 +94,10 @@ export default function ChatPage() {
         profileImage: null
     });
 
+    const { messages, sendMessage, isConnected } = useChat(
+        selectedRoom?.id || roomId,
+        user?.email  
+    );
 
     // 현재 사용자 정보 가져오기
     useEffect(() => {
@@ -108,7 +112,7 @@ export default function ChatPage() {
         if (newChatRoom.chatRoomType === "INDIVIDUAL") {
             // 현재 로그인한 사용자와 다른 참여자 찾기
             const partner = newChatRoom.participants.find(
-                p => p.email !== user.email  // useAuth에서 가져온 user 정보 사용
+                p => p.email !== user.email  
             );
 
             if (partner) {
@@ -116,15 +120,10 @@ export default function ChatPage() {
                     email: partner.email,
                     name: partner.username,
                     profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
-                });
+                });               
             }
         }
     };
-
-    const { messages, sendMessage, isConnected } = useChat(
-        selectedRoom?.id || roomId,
-        user?.email  
-    );
 
     const handleSendMessage = (content) => {
         sendMessage(content);
@@ -167,6 +166,11 @@ export default function ChatPage() {
                                     : null
                             }
                         />
+                        {!isConnected && (
+                        <div style={{ color: 'gray', fontSize: '14px' }}>
+                            연결 중...
+                        </div>
+                        )}
                     </ChatTitleWrapper>
                     <ChatMessagesScroll>
                     <ChatMessages>

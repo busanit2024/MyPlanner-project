@@ -18,26 +18,21 @@ export const useChat = (roomId, userEmail) => {
 
         const stompClient = new Client({
             webSocketFactory: () => new SockJS('/chat'),
-            reconnectDelay: 5000,
+            reconnectDelay: 2000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
             onConnect: () => {
                 console.log(`채팅방 ${roomId} 연결 성공`);
                 // 구독 설정
                 stompClient.subscribe(`/sub/chat/rooms/${roomId}`, (message) => {
-                    const receivedMessage = JSON.parse(message.body);
-                    console.log('수신된 메시지:', receivedMessage);
-                    
-                    const formattedMessage = {
-                        id: receivedMessage.id,
-                        contents: receivedMessage.contents,
-                        senderEmail: receivedMessage.senderEmail,
-                        senderName: receivedMessage.senderName,
-                        senderProfile: receivedMessage.senderProfile,
-                        sendTime: receivedMessage.sendTime
-                    };
-                    
-                    setMessages(prev => [...prev, formattedMessage]);
+                    try {
+                        const receivedMessage = JSON.parse(message.body);
+                        console.log('수신된 메시지:', receivedMessage);
+                        
+                        setMessages(prev => [...prev, receivedMessage]);
+                    } catch (error) {
+                        console.error('메시지 처리 중 오류:', error);
+                    }
                 });
                 
                 // 이전 메시지 가져오기
@@ -72,16 +67,16 @@ export const useChat = (roomId, userEmail) => {
 
     // roomId나 userEmail이 변경될 때 연결 재설정
     useEffect(() => {
-        if (roomId && userEmail) {
+        if (roomId && userEmail && !client.current?.connected) {
             connect();
         }
-
+    
         return () => {
-            if (client.current) {
+            if (client.current?.connected) {
                 client.current.deactivate();
             }
         };
-    }, [roomId, userEmail, connect]);  
+    }, [roomId, userEmail, connect]); 
 
     // 메시지 전송 함수
     const sendMessage = useCallback((content) => {
