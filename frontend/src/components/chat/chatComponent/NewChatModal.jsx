@@ -21,6 +21,9 @@ const ModalContent = styled.div`
     padding: 20px;
     border-radius: 5px;
     width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
 
     .modal-header {
       display: flex;
@@ -77,6 +80,28 @@ const ModalContent = styled.div`
       gap: 10px;
       border-top: solid 1px #e0e0e0;
       margin-top: 10px;
+      max-height: 28vh;
+      overflow-y: auto;
+      padding-right: 10px;
+
+      /* 스크롤바 */
+      &::-webkit-scrollbar {
+          width: 8px;
+      }
+
+      &::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 4px;
+      }
+
+      &::-webkit-scrollbar-thumb:hover {
+          background: #555;
+      }
     }
 
     .user-item {
