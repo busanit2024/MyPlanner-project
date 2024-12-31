@@ -27,11 +27,11 @@ export default function MyPage() {
 
   useEffect(() => {
     if (!loading && user) {
+      setListLoading(true);
       setFollowList([]);
       setFollowerList([]);
       setPage(0);
       setHasNext(false);
-      setListLoading(true);
       fetchFollowList(followType);
     }
   }, [followType, loading, user]);

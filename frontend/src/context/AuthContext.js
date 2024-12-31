@@ -30,8 +30,16 @@ export const AuthProvider = ({ children }) => {
 
 
   const loadUser = () => {
-    const token = sessionStorage.getItem("userToken");
+    const currentUser = auth.currentUser;
+    let token = null;
+    if (currentUser) {
+      token = currentUser.accessToken;
+    } else {
+      token = sessionStorage.getItem("userToken");
+    }
+    
     if (token) {
+      setLoading(true);
       login(token);
     }
   }

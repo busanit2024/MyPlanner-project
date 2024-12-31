@@ -14,6 +14,7 @@ import SearchPage from './components/search/SearchPage';
 import { SearchProvider } from './context/SearchContext';
 import MyPage from './components/user/MyPage';
 import ProfileEditPage from './components/user/ProfileEditPage';
+import NotificationPage from './components/user/NotificationPage';
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
               <Route path="chat" element={<ChatPage />} />
               <Route path='profile' element={<MyPage />} />
               <Route path='profile/edit' element={<ProfileEditPage />} />
+              <Route path='notification' element={<NotificationPage />} />
               <Route path='calendarWrite' element={<CalendarWrite />} />
             </Route>
             <Route path="chat/:roomId" element={<ChatPage />} />

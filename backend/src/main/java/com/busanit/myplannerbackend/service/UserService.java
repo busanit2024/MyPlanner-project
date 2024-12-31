@@ -36,10 +36,6 @@ public class UserService {
     return UserDTO.toDTO(user);
   }
 
-  public UserDTO findById(Long id) {
-    return userRepository.findById(id).map(UserDTO::toDTO).orElse(null);
-  }
-
   public UserDTO findByToken(String token) throws FirebaseAuthException {
     FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
     String uid = decodedToken.getUid();
