@@ -10,6 +10,9 @@ const GlobalStyles = createGlobalStyle`
     --mid-gray: #666;
     --light-gray: #D9D9D9;
     --layout-padding: 36px 48px;
+    --white : #FFFFFF;
+    --light-primary : #FFE7BA;
+    --chat-gray : #f2f2f2;
   }
 
   /* 

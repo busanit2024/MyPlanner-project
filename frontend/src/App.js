@@ -33,9 +33,9 @@ function App() {
               <Route path="chat" element={<ChatPage />} />
               <Route path='profile' element={<MyPage />} />
               <Route path='profile/edit' element={<ProfileEditPage />} />
-
               <Route path='calendarWrite' element={<CalendarWrite />} />
             </Route>
+            <Route path="chat/:roomId" element={<ChatPage />} />
           </Routes>
         </SearchProvider>
       </Router>
