@@ -48,6 +48,7 @@ export default function SideNavbar() {
       confirmButtonText: "로그아웃",
       cancelButtonText: "취소",
       customClass: {
+        //App.css에 정의된 클래스 사용
         title: "swal-title",
         htmlContainer: "swal-text-container",
         confirmButton: "swal-button swal-button-confirm",

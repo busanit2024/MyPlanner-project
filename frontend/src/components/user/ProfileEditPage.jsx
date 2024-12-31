@@ -146,6 +146,7 @@ export default function ProfileEditPage() {
       text: "프로필을 수정했어요.",
       confirmButtonText: "확인",
       customClass: {
+        //App.css에 정의된 클래스 사용
         title: "swal-title",
         htmlContainer: "swal-text-container",
         confirmButton: "swal-button swal-button-confirm",
