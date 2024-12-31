@@ -1,6 +1,7 @@
 package com.busanit.myplannerbackend.service;
 
 import com.busanit.myplannerbackend.domain.UserDTO;
+import com.busanit.myplannerbackend.domain.UserEditDTO;
 import com.busanit.myplannerbackend.entity.Follow;
 import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.repository.FollowRepository;
@@ -18,6 +19,14 @@ import org.springframework.stereotype.Service;
 public class UserService {
   private final UserRepository userRepository;
   private final FollowRepository followRepository;
+
+  public void save(User user) {
+    userRepository.save(user);
+  }
+
+  public User findById(Long id) {
+    return userRepository.findById(id).orElse(null);
+  }
 
   public UserDTO findByEmail(String email) {
     User user = userRepository.findByEmail(email).orElse(null);
@@ -53,12 +62,22 @@ public class UserService {
     return userRepository.findByPhone(phone).isPresent();
   }
 
-  public void saveUser(User user) {
-    userRepository.save(user);
+  public void saveUserProfile(UserEditDTO editDTO) {
+    User user = userRepository.findById(editDTO.getId()).orElse(null);
+    if (user == null) {
+      return;
+    }
+    user.setEmail(editDTO.getEmail());
+    user.setUsername(editDTO.getUsername());
+    user.setPhone(editDTO.getPhone());
+    user.setBio(editDTO.getBio());
+    user.setProfileImageUrl(editDTO.getProfileImageUrl());
+    
+    save(user);
   }
 
   public Slice<UserDTO> searchUser(Long userId, String searchText, Pageable pageable) {
-    Slice<User> userSlice = userRepository.findByIdNotAndEmailContainingOrUsernameContaining(userId, searchText, searchText,  pageable);
+    Slice<User> userSlice = userRepository.findByEmailOrUsernameAndIdNot( searchText, searchText, userId,  pageable);
     return UserDTO.toDTO(userSlice);
   }
 

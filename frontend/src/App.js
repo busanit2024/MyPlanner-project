@@ -13,6 +13,7 @@ import FindPage from './components/user/FindPage';
 import SearchPage from './components/search/SearchPage';
 import { SearchProvider } from './context/SearchContext';
 import MyPage from './components/user/MyPage';
+import ProfileEditPage from './components/user/ProfileEditPage';
 
 
 function App() {
@@ -26,11 +27,12 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path='/register' element={<RegisterPage />} />
             <Route path='/find' element={<FindPage />} />
-            <Route element={<Layout />} >
-              <Route path='/search' element={<SearchPage />} />
-              <Route path="/calendar" element={<CalendarPage />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path='/profile' element={<MyPage />} />
+            <Route path='/' element={<Layout />} >
+              <Route path='search' element={<SearchPage />} />
+              <Route path="calendar" element={<CalendarPage />} />
+              <Route path="chat" element={<ChatPage />} />
+              <Route path='profile' element={<MyPage />} />
+              <Route path='profile/edit' element={<ProfileEditPage />} />
 
               <Route path='calendarWrite' element={<CalendarWrite />} />
             </Route>

@@ -29,6 +29,13 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
 
+  const loadUser = () => {
+    const token = sessionStorage.getItem("userToken");
+    if (token) {
+      login(token);
+    }
+  }
+
   const login = (token) => {
     if (token) {
       axios.get("/api/user/find", {
@@ -54,7 +61,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout, loadUser }}>
       {children}
     </AuthContext.Provider>
   );

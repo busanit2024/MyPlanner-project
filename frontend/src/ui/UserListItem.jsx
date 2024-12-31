@@ -73,8 +73,8 @@ export default function UserListItem({ user: item }) {
   }
 
   const checkFollow = () => {
-    const follows = user?.follows ?? [];
-    const isFollow = follows.some(follow => follow === item?.id);
+    const itemFollowers = item?.followers ?? [];
+    const isFollow = itemFollowers.some(follower => follower === user?.id);
     setIsFollowing(isFollow);
   }
 
@@ -102,7 +102,7 @@ export default function UserListItem({ user: item }) {
       </Modal>
       <div className="left">
         <Avatar>
-          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => e.target.src = { defaultProfileImageUrl }} />
+          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl )} />
         </Avatar>
         <Info>
           <span className="name">{item?.username}
@@ -171,6 +171,7 @@ const Avatar = styled.div`
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
+    image-rendering: auto;
   }
 `;
 
