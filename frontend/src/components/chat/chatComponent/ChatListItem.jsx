@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 
 const ChatListItem = ({ chatRoom }) => {
-  // 채팅방 없을 시엔 렌더링 안함
-  if (!chatRoom) return null;
 
   const styles = {
     container: {
@@ -40,30 +39,70 @@ const ChatListItem = ({ chatRoom }) => {
     },
   };
 
+  const { user } = useAuth();
+  const [chatRooms, setChatRooms] = useState([]);
+
   // 날짜 포맷팅
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ko-KR', {
-      month: 'short',
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    }).format(date);
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return ''; // 유효하지 않은 날짜인 경우 빈 문자열 반환
+      
+      return new Intl.DateTimeFormat('ko-KR', {
+        month: 'short',
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(date);
+    } catch (error) {
+      console.error('날짜 형식 변환 오류:', error);
+      return '';
+    }
   }
 
+  const fetchChatRooms = () => {
+    if (user?.email) {
+      // 현재 사용자의 채팅방 목록 조회
+      fetch(`/api/chat/rooms/user/${user.email}`, {
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        setChatRooms(data);
+      })
+      .catch(error => console.error('채팅방 목록 로드 실패:', error));
+    }
+  };
+
+  useEffect(() => {
+    fetchChatRooms();
+  }, [user]);
+
   return (
-    <div style={styles.container}>
-      <img
-        src="/images/default/defaultProfileImage.png"
-        style={styles.profileImage}
-      />
-      <div style={styles.chatInfo}>
-        <div style={styles.chatHeader}>
-          <span style={styles.name}>{chatRoom.chatRoomTitle}</span>
-          <span style={styles.date}>{formatDate(chatRoom.lastMessage.sendTime)}</span>
+    <div>
+      {chatRooms.map((chatRoom) => (
+        <div key={chatRoom.id} style={styles.container}>
+          <img
+            src="/images/default/defaultProfileImage.png"
+            style={styles.profileImage}
+          />
+          <div style={styles.chatInfo}>
+            <div style={styles.chatHeader}>
+              <span style={styles.name}>{chatRoom.chatRoomTitle}</span>
+              <span style={styles.date}>
+                {chatRoom.lastMessage && formatDate(chatRoom.lastMessage.sendTime)}
+              </span>
+            </div>
+            <div style={styles.message}>
+              {chatRoom.lastMessage && chatRoom.lastMessage.contents}
+            </div>
+          </div>
         </div>
-        <div style={styles.message}>{chatRoom.lastMessage.contents}</div>
-      </div>
+      ))}
     </div>
   );
 };
