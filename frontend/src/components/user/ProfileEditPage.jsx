@@ -8,6 +8,7 @@ import Textarea from "../../ui/Textarea";
 import Button from "../../ui/Button";
 import { deleteFile, imageFileUpload } from "../../firebase";
 import Modal from "../../ui/Modal";
+import Swal from "sweetalert2";
 
 const defaultProfileImage = "/images/default/defaultProfileImage.png";
 
@@ -23,7 +24,6 @@ export default function ProfileEditPage() {
   const [prevPhone, setPrevPhone] = useState("");
   const [phoneCheck, setPhoneCheck] = useState("notyet");
   const [phoneError, setPhoneError] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -133,28 +133,36 @@ export default function ProfileEditPage() {
         if (newProfileImage) {
           deleteFile(prevProfileImageUrl);
         }
-        setIsModalOpen(true);
+        updateComplete();
       })
       .catch(err => {
         console.error(err);
       });
   }
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    navigate("/profile");
+  const updateComplete = () => {
+    Swal.fire({
+      title: "프로필 수정 완료",
+      text: "프로필을 수정했어요.",
+      confirmButtonText: "확인",
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-confirm",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        loadUser();
+        navigate("/profile");
+      }
+    });
   }
 
 
 
   return (
     <Container className="profile-edit">
-      <Modal title={"프로필 수정 완료"} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <div className="subtitle">프로필을 수정했어요.</div>
-        <div className="button-group">
-        <Button color="primary" onClick={handleModalClose}>확인</Button>
-        </div>
-      </Modal>
       <ProfileImageWrap className="profile-image-wrap">
         <ProfileImage>
           <img src={selectedImage ? URL.createObjectURL(selectedImage) : user?.profileImageUrl || defaultProfileImage} onError={(e) => (e.target.src = { defaultProfileImage })} alt="Profile" />

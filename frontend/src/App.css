@@ -36,3 +36,43 @@
     transform: rotate(360deg);
   }
 }
+
+
+.swal-title {
+  color: var(--dark-gray);
+  font-size: 22px;
+}
+
+.swal-text-container {
+  color: var(--dark-gray);
+  text-align: center;
+  font-size: 18px;
+  margin: 24px 0;
+}
+
+.swal-button {
+  padding: 8px 18px;
+  font-size: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: bold;
+  border-radius: 24px;
+}
+
+.swal-button-confirm {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+}
+
+.swal-button-danger {
+  background-color: var(--danger-color);
+  color: #fff;
+  border: none;
+}
+
+.swal-button-cancel {
+  background-color: #fff;
+  color: var(--dark-gray);
+  border: 1px solid var(--mid-gray);
+}

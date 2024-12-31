@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import Swal from "sweetalert2";
 
 const navItems = [
   {
@@ -40,8 +41,24 @@ export default function SideNavbar() {
   const currentPath = location.pathname;
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
+    Swal.fire({
+      title: "로그아웃",
+      text: "로그아웃하시겠어요?",
+      showCancelButton: true,
+      confirmButtonText: "로그아웃",
+      cancelButtonText: "취소",
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-confirm",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        logout();
+        navigate("/login");
+      }
+    });
   };
 
   return (
