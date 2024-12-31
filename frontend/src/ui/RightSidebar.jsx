@@ -52,7 +52,7 @@ export default function RightSidebar({ open, setOpen }) {
       <SidebarHeader>
         <h2>일정</h2>
         <button onClick={() => setOpen(false)}>
-          <img src="images/icon/doubleArrowRight.svg" alt="close" />
+          <img src="/images/icon/doubleArrowRight.svg" alt="close" />
         </button>
       </SidebarHeader>
 

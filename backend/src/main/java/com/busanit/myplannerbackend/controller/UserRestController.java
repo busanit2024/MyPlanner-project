@@ -1,6 +1,7 @@
 package com.busanit.myplannerbackend.controller;
 
 import com.busanit.myplannerbackend.domain.UserDTO;
+import com.busanit.myplannerbackend.domain.UserEditDTO;
 import com.busanit.myplannerbackend.domain.UserJoinDTO;
 import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.service.UserService;
@@ -40,6 +41,22 @@ public class UserRestController {
     return ResponseEntity.ok(foundEmail);
   }
 
+  @GetMapping("/getEditInfo")
+  public ResponseEntity<UserEditDTO> getUserEditInfo(@RequestParam Long userId) {
+    User user = userService.findById(userId);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+    UserEditDTO userEditDTO = UserEditDTO.toDTO(user);
+    return ResponseEntity.ok(userEditDTO);
+  }
+
+  @PostMapping("/saveProfile")
+  public ResponseEntity<String> saveProfile(@RequestBody UserEditDTO userEditDTO) {
+    userService.saveUserProfile(userEditDTO);
+    return ResponseEntity.ok().build();
+  }
+
   @GetMapping("/find")
   public ResponseEntity<UserDTO> getUser(@RequestHeader("Authorization") String authHeader) {
     String token = authHeader.replace("Bearer ", "");
@@ -56,14 +73,14 @@ public class UserRestController {
 
   @PostMapping("/join")
   public ResponseEntity<String> joinUser(@RequestBody UserJoinDTO userJoinDTO) {
-    userService.saveUser(User.toEntity(userJoinDTO));
+    userService.save(User.toEntity(userJoinDTO));
     return ResponseEntity.ok("가입 성공");
   }
 
   @GetMapping("/search")
-  public Slice<UserDTO> searchUser(@RequestParam String searchText, @RequestParam int page, @RequestParam int size) {
+  public Slice<UserDTO> searchUser(@RequestParam String searchText, @RequestParam Long userId, @RequestParam int page, @RequestParam int size) {
     Pageable pageable = PageRequest.of(page, size);
-    return userService.searchUser(searchText, pageable);
+    return userService.searchUser(userId, searchText, pageable);
   }
 
   @GetMapping("/follower")
