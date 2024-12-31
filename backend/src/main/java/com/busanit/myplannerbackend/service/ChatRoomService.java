@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.service;
 
+import com.busanit.myplannerbackend.domain.ChatRoomRequest;
 import com.busanit.myplannerbackend.domain.Participant;
 import com.busanit.myplannerbackend.entity.ChatRoom;
 import com.busanit.myplannerbackend.repository.ChatRoomRepository;
@@ -24,13 +25,21 @@ public class ChatRoomService {
         return chatRoomRepository.findByParticipantsEmailContaining(email);
     }
 
-    public ChatRoom createChatRoom(List<Participant> participants, String title) {
+    public ChatRoom getChatRoom(String chatRoomId) {
+        return chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+    }
+
+    public ChatRoom createChatRoom(ChatRoomRequest request) {
         ChatRoom chatRoom = new ChatRoom();
-        chatRoom.setParticipants(participants);
-        chatRoom.setChatroomTitle(title);
+        chatRoom.setParticipants(request.getParticipantIds());
+        chatRoom.setChatroomTitle(request.getChatroomTitle());
+        chatRoom.setChatRoomType(request.getParticipantIds().size() == 2 ? "INDIVIDUAL" : "GROUP");
         chatRoom.setCreatedAt(LocalDateTime.now());
-        chatRoom.setChatRoomType(participants.size() == 2 ? "1:1" : "GROUP");
 
         return chatRoomRepository.save(chatRoom);
+    }
+
+
+    public void save(ChatRoom chatRoom) {
     }
 }

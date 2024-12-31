@@ -92,12 +92,29 @@ export default function ChatPage() {
         profileImage: null
     });
 
-    const { roomId } = useParams();  // URL에서 roomId 가져오기
+    const { roomId } = useParams();
+    const [selectedRoom, setSelectedRoom] = useState(null);
+
+    const handleNewChat = (newChatRoom) => {
+        setSelectedRoom(newChatRoom);
+        const partner = newChatRoom.participants.find(
+            p => p.email !== currentUser.email
+        );
+        
+        fetch(`/api/user/find/${partner.email}`)
+            .then(res => res.json())
+            .then(userData => {
+                setChatPartner({
+                    email: userData.email,
+                    name: userData.name,
+                    profileImage: userData.profileImage || '/images/default/defaultProfileImage.png'
+                });
+            });
+    };
 
     useEffect(() => {
         const token = sessionStorage.getItem('userToken');
         if (token) {
-            // 1. 현재 사용자 정보 가져오기
             fetch('/api/user/find', {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -108,36 +125,38 @@ export default function ChatPage() {
                 return res.json();
             })
             .then(data => {
-                console.log('현재 사용자 데이터:', data);
                 setCurrentUser({
                     email: data.email,
                     name: data.name,
                     profileImage: data.profileImage || '/images/default/defaultProfileImage.png'
                 });
-    
-                // 2. 채팅방 정보 가져오기
-                return fetch(`/api/chat/rooms/${roomId}`);
+
+                if (roomId) {
+                    return fetch(`/api/chat/rooms/${roomId}`);
+                }
             })
             .then(res => {
+                if (!res) return; // roomId가 없는 경우
                 if (!res.ok) throw new Error(`채팅방 정보 로드 실패: ${res.status}`);
                 return res.json();
             })
             .then(roomData => {
-                console.log('채팅방 데이터:', roomData);
-                // 3. 채팅방 참여자 중 현재 사용자가 아닌 상대방 찾기
+                if (!roomData) return; // roomId가 없는 경우
+                setSelectedRoom(roomData);
+                
                 const partnerEmail = roomData.participants.find(
-                    email => email !== currentUser.email
+                    participant => participant.email !== currentUser.email
                 );
-    
-                // 4. 상대방 정보 가져오기
-                return fetch(`/api/user/profile/${partnerEmail}`);
+
+                return fetch(`/api/user/find/${partnerEmail.email}`);
             })
             .then(res => {
+                if (!res) return; // 이전 단계에서 return된 경우
                 if (!res.ok) throw new Error(`상대방 정보 로드 실패: ${res.status}`);
                 return res.json();
             })
             .then(partnerData => {
-                console.log('상대방 데이터:', partnerData);
+                if (!partnerData) return; // 이전 단계에서 return된 경우
                 setChatPartner({
                     email: partnerData.email,
                     name: partnerData.name,
@@ -145,13 +164,13 @@ export default function ChatPage() {
                 });
             })
             .catch(error => {
-                console.error('데이터 로딩 실패 상세:', error);
+                console.error('데이터 로딩 실패:', error);
             });
         }
     }, [roomId, currentUser.email]);
 
     const { messages, sendMessage } = useChat(
-        roomId,  // URL에서 가져온 roomId 사용
+        selectedRoom?.id || roomId,
         currentUser.email
     );
 
@@ -166,34 +185,46 @@ export default function ChatPage() {
                     <ChatListItem /> 
                 </ChatListScroll>
                 <NewChatButtonContainer>
-                    <NewChatButton currentUser={currentUser} /> 
+                    <NewChatButton currentUser={currentUser} onChatCreated={handleNewChat}/> 
                 </NewChatButtonContainer>
             </ChatList>
 
-            <ChatRoom>
-                <ChatTitleWrapper>
-                    <ChatTitle 
-                        profileImage={chatPartner.profileImage}
-                        userName={chatPartner.name}
-                        userEmail={chatPartner.email}
-                    />
-                </ChatTitleWrapper>
-                <ChatMessagesScroll>
-                    <ChatMessages>
-                        {messages.map(msg => (
-                            <ChatMessage
-                                key={msg.id}
-                                message={msg.contents}
-                                time={msg.sendTime}
-                                isMine={msg.senderEmail === currentUser.email}
-                            />
-                        ))}
-                    </ChatMessages>
-                </ChatMessagesScroll>
-                <ChatInput>
-                    <InputChat onSendMessage={handleSendMessage} />
-                </ChatInput>
-            </ChatRoom>
+            {selectedRoom ? (
+                <ChatRoom>
+                    <ChatTitleWrapper>
+                        <ChatTitle 
+                            profileImage={chatPartner.profileImage}
+                            userName={chatPartner.name}
+                            userEmail={chatPartner.email}
+                        />
+                    </ChatTitleWrapper>
+                    <ChatMessagesScroll>
+                        <ChatMessages>
+                            {messages.map(msg => (
+                                <ChatMessage
+                                    key={msg.id}
+                                    message={msg.contents}
+                                    time={msg.sendTime}
+                                    isMine={msg.senderEmail === currentUser.email}
+                                />
+                            ))}
+                        </ChatMessages>
+                    </ChatMessagesScroll>
+                    <ChatInput>
+                        <InputChat onSendMessage={handleSendMessage} />
+                    </ChatInput>
+                </ChatRoom>
+            ) : (
+                <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    width: '100%' 
+                }}>
+                    채팅방을 선택하거나 새로운 채팅을 시작하세요
+                </div>
+            )}
+            
         </ChatContainer>
     );
 }

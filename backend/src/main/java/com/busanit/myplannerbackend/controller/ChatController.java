@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.controller;
 
+import com.busanit.myplannerbackend.domain.ChatRoomRequest;
 import com.busanit.myplannerbackend.domain.Participant;
 import com.busanit.myplannerbackend.domain.UserDTO;
 import com.busanit.myplannerbackend.entity.ChatRoom;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/chat")
 public class ChatController {
 
     private final UserService userService;
@@ -31,41 +33,28 @@ public class ChatController {
     private final ChatRoomService chatRoomService;
 
     // 채팅방 정보 조회
-    @GetMapping("/api/chat/rooms/{roomId}")
+    @GetMapping("/rooms/{roomId}")
     public ResponseEntity<ChatRoom> getChatRoom(@PathVariable String roomId) {
         ChatRoom chatRoom = chatRoomService.findById(roomId);
         return ResponseEntity.ok(chatRoom);
     }
 
     // 새로운 채팅방 생성
-    @PostMapping("/api/chat/rooms")
-    public ResponseEntity<ChatRoom> createChatRoom(
-            @RequestBody Map<String, Object> request) {
-        List<Participant> participants = ((List<String>) request.get("participants"))
-                .stream()
-                .map(email -> {
-                    Participant participant = new Participant();
-                    participant.setEmail(email);
-                    participant.setStatus("ACTIVE");
-                    return participant;
-                })
-                .collect(Collectors.toList());
-
-        String title = (String) request.get("title");
-        ChatRoom chatRoom = chatRoomService.createChatRoom(participants, title);
+    @PostMapping("/rooms")
+    public ResponseEntity<ChatRoom> createChatRoom(@RequestBody ChatRoomRequest request) {
+        ChatRoom chatRoom = chatRoomService.createChatRoom(request);
         return ResponseEntity.ok(chatRoom);
     }
 
     // 사용자의 모든 채팅방 조회
-    @GetMapping("/api/chat/rooms")
-    public ResponseEntity<List<ChatRoom>> getUserChatRooms(
-            @RequestParam String userEmail) {
-        List<ChatRoom> chatRooms = chatRoomService.findByParticipantEmail(userEmail);
+    @GetMapping("/rooms/user/{email}")
+    public ResponseEntity<List<ChatRoom>> getUserChatRooms(@PathVariable String email) {
+        List<ChatRoom> chatRooms = chatRoomService.findByParticipantEmail(email);
         return ResponseEntity.ok(chatRooms);
     }
 
     // 채팅방 이전 메시지 조회
-    @GetMapping("/api/chat/rooms/{chatRoomId}/messages")
+    @GetMapping("/rooms/{chatRoomId}/messages")
     public ResponseEntity<List<Message>> getChatHistory(@PathVariable String chatRoomId){
         List<Message> messages = messageService.getChatHistory(chatRoomId);
         return ResponseEntity.ok(messages);

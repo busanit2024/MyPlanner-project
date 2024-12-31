@@ -112,7 +112,7 @@ const UserEmail = styled.span`
   font-size: 0.9em;
 `;
 
-const NewChatModal = ({ isOpen, onClose }) => {   
+const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {   
     const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUsers, setSelectedUsers] = useState([]);
@@ -175,11 +175,33 @@ const NewChatModal = ({ isOpen, onClose }) => {
     // start chat
     const handleStartChat = () => {
       if (selectedUsers.length > 0) {
-          console.log('선택된 사용자들:', selectedUsers);
-          // TODO: 채팅방 생성 로직 구현
-          onClose();
+          const chatRoomRequest = {
+              participantIds: [
+                  { email: user.email, status: "ACTIVE" },
+                  ...selectedUsers.map(user => ({
+                      email: user.email,
+                      status: "ACTIVE"
+                  }))
+              ],
+              chatroomTitle: selectedUsers.map(user => user.name).join(', '),
+              chatroomType: selectedUsers.length === 1 ? "INDIVIDUAL" : "GROUP"
+          };
+  
+          fetch('/api/chat/rooms', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
+              },
+              body: JSON.stringify(chatRoomRequest)
+          })
+          .then(res => res.json())
+          .then(chatRoom => {
+              onClose();
+              onChatCreated(chatRoom);
+          });
       }
-  };
+    };
 
     if (!isOpen) return null;
 
