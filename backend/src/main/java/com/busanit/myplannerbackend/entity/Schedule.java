@@ -3,24 +3,19 @@ package com.busanit.myplannerbackend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.catalina.Group;
 
 import java.sql.Time;
 import java.util.Date;
 
 @Entity
+@Table(name = "schedule")
 @Getter
 @Setter
-@Table(name = "schedule")
 public class Schedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;    // 일정 게시물 아이디
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;    // 사용자 아이디
 
     @Column(name = "type")
     private String type;    // 개인 일정, 그룹 일정
@@ -43,18 +38,14 @@ public class Schedule {
     @Column(name = "all_day", nullable = false)
     private Boolean allDay; // 종일 여부
 
-    @Column(name = "repeat")
-    private String repeat;  // 반복 기간
+    @Column(name = "is_repeat")
+    private String isRepeat;  // 반복 기간
 
-    @Column(name = "alarm")
-    private Boolean alarm;  // 알람 여부
+    @Column(name = "is_alarm")
+    private Boolean isAlarm;  // 알람 여부
 
-    @Column(name = "isPrivate", nullable = false)
+    @Column(name = "is_private", nullable = false)
     private Boolean isPrivate;  // 공개 여부
-
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private Category category;  // 카테고리 (Category 엔티티와의 관계)
 
     @Column(name = "image_url")
     private String imageUrl;  // 이미지 URL
@@ -68,6 +59,14 @@ public class Schedule {
 
     @Column(name = "done", nullable = false)
     private Boolean done;  // 완료 여부
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;    // 사용자 아이디
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;  // 카테고리 (Category 엔티티와의 관계)
 
 //    @ManyToOne
 //    @JoinColumn(name = "group_id")

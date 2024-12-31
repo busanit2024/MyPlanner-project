@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../css/CalendarWrite.css';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const CalendarWrite = () => {
   const [title, setTitle] = useState('');
@@ -11,10 +12,10 @@ const CalendarWrite = () => {
   const [endDate, setEndDate] = useState(''); // 끝 날짜 상태
   const [startTime, setStartTime] = useState(''); // 시작 시간 상태
   const [endTime, setEndTime] = useState(''); // 끝 시간 상태
-  const [allDay, setAllDay] = useState(false);
-  const [repeat, setRepeat] = useState(false);
-  const [reminder, setReminder] = useState(false);
-  const [viewBefore, setViewBefore] = useState(false);
+  const [allDay, setAllDay] = useState(false);  // 종일 여부
+  const [repeat, setRepeat] = useState(false);  // 반복 여부
+  const [reminder, setReminder] = useState(false);  // 5분 전 알림 여부
+  const [viewOnlyMe, setViewOnlyMe] = useState(false);  // 
   const [checklist, setChecklist] = useState(['체크리스트1', '체크리스트2']);
   const [detail, setDetail] = useState('');
   const [image, setImage] = useState(null); // 이미지 상태
@@ -57,12 +58,44 @@ const CalendarWrite = () => {
     }
   };
 
+  const handleSubmit = async () => {
+    // 전송할 데이터 객체 생성
+    const scheduleData = {
+      title,
+      category,
+      participants,
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+      allDay,
+      repeat,
+      reminder,
+      viewOnlyMe,
+      checklist,
+      detail,
+      image,
+    };
+
+    console.log("전송할 데이터: ", scheduleData);
+
+    try {
+      // POST 요청
+      const response = await axios.post('http://localhost:3000/api/schedules', scheduleData);
+      console.log('일정이 저장되었습니다:', response.data);
+      navigate('/calendar');
+    } catch (error) {
+      console.error('일정 저장 중 오류 발생:', error);
+      alert('일정 저장에 실패했습니다. 다시 시도해 주세요.');
+    }
+  };
+
   return (
     <div className="calendar-write">
       <div className='header'>
         <h2>일정 입력</h2>
         <button className="submit-button"
-          onClick={() => navigate('/calendar')}>
+          onClick={handleSubmit}>
           완료
         </button>
       </div>
@@ -192,13 +225,13 @@ const CalendarWrite = () => {
         <p/>
         <div className="toggle-container">
           <span>
-            {viewBefore ? '🔒︎ 나만 보기' : '🔓︎ 나만 보기'}
+            {viewOnlyMe ? '🔒︎ 나만 보기' : '🔓︎ 나만 보기'}
           </span>
           <label className="toggle">
             <input 
               type="checkbox" 
-              checked={viewBefore} 
-              onChange={() => setViewBefore(!viewBefore)} 
+              checked={viewOnlyMe} 
+              onChange={() => setViewOnlyMe(!viewOnlyMe)} 
             />
             <span className="slider"></span>
           </label>
