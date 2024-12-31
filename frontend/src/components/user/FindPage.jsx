@@ -218,7 +218,7 @@ export default function FindPage() {
   return (
     <FullPageContainer style={{ paddingTop: "80px" }} className="find-page">
       <Logo onClick={() => navigate("/")}>
-        <img src="images/logo/textLogo.svg" alt="CiRCLE" />
+        <img src="/images/logo/textLogo.svg" alt="CiRCLE" />
       </Logo>
 
       <InputBox className="input-box">
