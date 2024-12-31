@@ -1,13 +1,8 @@
 import React from 'react';
 
-const ChatListItem = () => {
-  // 더미 데이터
-  const chatData = {
-    profileImage: 'images/default/defaultProfileImage.png',
-    name: '호두',
-    date: '2024.11.09',
-    message: '14일에 봐~',
-  };
+const ChatListItem = ({ chatRoom }) => {
+  // 채팅방 없을 시엔 렌더링 안함
+  if (!chatRoom) return null;
 
   const styles = {
     container: {
@@ -45,19 +40,29 @@ const ChatListItem = () => {
     },
   };
 
+  // 날짜 포맷팅
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('ko-KR', {
+      month: 'short',
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(date);
+  }
+
   return (
     <div style={styles.container}>
       <img
-        src={chatData.profileImage}
-        alt={`${chatData.name} 프로필`}
+        src="/images/default/defaultProfileImage.png"
         style={styles.profileImage}
       />
       <div style={styles.chatInfo}>
         <div style={styles.chatHeader}>
-          <span style={styles.name}>{chatData.name}</span>
-          <span style={styles.date}>{chatData.date}</span>
+          <span style={styles.name}>{chatRoom.chatRoomTitle}</span>
+          <span style={styles.date}>{formatDate(chatRoom.lastMessage.sendTime)}</span>
         </div>
-        <div style={styles.message}>{chatData.message}</div>
+        <div style={styles.message}>{chatRoom.lastMessage.contents}</div>
       </div>
     </div>
   );

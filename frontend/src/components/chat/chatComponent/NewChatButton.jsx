@@ -18,6 +18,7 @@ const NewChatButton = () => {
             <NewChatModal 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
+                
             />
         </>
     );
