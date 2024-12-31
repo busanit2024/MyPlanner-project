@@ -13,15 +13,13 @@ import java.util.List;
 @Getter
 @Setter
 public class Message {
-
     @Id
     private String id;
     private String chatRoomId;
     private String messageId;
-    private String senderId;
-    private String receiverId;
+    private String senderEmail;
+    private String receiverEmail;
     private String contents;
     private LocalDateTime sendTime;
-
     private List<String> images;
 }

@@ -3,10 +3,16 @@ import { createGlobalStyle } from "styled-components";
 const GlobalStyles = createGlobalStyle`
 
   :root {
-    --primary-color: #FFAE00;
+    --primary-color: #F9AD47;
+    --accent-text-color: #F79200;
+    --danger-color: #EC3B40;
     --dark-gray: #333;
     --mid-gray: #666;
     --light-gray: #D9D9D9;
+    --layout-padding: 36px 48px;
+    --white : #FFFFFF;
+    --light-primary : #FFE7BA;
+    --chat-gray : #f2f2f2;
   }
 
   /* 
@@ -21,6 +27,11 @@ const GlobalStyles = createGlobalStyle`
     font-family: 'Noto Sans KR', sans-serif;
     height: 100vh;
   }
+
+  a {
+    color: var(--accent-text-color);
+  }
+
 `;
 
 export default GlobalStyles;
