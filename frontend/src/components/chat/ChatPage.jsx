@@ -100,11 +100,9 @@ export default function ChatPage() {
         if (!loading && !user) {
             navigate("/login");
         }
-        console.log("현재 로그인한 사용자:", user);
     }, [user, loading]);
 
     const handleNewChat = (newChatRoom) => {
-        console.log("새로운 채팅방 데이터:", newChatRoom);
         setSelectedRoom(newChatRoom);
 
         if (newChatRoom.chatRoomType === "INDIVIDUAL") {
@@ -112,8 +110,6 @@ export default function ChatPage() {
             const partner = newChatRoom.participants.find(
                 p => p.email !== user.email  // useAuth에서 가져온 user 정보 사용
             );
-
-            console.log("찾은 상대방:", partner);
 
             if (partner) {
                 setChatPartner({
@@ -133,6 +129,10 @@ export default function ChatPage() {
     const handleSendMessage = (content) => {
         sendMessage(content);
     };
+
+    useEffect(() => {
+        console.log("현재 메시지 목록:", messages);  // 메시지 배열 확인
+    }, [messages]);
 
     return (
         <ChatContainer>
@@ -169,18 +169,21 @@ export default function ChatPage() {
                         />
                     </ChatTitleWrapper>
                     <ChatMessagesScroll>
-                        <ChatMessages>
-                            {messages && messages.map(msg => (
+                    <ChatMessages>
+                        {messages && messages.map(msg => {
+                            console.log("메시지 데이터:", msg);  // 각 메시지 데이터 확인
+                            return (
                                 <ChatMessage
-                                    key={msg.id}
+                                    key={msg.id} 
                                     message={msg.contents}
                                     time={msg.sendTime}
                                     isMine={msg.senderEmail === user?.email}
-                                    senderName={msg.senderEmail === user?.email ? null : chatPartner.name}
-                                    senderProfile={msg.senderEmail === user?.email ? null : chatPartner.profileImage}
+                                    senderName={msg.senderEmail === user?.email ? user.username : chatPartner.name}
+                                    senderProfile={msg.senderEmail === user?.email ? user.profileImageUrl : chatPartner.profileImage}
                                 />
-                            ))}
-                        </ChatMessages>
+                            );
+                        })}
+                    </ChatMessages>
                     </ChatMessagesScroll>
                     <ChatInput>
                         <InputChat onSendMessage={handleSendMessage} />

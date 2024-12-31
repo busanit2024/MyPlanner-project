@@ -17,7 +17,7 @@ export const useChat = (roomId, userEmail) => {
         }
 
         const stompClient = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8080/chat'),
+            webSocketFactory: () => new SockJS('/chat'),
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
@@ -25,9 +25,19 @@ export const useChat = (roomId, userEmail) => {
                 console.log(`채팅방 ${roomId} 연결 성공`);
                 // 구독 설정
                 stompClient.subscribe(`/sub/chat/rooms/${roomId}`, (message) => {
-                    const newMessage = JSON.parse(message.body);
-                    console.log('새 메시지 수신:', newMessage);
-                    setMessages(prev => [...prev, newMessage]);
+                    const receivedMessage = JSON.parse(message.body);
+                    console.log('수신된 메시지:', receivedMessage);
+                    
+                    const formattedMessage = {
+                        id: receivedMessage.id,
+                        contents: receivedMessage.contents,
+                        senderEmail: receivedMessage.senderEmail,
+                        senderName: receivedMessage.senderName,
+                        senderProfile: receivedMessage.senderProfile,
+                        sendTime: receivedMessage.sendTime
+                    };
+                    
+                    setMessages(prev => [...prev, formattedMessage]);
                 });
                 
                 // 이전 메시지 가져오기
@@ -75,11 +85,6 @@ export const useChat = (roomId, userEmail) => {
 
     // 메시지 전송 함수
     const sendMessage = useCallback((content) => {
-        if (!roomId || !userEmail) {
-            console.error('roomId 또는 userEmail이 없음');
-            return;
-        }
-
         if (!client.current?.connected) {
             console.log('연결되지 않음, 재연결 시도');
             connect();
@@ -93,13 +98,15 @@ export const useChat = (roomId, userEmail) => {
             sendTime: new Date().toISOString()
         };
 
-        console.log('메시지 전송:', message);
+        console.log('전송할 메시지:', message);
 
         client.current.publish({
-            destination: `/chat/rooms/${roomId}/send`,
+            destination: `/pub/chat/rooms/${roomId}/send`,
             body: JSON.stringify(message)
         });
     }, [roomId, userEmail, connect]);
+
+    console.log("useChat에서 반환하는 messages:", messages);
 
     return { messages, sendMessage, isConnected: !!client.current?.connected  };
 }; 
