@@ -19,6 +19,7 @@ const CalendarWrite = () => {
   const [checklist, setChecklist] = useState(['체크리스트1', '체크리스트2']);
   const [detail, setDetail] = useState('');
   const [image, setImage] = useState(null); // 이미지 상태
+  const [createdAt, setCreatedAt] = useState(''); // 등록 시간
 
   const navigate = useNavigate();
 
@@ -68,7 +69,7 @@ const CalendarWrite = () => {
     const scheduleData = {
       title: title,
       category: category === '카테고리' ? '카테고리 없음' : category,
-      // participants: participants.length > 0 ? participants : [''],
+      participants: participants.length > 0 ? participants : [],
       startDate: startDate || date,
       endDate: endDate || date,
       startTime: startTime,
@@ -77,10 +78,11 @@ const CalendarWrite = () => {
       isRepeat: repeat,
       isAlarm: reminder,
       isPrivate: viewOnlyMe,
-      // checkList: checklist,
+      checkList: checklist.length > 0 ? checklist : [],
       detail: detail,
-      // imageUrl: image,
-      done: true,      
+      imageUrl: image || '',
+      done: true,
+      createdAt: createdAt || new Date().toISOString(), // 현재 시간
     };
 
     console.log("전송할 데이터: ", scheduleData);

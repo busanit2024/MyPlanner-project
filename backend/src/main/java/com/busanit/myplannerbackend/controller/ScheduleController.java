@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +29,7 @@ public class ScheduleController {
         user.setPhone("01011112222");
 
         schedule.setUser(user);
+        schedule.setCreatedAt(new Date());  // 현재 시간 설정
         Schedule createdSchedule = scheduleService.createSchedule(schedule);
         return ResponseEntity.ok(createdSchedule);
     }

@@ -59,7 +59,7 @@ public class Schedule {
     private Date createdAt;   // 등록 날짜
 
     @Column(name = "checkList")
-    private String checkList;   // 체크리스트
+    private List<String> checkList;   // 체크리스트
 
     @Column(name = "done", nullable = false)
     private Boolean done;  // 완료 여부
