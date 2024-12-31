@@ -3,18 +3,22 @@ package com.busanit.myplannerbackend.service;
 import com.busanit.myplannerbackend.domain.ChatRoomRequest;
 import com.busanit.myplannerbackend.domain.Participant;
 import com.busanit.myplannerbackend.entity.ChatRoom;
+import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.repository.ChatRoomRepository;
+import com.busanit.myplannerbackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
+    private final UserRepository userRepository;
 
     public ChatRoom findById(String roomId) {
         return chatRoomRepository.findById(roomId)
@@ -30,10 +34,25 @@ public class ChatRoomService {
     }
 
     public ChatRoom createChatRoom(ChatRoomRequest request) {
+        List<Participant> participants = request.getParticipantIds().stream()
+                .map(participantRequest -> {
+                    User user = userRepository.findByEmail(participantRequest.getEmail())
+                            .orElseThrow(() -> new RuntimeException("User not found"));
+
+                    Participant participant = new Participant();
+                    participant.setEmail(user.getEmail());
+                    participant.setUsername(user.getUsername());
+                    participant.setProfileImageUrl(user.getProfileImageUrl());
+                    participant.setStatus(participantRequest.getStatus());
+
+                    return participant;
+                })
+                .collect(Collectors.toList());
+
         ChatRoom chatRoom = new ChatRoom();
-        chatRoom.setParticipants(request.getParticipantIds());
+        chatRoom.setParticipants(participants);
         chatRoom.setChatroomTitle(request.getChatroomTitle());
-        chatRoom.setChatRoomType(request.getParticipantIds().size() == 2 ? "INDIVIDUAL" : "GROUP");
+        chatRoom.setChatRoomType(request.getChatroomType());
         chatRoom.setCreatedAt(LocalDateTime.now());
 
         return chatRoomRepository.save(chatRoom);

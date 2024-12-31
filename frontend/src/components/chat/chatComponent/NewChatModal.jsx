@@ -126,7 +126,6 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     useEffect(() => {
       if (isOpen && user?.id) {  // user.id가 있을 때만 실행
           resetState();
-          console.log('현재 사용자 ID:', user.id);  // user.id 로그 추가
 
           // 바로 following 목록 조회
           fetch(`/api/user/following?userId=${user.id}&page=0&size=20`)
@@ -138,7 +137,6 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
                   return res.json();
               })
               .then(followData => {
-                  console.log('팔로우 목록:', followData);
                   setFollows(followData.content);
               })
               .catch(error => {
