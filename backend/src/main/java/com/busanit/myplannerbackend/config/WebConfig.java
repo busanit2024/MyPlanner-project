@@ -11,7 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         // 일반 HTTP 요청에 대한 CORS 설정
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:8080") //프론트엔드 서버 주소 설정
+                .allowedOrigins("http://localhost:3000") //프론트엔드 서버 주소 설정
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .exposedHeaders("Authorization")
                 .allowedHeaders("*")
