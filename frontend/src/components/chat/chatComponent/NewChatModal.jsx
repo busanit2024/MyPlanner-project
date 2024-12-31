@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import UserChip from './UserChip';
 import { useAuth } from '../../../context/AuthContext';
+import Button from '../../../ui/Button';
 
 const ModalOverlay = styled.div`
     position: fixed;
@@ -24,6 +25,25 @@ const ModalContent = styled.div`
     .modal-header {
       display: flex;
       font-size: 20px;
+      justify-content: space-between;
+      align-items : center;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    .header-center {
+      flex: 1;  
+      text-align: center;  
+      margin: 0 20px;  
+    }
+
+    .header-right {
+      margin-left: auto; 
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
     }
     
     .cancel-icon {
@@ -152,6 +172,15 @@ const NewChatModal = ({ isOpen, onClose }) => {
       onClose();
     };
 
+    // start chat
+    const handleStartChat = () => {
+      if (selectedUsers.length > 0) {
+          console.log('선택된 사용자들:', selectedUsers);
+          // TODO: 채팅방 생성 로직 구현
+          onClose();
+      }
+  };
+
     if (!isOpen) return null;
 
     return (
@@ -161,7 +190,15 @@ const NewChatModal = ({ isOpen, onClose }) => {
                     <div className="cancel-icon" onClick={onClose}>
                         <img src="images/icon/cancel.svg" alt="cancel" />
                     </div>
-                    <span style={{ marginLeft: '10px' }}>새 쪽지</span>
+                    <div className="header-center">새 쪽지</div>
+                    <Button 
+                      color={selectedUsers.length > 0 ? "primary" : "unselected"}
+                      size="small"
+                      onClick={handleStartChat}
+                      disabled={selectedUsers.length === 0}
+                    >
+                      시작하기
+                    </Button>
                 </div>
                 <div className='search-user'>
                     <img src="images/icon/search.svg" alt="search" />                    
