@@ -1,61 +1,113 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom'; // React Router import
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../../css/CalendarPage.css';
+import Modal from '../../ui/Modal'; // Modal.jsx 파일 경로
 
 const CalendarPage = () => {
-  const navigate = useNavigate(); // useNavigate 훅 사용
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isYearMonthSelectorOpen, setIsYearMonthSelectorOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // 더미 데이터
-  const events = [
-    { date: '2017-04-03', title: '1주간 프로젝트', time: '10:00' },
-    { date: '2017-04-10', title: '미팅', time: '15:00' },
-    { date: '2017-04-21', title: '회의', time: '14:00' },
-    { date: '2017-04-16', title: '팀 점검', time: '11:00' },
-  ];
-
-  // 날짜를 계산하는 함수
-  const getDaysInMonth = (year, month) => {
-    const date = new Date(year, month + 1, 0);
-    return date.getDate();
+  const goToPreviousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
 
-  const renderCalendarDays = () => {
-    const daysInMonth = getDaysInMonth(2024, 11); // 12월 달력
-    const days = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(
-        <div className="day" key={i}>
-          <div className="day-header">{i}</div>
-          {events
-            .filter(event => new Date(event.date).getDate() === i)
-            .map((event, index) => (
-              <div className="event" key={index}>
-                {event.title} {event.time}
-              </div>
-            ))}
-        </div>
-      );
-    }
-    return days;
+  const goToNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const toggleYearMonthSelector = () => {
+    setIsYearMonthSelectorOpen(!isYearMonthSelectorOpen);
+  };
+
+  const handleYearMonthChange = (year, month) => {
+    setCurrentDate(new Date(year, month - 1, 1));
+    setIsYearMonthSelectorOpen(false);
+  };
+
+  const getDaysInMonth = (year, month) => {
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    return Array.from({ length: lastDay }, (_, i) => i + 1);
+  };
+
+  const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
+  const firstDayOfWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+
+  const goToDailyPage = (day) => {
+    const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    navigate(`/daily?date=${selectedDate.toISOString().split('T')[0]}`);
   };
 
   return (
     <div className="calendar-page">
-      <div className="header">
-        <h1>캘린더</h1>
+      <header className="calendar-header">
+        <button onClick={goToPreviousMonth}>◀</button>
+        <h2 onClick={toggleYearMonthSelector} style={{ cursor: 'pointer' }}>
+          {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
+        </h2>
+        <button onClick={goToNextMonth}>▶</button>
+
+        {/* Modal for Year and Month Selector */}
+        <Modal
+          isOpen={isYearMonthSelectorOpen}
+          onClose={() => setIsYearMonthSelectorOpen(false)}
+          title="연도와 월 선택"
+        >
+          <div>
+            <h3>연도 선택</h3>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {Array.from({ length: 10 }).map((_, index) => {
+                const year = currentDate.getFullYear() - 5 + index;
+                return (
+                  <button
+                    key={year}
+                    onClick={() => handleYearMonthChange(year, currentDate.getMonth() + 1)}
+                  >
+                    {year}년
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <h3>월 선택</h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {Array.from({ length: 12 }).map((_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => handleYearMonthChange(currentDate.getFullYear(), index + 1)}
+                >
+                  {index + 1}월
+                </button>
+              ))}
+            </div>
+          </div>
+        </Modal>
+
+        {/* Profile Pictures */}
         <div className="profile-pictures">
           <img src="profile1.jpg" alt="Profile 1" className="profile-picture" />
           <img src="profile2.jpg" alt="Profile 2" className="profile-picture" />
           <img src="profile3.jpg" alt="Profile 3" className="profile-picture" />
         </div>
+
+        {/* Category Dropdown */}
         <div className="category-dropdown">
-          <button>카테고리 ▼</button>
-          <div className="dropdown-content">
-            <p>카테고리1</p>
-            <p>카테고리2</p>
-            <p>카테고리3</p>
-          </div>
+          <button onClick={toggleDropdown}>카테고리 ▼</button>
+          {isDropdownOpen && (
+            <div className="dropdown-content">
+              <button onClick={() => navigate('/calendar')}>월간</button>
+              <button onClick={() => navigate('/weekly')}>주간</button>
+              <button onClick={() => navigate('/daily')}>매일</button>
+            </div>
+          )}
         </div>
+
         <button 
           className="add-event-button" 
           onClick={() => navigate('/calendarWrite')}
@@ -63,9 +115,31 @@ const CalendarPage = () => {
         >
           📅+
         </button>
+      </header>
+
+      {/* Calendar Weekdays */}
+      <div className="calendar-weekdays">
+        {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
+          <div key={index} className="weekday">
+            {day}
+          </div>
+        ))}
       </div>
-      <div className="calendar">
-        {renderCalendarDays()}
+
+      {/* Calendar Days */}
+      <div className="calendar-days">
+        {Array.from({ length: firstDayOfWeek }).map((_, index) => (
+          <div key={index} className="empty-day"></div>
+        ))}
+        {daysInMonth.map(day => (
+          <div key={day} 
+          className="day"
+          onClick={() => goToDailyPage(day)} // 날짜 클릭 시 매일 페이지로 이동
+          style={{ cursor: 'pointer' }}
+          >
+            <div className="day-number">{day}</div>
+          </div>
+        ))}
       </div>
     </div>
   );

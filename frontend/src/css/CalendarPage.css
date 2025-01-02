@@ -1,7 +1,35 @@
 .calendar-page {
-    padding: var(--layout-padding);
-    font-family: 'Arial', sans-serif;
-}
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .calendar-weekdays,
+  .calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+  }
+  
+  .weekday,
+  .day {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  .day-number {
+    font-size: 16px;
+    font-weight: bold;
+  }
 
 .header {
     display: flex;
