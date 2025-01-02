@@ -39,7 +39,7 @@ export default function IndexPage() {
   return (
     <IndexPageContainer>
       <div className="logo">
-        <img src="images/logo/logo.svg" alt="logo" />
+        <img src="/images/logo/logo.svg" alt="logo" />
       </div>
     </IndexPageContainer>
   );
