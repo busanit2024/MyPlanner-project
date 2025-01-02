@@ -151,7 +151,7 @@ public class UserService {
     if (user == null) {
       return null;
     }
-    Slice<Notification> notifications =  notificationRepository.findAllByUserAndTypeNotOrderByCreatedAtDesc(user, Notification.NotiType.INVITE, pageable);
+    Slice<Notification> notifications =  notificationRepository.findAllByUserAndTypeNotOrderByUpdatedAtDesc(user, Notification.NotiType.INVITE, pageable);
     return NotificationDTO.toDTO(notifications);
   }
 
@@ -160,7 +160,7 @@ public class UserService {
     if (user == null) {
       return null;
     }
-    Slice<Notification> notis = notificationRepository.findAllByUserAndTypeOrderByCreatedAtDesc(user, Notification.NotiType.INVITE, pageable);
+    Slice<Notification> notis = notificationRepository.findAllByUserAndTypeOrderByUpdatedAtDesc(user, Notification.NotiType.INVITE, pageable);
     return NotificationDTO.toDTO(notis);
   }
 }

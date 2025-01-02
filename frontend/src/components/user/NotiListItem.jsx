@@ -11,7 +11,7 @@ export default function NotiListItem(props) {
 
   const makeText = () => {
     if (!data) return "";
-    const fromUser = data.args.fromUser;
+    const fromUser = data.fromUser;
     switch (data.type) {
       case "FOLLOW":
         return (
@@ -31,12 +31,12 @@ export default function NotiListItem(props) {
     <Container className="noti-list-item">
       <div className="content">
         <Avatar>
-          <img src={data?.args.fromUser.profileImageUrl ?? defaultProfileImage} onError={(e) => e.target.src = defaultProfileImage} alt="profile" />
+          <img src={data?.fromUser.profileImageUrl ?? defaultProfileImage} onError={(e) => e.target.src = defaultProfileImage} alt="profile" />
         </Avatar>
 
         <NotiText>
           {makeText()}
-          <span className="time"> {calculateDate(data?.createdAt)} 전</span>
+          <span className="time"> {calculateDate(data?.updatedAt)} 전</span>
         </NotiText>
       </div>
 

@@ -1,6 +1,7 @@
 package com.busanit.myplannerbackend.entity;
 
 import com.busanit.myplannerbackend.domain.UserDTO;
+import com.busanit.myplannerbackend.domain.UserProfileDTO;
 import com.busanit.myplannerbackend.listener.NotificationListener;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -18,7 +19,7 @@ public class Follow {
 
   public void publishEvent(ApplicationEventPublisher eventPublisher) {
     if (eventPublisher != null) {
-      eventPublisher.publishEvent(Notification.of(followTo, Notification.NotiType.FOLLOW, new Notification.NotiArgs(UserDTO.toDTO(followFrom), followFrom.getId())));
+      eventPublisher.publishEvent(Notification.of(followTo, Notification.NotiType.FOLLOW, followFrom, followFrom.getId()));
     }
   }
 

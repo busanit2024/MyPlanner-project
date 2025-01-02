@@ -74,6 +74,9 @@ public class NotificationService {
   }
 
   public void send(Notification sendedNotification) {
+    if (sendedNotification.getType().equals(Notification.NotiType.FOLLOW)) {
+      notificationRepository.findByUserAndFromUser(sendedNotification.getUser(), sendedNotification.getFromUser()).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
+    }
     Notification notification = notificationRepository.save(sendedNotification);
     String recieverId = String.valueOf(notification.getUser().getId());
     String eventId = makeTimeIncludeId(notification.getUser().getId());

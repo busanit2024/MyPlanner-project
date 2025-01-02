@@ -7,12 +7,16 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
   Slice<Notification> findAllByUser(User user, Pageable pageable);
 
-  Slice<Notification> findAllByUserAndTypeNotOrderByCreatedAtDesc(User user, Notification.NotiType type, Pageable pageable );
+  Slice<Notification> findAllByUserAndTypeNotOrderByUpdatedAtDesc(User user, Notification.NotiType type, Pageable pageable );
 
-  Slice<Notification> findAllByUserAndTypeOrderByCreatedAtDesc(User user, Notification.NotiType type, Pageable pageable);
+  Slice<Notification> findAllByUserAndTypeOrderByUpdatedAtDesc(User user, Notification.NotiType type, Pageable pageable);
+
+  Optional<Notification> findByUserAndFromUser(User user, User fromUser);
 }

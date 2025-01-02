@@ -130,7 +130,6 @@ export default function NotificationPage() {
     <Container>
       <InnerContainer>
         <h2 className="title">일정 초대</h2>
-        <NotiListItem />
         {isloading.invite && <p>로딩중...</p>}
         {notiList.invite.length === 0 && !isloading.invite && <p>받은 초대가 없어요.</p>}
         {notiList.invite.map((invite) => (

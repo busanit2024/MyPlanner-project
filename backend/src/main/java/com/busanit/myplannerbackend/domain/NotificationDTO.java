@@ -17,7 +17,8 @@ public class NotificationDTO {
   private Long id;
   private UserProfileDTO user;
   private Notification.NotiType type;
-  private Notification.NotiArgs args;
+  private UserProfileDTO fromUser;
+  private Long targetId;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private LocalDateTime deletedAt;
@@ -28,7 +29,8 @@ public class NotificationDTO {
             .id(notification.getId())
             .user(UserProfileDTO.toDTO(notification.getUser()))
             .type(notification.getType())
-            .args(notification.getArgs())
+            .fromUser(UserProfileDTO.toDTO(notification.getFromUser()))
+            .targetId(notification.getTargetId())
             .createdAt(notification.getCreatedAt())
             .updatedAt(notification.getUpdatedAt())
             .deletedAt(notification.getDeletedAt())
