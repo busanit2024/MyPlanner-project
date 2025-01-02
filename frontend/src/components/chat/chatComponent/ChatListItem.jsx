@@ -63,22 +63,28 @@ const ChatListItem = () => {
   const { user } = useAuth();
   const [chatRooms, setChatRooms] = useState([]);
 
-  useEffect(() => {
-    const fetchChatRooms = async () => {
-      try {
-        const response = await fetch(`/api/chat/rooms/user/${user.email}`);
-        if (!response.ok) {
-          throw new Error('채팅방 목록을 불러오는데 실패했습니다.');
-        }
-        const data = await response.json();
-        setChatRooms(data);
-      } catch (error) {
-        console.error('채팅방 목록 로딩 에러: ', error);
+  const fetchChatRooms = async () => {
+    try {
+      const response = await fetch(`/api/chat/rooms/user/${user.email}`);
+      if (!response.ok) {
+        throw new Error('채팅방 목록을 불러오는데 실패했습니다.');
       }
-    };
+      const data = await response.json();
+      setChatRooms(data);
+    } catch (error) {
+      console.error('채팅방 목록 로딩 에러: ', error);
+    }
+  };
 
+  useEffect(() => {
     if (user?.email) {
       fetchChatRooms();
+
+      const interval = setInterval(() => {
+        fetchChatRooms();
+      }, 5000);
+
+      return () => clearInterval(interval);
     }
   }, [user]);
   

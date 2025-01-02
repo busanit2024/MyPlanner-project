@@ -88,6 +88,7 @@ export default function ChatPage() {
     const { user, loading } = useAuth();  
     const { roomId } = useParams();
     const [selectedRoom, setSelectedRoom] = useState(null);
+    const [chatRooms, setChatRooms] = useState([]);
     const [chatPartner, setChatPartner] = useState({
         email: '',
         name: '',
@@ -104,6 +105,7 @@ export default function ChatPage() {
 
     const handleNewChat = (newChatRoom) => {
         setSelectedRoom(newChatRoom);
+        setChatRooms(prevChatRooms => [...prevChatRooms, newChatRoom]);
 
         if (newChatRoom.chatRoomType === "INDIVIDUAL") {
             // 현재 로그인한 사용자와 다른 참여자 찾기
@@ -138,7 +140,7 @@ export default function ChatPage() {
         <ChatContainer>
             <ChatList>
                 <ChatListScroll>
-                    <ChatListItem /> 
+                    <ChatListItem chatRooms={chatRooms} /> 
                 </ChatListScroll>
                 <NewChatButtonContainer>
                     <NewChatButton 

@@ -190,7 +190,7 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     );
 
     const handleUserSelect = (user) => {
-      if (setExistingChatUsers.includes(user.email)) {
+      if (existingChatUsers.includes(user.email)) {
         return;
       }
       if (!selectedUsers.some(selectedUser => selectedUser.email === user.email)) {
@@ -213,33 +213,36 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     };
 
     // start chat
-    const handleStartChat = () => {
+    const handleStartChat = async () => {
       if (selectedUsers.length > 0) {
-          const chatRoomRequest = {
-              participantIds: [
-                  { email: user.email, status: "ACTIVE" },
-                  ...selectedUsers.map(user => ({
-                      email: user.email,
-                      status: "ACTIVE"
-                  }))
-              ],
-              chatroomTitle: selectedUsers.map(user => user.name).join(', '),
-              chatroomType: selectedUsers.length === 1 ? "INDIVIDUAL" : "GROUP"
-          };
-  
-          fetch('/api/chat/rooms', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
-              },
-              body: JSON.stringify(chatRoomRequest)
-          })
-          .then(res => res.json())
-          .then(chatRoom => {
-              onClose();
-              onChatCreated(chatRoom);
+        const chatRoomRequest = {
+          participantIds: [
+            { email: user.email, status: "ACTIVE" },
+            ...selectedUsers.map(user => ({
+              email: user.email,
+              status: "ACTIVE"
+            }))
+          ],
+          chatroomTitle: selectedUsers.map(user => user.name).join(', '),
+          chatroomType: selectedUsers.length === 1 ? "INDIVIDUAL" : "GROUP"
+        };
+    
+        try {
+          const response = await fetch('/api/chat/rooms', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
+            },
+            body: JSON.stringify(chatRoomRequest)
           });
+          
+          const chatRoom = await response.json();
+          onChatCreated(chatRoom); // 채팅방 생성 후 콜백 호출
+          onClose();
+        } catch (error) {
+          console.error('채팅방 생성 중 오류:', error);
+        }
       }
     };
 
