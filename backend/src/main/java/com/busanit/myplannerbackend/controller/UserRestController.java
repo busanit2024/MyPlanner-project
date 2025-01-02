@@ -104,4 +104,10 @@ public class UserRestController {
   public void unfollow(@RequestParam Long userId, @RequestParam Long targetUserId) {
     userService.unfollow(userId, targetUserId);
   }
+
+  @GetMapping("/api/user/find/{email}")
+  public ResponseEntity<?> findUserByEmail(@PathVariable String email) {
+    // 사용자 정보 조회 로직
+    return ResponseEntity.ok(userService.findByEmail(email));
+  }
 }
