@@ -31,9 +31,14 @@ public class MessageService {
             log.info("채팅방 조회: {}", chatRoom);
 
             // 채팅방의 마지막 메시지 정보 업데이트
-            chatRoom.setLastMessage(message.getContents());
-            chatRoom.setLastMessageAt(message.getSendTime());
-            chatRoomService.save(chatRoom);
+//            chatRoom.setLastMessage(message.getContents());
+//            chatRoom.setLastMessageAt(message.getSendTime());
+//            chatRoomService.save(chatRoom);
+            chatRoomService.updateLastMessage(
+                    message.getChatRoomId(),
+                    message.getContents(),
+                    message.getSendTime()
+            );
 
             log.info("채팅방 업데이트 완료: roomId={}, lastMessage={}",
                     chatRoom.getId(), chatRoom.getLastMessage());

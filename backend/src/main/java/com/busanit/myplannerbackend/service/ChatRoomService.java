@@ -61,8 +61,9 @@ public class ChatRoomService {
         return chatRoomRepository.save(chatRoom);
     }
 
-
+    @Transactional
     public void save(ChatRoom chatRoom) {
+        chatRoomRepository.save(chatRoom);
     }
 
     // 채팅방 삭제 메소드
@@ -73,5 +74,14 @@ public class ChatRoomService {
 
         // 채팅방 삭제
         chatRoomRepository.deleteById(roomId);
+    }
+
+    // 채팅방 마지막 메세지 띄우기
+    @Transactional
+    public void updateLastMessage(String roomId, String message, LocalDateTime time) {
+        ChatRoom chatRoom = findById(roomId);
+        chatRoom.setLastMessage(message);
+        chatRoom.setLastMessageAt(time);
+        chatRoomRepository.save(chatRoom);
     }
 }
