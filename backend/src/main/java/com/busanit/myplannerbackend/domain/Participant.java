@@ -7,5 +7,7 @@ import lombok.Setter;
 @Setter
 public class Participant {
     private String email;
+    private String username;
+    private String profileImageUrl;
     private String status;
 }

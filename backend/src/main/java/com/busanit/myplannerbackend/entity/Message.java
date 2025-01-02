@@ -18,7 +18,6 @@ public class Message {
     private String chatRoomId;
     private String messageId;
     private String senderEmail;
-    private String receiverEmail;
     private String contents;
     private LocalDateTime sendTime;
     private List<String> images;
