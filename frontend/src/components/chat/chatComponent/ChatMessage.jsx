@@ -34,7 +34,8 @@ const MessageBubble = styled.div`
   padding: 8px 12px;
   border-radius: 12px;
   max-width: 70%;
-  word-break: break-word;
+  word-break: keep-all;
+  white-space: ${props => props.message?.length > 16 ? 'nowrap' : 'normal'};
 `;
 
 const TimeStamp = styled.span`
