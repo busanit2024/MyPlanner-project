@@ -27,13 +27,13 @@ public class Schedule {
     private Date startDate; // 시작일
 
     @Column(name = "start_time", nullable = false)
-    private Time startTime; // 시작 시간
+    private String startTime; // 시작 시간
 
     @Column(name = "end_date", nullable = false)
     private Date endDate;   // 종료일
 
     @Column(name = "end_time", nullable = false)
-    private Time endTime;   // 종료 시간
+    private String endTime;   // 종료 시간
 
     @Column(name = "all_day", nullable = false)
     private Boolean allDay; // 종일 여부

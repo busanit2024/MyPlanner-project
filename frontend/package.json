@@ -26,6 +26,7 @@
     "rimraf": "^6.0.1",
     "sockjs-client": "^1.6.1",
     "styled-components": "^6.1.13",
+    "sweetalert2": "^11.6.13",
     "uuid": "^11.0.3",
     "web-vitals": "^4.2.4"
   },
@@ -37,8 +38,7 @@
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {

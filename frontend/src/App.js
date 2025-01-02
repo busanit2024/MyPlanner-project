@@ -18,6 +18,8 @@ import FindPage from './components/user/FindPage';
 import SearchPage from './components/search/SearchPage';
 import { SearchProvider } from './context/SearchContext';
 import MyPage from './components/user/MyPage';
+import ProfileEditPage from './components/user/ProfileEditPage';
+import NotificationPage from './components/user/NotificationPage';
 
 
 function App() {
@@ -31,6 +33,13 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path='/register' element={<RegisterPage />} />
             <Route path='/find' element={<FindPage />} />
+            <Route path='/' element={<Layout />} >
+              <Route path='search' element={<SearchPage />} />
+              <Route path="calendar" element={<CalendarPage />} />
+              <Route path="chat" element={<ChatPage />} />
+              <Route path='profile' element={<MyPage />} />
+              <Route path='profile/edit' element={<ProfileEditPage />} />
+              <Route path='notification' element={<NotificationPage />} />
             <Route element={<Layout />} >
               <Route path='/search' element={<SearchPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
@@ -41,7 +50,7 @@ function App() {
               <Route path='/profile' element={<MyPage />} />
               <Route path='calendarWrite' element={<CalendarWrite />} />
             </Route>
-            <Route path="/chat/:roomId" element={<ChatPage />} />
+            <Route path="chat/:roomId" element={<ChatPage />} />
           </Routes>
         </SearchProvider>
       </Router>

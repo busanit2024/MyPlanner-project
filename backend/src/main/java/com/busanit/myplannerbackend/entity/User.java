@@ -1,6 +1,7 @@
 package com.busanit.myplannerbackend.entity;
 
 
+import com.busanit.myplannerbackend.domain.UserEditDTO;
 import com.busanit.myplannerbackend.domain.UserJoinDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -45,6 +46,12 @@ public class User {
     ADMIN, USER
   }
 
+  @OneToMany(mappedBy = "followFrom")
+  private List<Follow> follows;
+
+  @OneToMany(mappedBy = "followTo")
+  private List<Follow> followers;
+
   public static User toEntity(UserJoinDTO dto) {
     UserBuilder builder = User.builder()
             .firebaseUid(dto.getFirebaseUid())
@@ -58,10 +65,16 @@ public class User {
     return builder.build();
   }
 
-  @OneToMany(mappedBy = "followFrom")
-  private List<Follow> follows;
+  public static User toEntity(UserEditDTO dto) {
+    UserBuilder builder = User.builder()
+            .id(dto.getId())
+            .email(dto.getEmail())
+            .username(dto.getUsername())
+            .bio(dto.getBio())
+            .phone(dto.getPhone())
+            .role(dto.getRole())
+            .profileImageUrl(dto.getProfileImageUrl());
 
-  @OneToMany(mappedBy = "followTo")
-  private List<Follow> followers;
-
+    return builder.build();
+  }
 }

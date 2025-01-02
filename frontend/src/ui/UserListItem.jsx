@@ -5,6 +5,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import Chip from "./Chip";
+import Swal from "sweetalert2";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
@@ -12,18 +13,15 @@ export default function UserListItem({ user: item }) {
   const { user, loading } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followsMe, setFollowsMe] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMyAccount, setIsMyAccount] = useState(false);
 
   useEffect(() => {
     if (user) {
       checkFollow();
       checkFollowsMe();
+      checkMyAccount();
     }
   }, [user]);
-
-  const onModalClose = () => {
-    setIsModalOpen(false);
-  }
 
   const onFollow = () => {
     if (loading || !user) {
@@ -63,7 +61,6 @@ export default function UserListItem({ user: item }) {
       .then(res => {
         console.log(`unfollow id ${targetUserId}`, res.data);
         setIsFollowing(false);
-        setIsModalOpen(false);
       })
       .catch(err => {
         console.error(err);
@@ -71,8 +68,8 @@ export default function UserListItem({ user: item }) {
   }
 
   const checkFollow = () => {
-    const follows = user?.follows ?? [];
-    const isFollow = follows.some(follow => follow === item?.id);
+    const itemFollowers = item?.followers ?? [];
+    const isFollow = itemFollowers.some(follower => follower === user?.id);
     setIsFollowing(isFollow);
   }
 
@@ -82,23 +79,43 @@ export default function UserListItem({ user: item }) {
     setFollowsMe(follows);
   }
 
+  const checkMyAccount = () => {
+    if (user?.id === item?.id) {
+      setIsMyAccount(true);
+    }
+  }
+
+  const handleUnfollowButton = () => {
+    Swal.fire({
+      title: "언팔로우하기",
+      text: "이 회원을 언팔로우하시겠어요?",
+      showCancelButton: true,
+      confirmButtonText: "언팔로우",
+      cancelButtonText: "취소",
+      customClass: {
+        //App.css에 정의된 클래스 사용
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-danger",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onUnfollow();
+      }
+    });
+  }
+
 
   return (
     <Container className="user-list-item">
-      <Modal title={"언팔로우하기"} isOpen={isModalOpen} onClose={onModalClose}>
-        <div className="subtitle">이 회원을 언팔로우하시겠어요?</div>
-        <div className="button-group">
-          <Button onClick={onUnfollow} color="danger">언팔로우</Button>
-          <Button onClick={onModalClose}>취소</Button>
-        </div>
-      </Modal>
       <div className="left">
         <Avatar>
-          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => e.target.src = { defaultProfileImageUrl }} />
+          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl )} />
         </Avatar>
         <Info>
           <span className="name">{item?.username}
-            {followsMe && <Chip color="primary" size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip> }
+            {(!isMyAccount && followsMe) && <Chip size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip> }
           </span>
           <span className="email">{item?.email}</span>
 
@@ -107,12 +124,15 @@ export default function UserListItem({ user: item }) {
       </div>
 
       <div className="right">
+        { !isMyAccount && 
+        <>
         {isFollowing &&
           <div className="message-icon">
             <img src="/images/icon/message.svg" alt="message" />
           </div>
         }
-        {isFollowing ? <Button onClick={() => setIsModalOpen(true)} >팔로잉</Button> : <Button color="primary" onClick={onFollow}>팔로우하기</Button>}
+        {isFollowing ? <Button onClick={handleUnfollowButton} >팔로잉</Button> : <Button color="primary" onClick={onFollow}>팔로우하기</Button>}
+        </> }
       </div>
     </Container>
   );
@@ -160,6 +180,7 @@ const Avatar = styled.div`
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
+    image-rendering: auto;
   }
 `;
 
