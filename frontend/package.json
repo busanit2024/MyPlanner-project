@@ -45,6 +45,7 @@
     ]
   },
   "proxy": "http://localhost:8080",
+  
   "devDependencies": {
     "web-vitals": "^4.2.4"
   }

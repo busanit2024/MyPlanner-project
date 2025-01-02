@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.controller;
 
+import com.busanit.myplannerbackend.domain.NotificationDTO;
 import com.busanit.myplannerbackend.domain.UserDTO;
 import com.busanit.myplannerbackend.domain.UserEditDTO;
 import com.busanit.myplannerbackend.domain.UserJoinDTO;
@@ -103,5 +104,19 @@ public class UserRestController {
   @GetMapping("/unfollow")
   public void unfollow(@RequestParam Long userId, @RequestParam Long targetUserId) {
     userService.unfollow(userId, targetUserId);
+  }
+
+  @GetMapping("/notification")
+  public ResponseEntity<Slice<NotificationDTO>> notification(@RequestParam Long userId, @RequestParam String type, @RequestParam int page, @RequestParam int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    Slice<NotificationDTO> notifications = switch (type) {
+      case "invite" -> userService.inviteNotis(userId, pageable);
+      case "noti" -> userService.notifications(userId, pageable);
+      default -> null;
+    };
+    if (notifications == null) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(notifications);
   }
 }

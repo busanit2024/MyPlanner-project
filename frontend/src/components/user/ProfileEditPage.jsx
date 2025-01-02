@@ -69,7 +69,7 @@ export default function ProfileEditPage() {
 
     axios.get(`/api/user/getEditInfo`, { params: { userId: user.id } })
       .then(res => {
-        console.log(res.data);
+        console.log("get edit info", res.data);
         setUserInput({
           username: res.data.username,
           phone: res.data.phone,
@@ -175,7 +175,7 @@ export default function ProfileEditPage() {
           profileImageUrl: newProfileImage ? newProfileImage.url : prevProfileImageUrl,
         })
           .then(res => {
-            console.log(res.data);
+            console.log("save profile image", res.data);
             if (newProfileImage) {
               deleteFile(prevProfileImageUrl);
             }
