@@ -35,7 +35,7 @@ const MessageBubble = styled.div`
   border-radius: 12px;
   max-width: 70%;
   word-break: keep-all;
-  white-space: ${props => props.message?.length > 16 ? 'nowrap' : 'normal'};
+  white-space: ${props => props.message?.length > 16 ? 'nowrap' : 'normal'}; // 메세지 길이 16자 이상일 시 줄바꿈
 `;
 
 const TimeStamp = styled.span`
