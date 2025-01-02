@@ -197,32 +197,80 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
 
     // start chat
     const handleStartChat = () => {
+      // if (selectedUsers.length > 0) {
+      //     const chatRoomRequest = {
+      //         participantIds: [
+      //             { email: user.email, status: "ACTIVE" },
+      //             ...selectedUsers.map(user => ({
+      //                 email: user.email,
+      //                 status: "ACTIVE"
+      //             }))
+      //         ],
+      //         chatroomTitle: selectedUsers.map(user => user.name).join(', '),
+      //         chatroomType: selectedUsers.length === 1 ? "INDIVIDUAL" : "GROUP"
+      //     };
+  
+      //     fetch('/api/chat/rooms', {
+      //         method: 'POST',
+      //         headers: {
+      //             'Content-Type': 'application/json',
+      //             'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
+      //         },
+      //         body: JSON.stringify(chatRoomRequest)
+      //     })
+      //     .then(res => res.json())
+      //     .then(chatRoom => {
+      //         onClose();
+      //         onChatCreated(chatRoom);
+      //     });
+      // }
       if (selectedUsers.length > 0) {
-          const chatRoomRequest = {
+        const newChatRoomParticipants = selectedUsers.map(user => user.email).sort();
+        fetch(`/api/chat/rooms/user/${user.email}`, {
+          headers: {
+            'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
+          }
+        })
+        .then(res => res.json())
+        .then(chatRooms => {
+          const isDuplicate = chatRooms.some(chatRoom => {
+            const existingParticipants = chatRoom.participants.map(p => p.email).sort();
+            return JSON.stringify(existingParticipants) === JSON.stringify(newChatRoomParticipants);
+          });
+    
+          if (!isDuplicate) {
+            const chatRoomRequest = {
               participantIds: [
-                  { email: user.email, status: "ACTIVE" },
-                  ...selectedUsers.map(user => ({
-                      email: user.email,
-                      status: "ACTIVE"
-                  }))
+                { email: user.email, status: "ACTIVE" },
+                ...selectedUsers.map(user => ({
+                  email: user.email,
+                  status: "ACTIVE"
+                }))
               ],
               chatroomTitle: selectedUsers.map(user => user.name).join(', '),
               chatroomType: selectedUsers.length === 1 ? "INDIVIDUAL" : "GROUP"
-          };
-  
-          fetch('/api/chat/rooms', {
+            };
+    
+            return fetch('/api/chat/rooms', {
               method: 'POST',
               headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
               },
               body: JSON.stringify(chatRoomRequest)
-          })
-          .then(res => res.json())
-          .then(chatRoom => {
-              onClose();
-              onChatCreated(chatRoom);
-          });
+            })
+            .then(res => res.json());
+          } else {
+            alert('이미 동일한 채팅방이 존재합니다.');
+          }
+        })
+        .then(chatRoom => {
+          if (chatRoom) {
+            onClose();
+            onChatCreated(chatRoom);
+          }
+        })
+        .catch(error => console.error('채팅방 생성 실패:', error));
       }
     };
 

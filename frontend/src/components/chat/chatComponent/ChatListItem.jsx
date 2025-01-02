@@ -1,109 +1,92 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import styled from 'styled-components';
 import { useAuth } from '../../../context/AuthContext';
 
+const Container = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+`;
+
+const ProfileImage = styled.img`
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+`;
+
+const ChatInfo = styled.div`
+  flex: 1;
+`;
+
+const ChatHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+`;
+
+const Name = styled.span`
+  font-weight: bold;
+  font-size: 14px;
+`;
+
+const Date = styled.span`
+  font-size: 12px;
+  color: gray;
+`;
+
+const Message = styled.div`
+  font-size: 14px;
+  color: #333;
+`;
+
+const formatDate = (timestamp) => {
+  if (!timestamp) return '';
+  
+  const date = new Date(timestamp);
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).replace(/\. /g, '-').replace('.', '');
+};
+
 const ChatListItem = ({ chatRoom }) => {
-
-  const styles = {
-    container: {
-      display: 'flex',
-      alignItems: 'center',
-      padding: '10px',
-      borderBottom: '1px solid #eee',
-    },
-    profileImage: {
-      width: '50px',
-      height: '50px',
-      borderRadius: '50%',
-      objectFit: 'cover',
-      marginRight: '10px',
-    },
-    chatInfo: {
-      flex: 1,
-    },
-    chatHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginBottom: '5px',
-    },
-    name: {
-      fontWeight: 'bold',
-      fontSize: '14px',
-    },
-    date: {
-      fontSize: '12px',
-      color: 'gray',
-    },
-    message: {
-      fontSize: '14px',
-      color: '#333',
-    },
-  };
-
   const { user } = useAuth();
-  const [chatRooms, setChatRooms] = useState([]);
 
-  // 날짜 포맷팅
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return ''; // 유효하지 않은 날짜인 경우 빈 문자열 반환
-      
-      return new Intl.DateTimeFormat('ko-KR', {
-        month: 'short',
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      }).format(date);
-    } catch (error) {
-      console.error('날짜 형식 변환 오류:', error);
-      return '';
-    }
+  if (!chatRoom) {
+    return null;
   }
-
-  const fetchChatRooms = () => {
-    if (user?.email) {
-      // 현재 사용자의 채팅방 목록 조회
-      fetch(`/api/chat/rooms/user/${user.email}`, {
-        headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        setChatRooms(data);
-      })
-      .catch(error => console.error('채팅방 목록 로드 실패:', error));
-    }
+  
+  const getOtherUserInfo = () => {
+    const otherUser = chatRoom.participants.find(
+      participant => participant.email !== user.email
+    );
+    return otherUser || {};
   };
 
-  useEffect(() => {
-    fetchChatRooms();
-  }, [user]);
+  const otherUser = getOtherUserInfo();
 
   return (
-    <div>
-      {chatRooms.map((chatRoom) => (
-        <div key={chatRoom.id} style={styles.container}>
-          <img
-            src="/images/default/defaultProfileImage.png"
-            style={styles.profileImage}
-          />
-          <div style={styles.chatInfo}>
-            <div style={styles.chatHeader}>
-              <span style={styles.name}>{chatRoom.chatRoomTitle}</span>
-              <span style={styles.date}>
-                {chatRoom.lastMessage && formatDate(chatRoom.lastMessage.sendTime)}
-              </span>
-            </div>
-            <div style={styles.message}>
-              {chatRoom.lastMessage && chatRoom.lastMessage.contents}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+    <Container>
+      <ProfileImage
+        src={otherUser.profileImage || "/images/default/defaultProfileImage.png"}
+        alt="프로필 이미지"
+      />
+      <ChatInfo>
+        <ChatHeader>
+          <Name>{otherUser.nickname || "알 수 없음"}</Name>
+          <Date>
+            {chatRoom.lastMessage && formatDate(chatRoom.lastMessage.sendTime)}
+          </Date>
+        </ChatHeader>
+        <Message>
+          {chatRoom.lastMessage && chatRoom.lastMessage.contents}
+        </Message>
+      </ChatInfo>
+    </Container>
   );
 };
 
