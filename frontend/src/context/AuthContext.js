@@ -45,20 +45,24 @@ export const AuthProvider = ({ children }) => {
   }
 
   const login = (token) => {
+    let loginResult = false;
     if (token) {
-      axios.get("/api/user/find", {
+      loginResult = axios.get("/api/user/find", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }).then((res) => {
         setUser(res.data);
         setIsLoggedIn(true);
+        return true;
       }).catch((error) => {
         console.error(error);
+        return false;
       }).finally(() => {
         setLoading(false);
       });
     }
+    return loginResult;
   }
 
   const logout = () => {

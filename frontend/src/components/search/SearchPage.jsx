@@ -44,7 +44,7 @@ export default function SearchPage() {
     if (searchType === 'user') {
       axios.get(`/api/user/search`, { params: { searchText, userId, page, size } })
         .then(res => {
-          console.log(res.data);
+          console.log("user search", res.data);
           const data = res.data.content;
           setUsers(data);
           setHasNext(res.data.hasNext);

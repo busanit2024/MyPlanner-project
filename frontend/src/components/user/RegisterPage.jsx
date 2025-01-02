@@ -186,7 +186,7 @@ export default function RegisterPage() {
     }
     axios.get(`/api/user/checkEmail?email=${userInfo.email}`).then((res) => {
       setInputError(prev => ({ ...prev, email: "" }));
-      console.log(res.data);
+      console.log("check email", res.data);
       if (res.data === false) {
         setEmailCheck("ok");
       }
