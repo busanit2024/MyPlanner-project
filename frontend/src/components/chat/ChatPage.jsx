@@ -1,8 +1,6 @@
 import styled from "styled-components";
-import InputChat from "./chatComponent/InputChat";
-import ChatTitle from "./chatComponent/ChatTitle";
 import ChatListItem from "./chatComponent/ChatListItem";
-import ChatMessage from './chatComponent/ChatMessage';
+import ChatRoom from "./chatComponent/ChatRoom";
 import NewChatButton from "./chatComponent/NewChatButton";
 import { useChat } from '../../hooks/useChat';
 import { useState, useEffect, useRef } from 'react';
@@ -34,35 +32,7 @@ const ChatListScroll = styled.div`
     flex-grow: 1;
 `;
 
-const ChatRoom = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-`;
 
-const ChatTitleWrapper = styled.div`
-    padding: 24px;
-    border-bottom: 1px solid var(--light-gray);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-`;
-
-const ChatMessagesScroll = styled.div`
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 0 24px;
-`;
-
-const ChatMessages = styled.div`
-    display: flex;
-    flex-direction: column;
-`;
-
-const ChatInput = styled.div`
-    padding: 24px;
-`;
 
 const NewChatButtonContainer = styled.span`
     position: absolute;
@@ -99,8 +69,6 @@ export default function ChatPage() {
         selectedRoom?.id || roomId,
         user?.email  
     );
-    const messagesEndRef = useRef(null);
-    const [lastMessageSender, setLastMessageSender] = useState(null);
 
     // 현재 사용자 정보 가져오기
     useEffect(() => {
@@ -133,28 +101,6 @@ export default function ChatPage() {
         sendMessage(content);
     };
 
-
-    // 메시지 추가 스크롤 이동
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    useEffect(() => {
-        if (messages.length > 0) {
-            const lastMessage = messages[messages.length - 1];
-            setLastMessageSender(lastMessage.senderEmail);
-            
-            // 마지막 메시지가 내가 보낸 것일 때만 스크롤
-            if (lastMessage.senderEmail === user?.email) {
-                scrollToBottom();
-            }
-        }
-    }, [messages, user?.email]);
-
-    useEffect(() => {
-        console.log("현재 메시지 목록:", messages);  // 메시지 배열 확인
-    }, [messages]);
-
     const handleSelectRoom = (room, partner) => {
         setSelectedRoom(room);
 
@@ -164,6 +110,11 @@ export default function ChatPage() {
             profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
         });
     };
+
+    
+    useEffect(() => {
+        console.log("현재 메시지 목록:", messages);  // 메시지 배열 확인
+    }, [messages]);
 
     return (
         <ChatContainer>
@@ -180,52 +131,14 @@ export default function ChatPage() {
             </ChatList>
     
             {selectedRoom ? (
-                <ChatRoom>
-                    <ChatTitleWrapper>
-                        <img src="/images/icon/ArrowLeft.svg" alt="뒤로 가기" />
-                        <ChatTitle 
-                            profileImage={chatPartner.profileImage}
-                            userName={
-                                selectedRoom.chatRoomType === "INDIVIDUAL" 
-                                    ? chatPartner.name 
-                                    : `그룹 채팅 (${selectedRoom.participants.length}명)`
-                            }
-                            userEmail={chatPartner.email}
-                            isGroup={selectedRoom.chatRoomType !== "INDIVIDUAL"}
-                            participantCount={
-                                selectedRoom.chatRoomType !== "INDIVIDUAL" 
-                                    ? selectedRoom.participants.length 
-                                    : null
-                            }
-                        />
-                        {!isConnected && (
-                        <div style={{ color: 'gray', fontSize: '14px' }}>
-                            연결 중...
-                        </div>
-                        )}
-                    </ChatTitleWrapper>
-                    <ChatMessagesScroll>
-                    <ChatMessages>
-                        {messages && messages.map(msg => {
-                            console.log("메시지 데이터:", msg);  // 각 메시지 데이터 확인
-                            return (
-                                <ChatMessage
-                                    key={msg.id} 
-                                    message={msg.contents}
-                                    time={msg.sendTime}
-                                    isMine={msg.senderEmail === user?.email}
-                                    senderName={msg.senderEmail === user?.email ? user.username : chatPartner.name}
-                                    senderProfile={msg.senderEmail === user?.email ? user.profileImageUrl : chatPartner.profileImage}
-                                />
-                            );
-                        })}
-                        <div ref={messagesEndRef} />
-                    </ChatMessages>
-                    </ChatMessagesScroll>
-                    <ChatInput>
-                        <InputChat onSendMessage={handleSendMessage} />
-                    </ChatInput>
-                </ChatRoom>
+                <ChatRoom
+                    selectedRoom={selectedRoom}
+                    chatPartner={chatPartner}
+                    messages={messages}
+                    user={user}
+                    isConnected={isConnected}
+                    onSendMessage={handleSendMessage}
+                />
             ) : (
                 <div style={{ 
                     display: 'flex', 

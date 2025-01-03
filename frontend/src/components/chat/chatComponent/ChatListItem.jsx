@@ -59,9 +59,9 @@ const formatDate = (timestamp) => {
 };
 
 
-const ChatListItem = ( { chatRooms: propsChatRooms, onSelectRoom}) => {
+const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
   const { user } = useAuth();
-  const [chatRooms, setChatRooms] = useState([]);
+  const [localChatRooms, setLocalChatRooms] = useState([]);
 
   const fetchChatRooms = async () => {
     try {
@@ -70,14 +70,14 @@ const ChatListItem = ( { chatRooms: propsChatRooms, onSelectRoom}) => {
         throw new Error('채팅방 목록을 불러오는데 실패했습니다.');
       }
       const data = await response.json();
-      setChatRooms(data);
+      setLocalChatRooms(data);
     } catch (error) {
       console.error('채팅방 목록 로딩 에러: ', error);
     }
   };
 
   useEffect(() => {
-    if (user?.email && !propsChatRooms?.length) {
+    if (user?.email) {
       fetchChatRooms();
 
       const interval = setInterval(() => {
@@ -87,7 +87,15 @@ const ChatListItem = ( { chatRooms: propsChatRooms, onSelectRoom}) => {
       return () => clearInterval(interval);
     }
   }, [user]);
-  
+
+  // props와 로컬 채팅방 목록 합치기
+  const allChatRooms = [...(propsChatRooms || []), ...localChatRooms].reduce((unique, room) => {
+    const exists = unique.find(r => r.id === room.id);
+    if (!exists) {
+      unique.push(room);
+    }
+    return unique;
+  }, []);
   
   const getOtherUserInfo = (chatRoom) => {
     if (!Array.isArray(chatRoom.participants)) {
@@ -100,10 +108,9 @@ const ChatListItem = ( { chatRooms: propsChatRooms, onSelectRoom}) => {
     return otherUser || {};
   };
 
-  
   return (
     <>
-      {chatRooms.map(chatRoom => {
+      {allChatRooms.map(chatRoom => {
         const otherUser = getOtherUserInfo(chatRoom);
         const lastMessageDate = chatRoom.lastMessageAt ? formatDate(chatRoom.lastMessageAt) : '';
 
@@ -111,7 +118,7 @@ const ChatListItem = ( { chatRooms: propsChatRooms, onSelectRoom}) => {
           <Container 
             key={chatRoom.id}
             onClick={() => onSelectRoom(chatRoom, otherUser)}
-            style={ { cursor : 'pointer'}}
+            style={{ cursor: 'pointer' }}
           >
             <ProfileImage
               src={otherUser.profileImageUrl || "/images/default/defaultProfileImage.png"}
