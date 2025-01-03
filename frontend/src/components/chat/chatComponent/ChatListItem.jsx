@@ -70,7 +70,22 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
         throw new Error('채팅방 목록을 불러오는데 실패했습니다.');
       }
       const data = await response.json();
-      setLocalChatRooms(data);
+
+      // 기존 채팅방 정보 유지하면서 업데이트
+      setLocalChatRooms(prevRooms => {
+        const updatedRooms = data.map(newRoom => {
+          const existingRoom = prevRooms.find(room => room.id === newRoom.id);
+          if (existingRoom) {
+            // 기존 참가자 정보 유지
+            return {
+              ...newRoom,
+              participants: existingRoom.participants || newRoom.participants
+            };
+          }
+          return newRoom;
+        });
+        return updatedRooms;
+      });
     } catch (error) {
       console.error('채팅방 목록 로딩 에러: ', error);
     }
@@ -93,6 +108,13 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     const exists = unique.find(r => r.id === room.id);
     if (!exists) {
       unique.push(room);
+    } else {
+      // 기존 방 정보 업데이트 하되, participants 정보 유지
+      const updatedRoom = {
+        ...room,
+        participants : exists.participants || room.participants
+      };
+      unique[unique.indexOf(exists)] = updatedRoom;
     }
     return unique;
   }, []);

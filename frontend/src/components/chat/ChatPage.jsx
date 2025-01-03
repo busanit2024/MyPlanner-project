@@ -63,7 +63,7 @@ export default function ChatPage() {
         profileImage: null
     });
 
-    const { messages, sendMessage, isConnected } = useChat(
+    const { messages, sendMessage, isConnected, loadChatHistory } = useChat(
         selectedRoom?.id || roomId,
         user?.email  
     );
@@ -120,16 +120,11 @@ export default function ChatPage() {
             // 채팅방이 변경될 때마다 메시지 다시 로드
             const fetchMessages = async () => {
                 try {
-                    const response = await fetch(`/api/chat/messages/${selectedRoom.id}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        // messages 상태 업데이트 로직
-                    }
+                    loadChatHistory();
                 } catch (error) {
                     console.error('메시지 로드 실패:', error);
                 }
             };
-            
             fetchMessages();
         }
     }, [selectedRoom]);

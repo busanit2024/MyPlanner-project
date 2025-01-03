@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs';
+import { Stomp } from '@stomp/stompjs';
 
 export const useChat = (roomId, userEmail) => {
     const [messages, setMessages] = useState([]);
@@ -16,8 +15,8 @@ export const useChat = (roomId, userEmail) => {
                 return res.json();
             })
             .then(data => {
-                console.log('채팅 이력 로드:', data);
-                setMessages(data); // 메시지 상태 초기화
+                const messageArray = Array.isArray(data) ? data : [data];
+                setMessages(messageArray);
             })
             .catch(error => {
                 console.error('채팅 이력 로딩 실패:', error);
@@ -26,44 +25,22 @@ export const useChat = (roomId, userEmail) => {
 
     const connect = useCallback(() => {
         if (!roomId || !userEmail) {
-            console.log('roomId 또는 userEmail이 없음');
             return;
         }
-
-        // 기존 연결 정리
-        if (client.current?.connected) {
-            client.current.deactivate();
-        }
-
-        const stompClient = new Client({
-            webSocketFactory: () => new SockJS('/chat'),
-            reconnectDelay: 2000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
-            onConnect: () => {
-                console.log(`채팅방 ${roomId} 연결 성공`);
-                // 구독 설정
-                stompClient.subscribe(`/sub/chat/rooms/${roomId}`, (message) => {
-                    try {
-                        const receivedMessage = JSON.parse(message.body);
-                        console.log('수신된 메시지:', receivedMessage);
-                        setMessages(prev => [...prev, receivedMessage]);
-                    } catch (error) {
-                        console.error('메시지 처리 중 오류:', error);
-                    }
-                });
-                
-                // 연결 성공 후 이전 메시지 로드
-                loadChatHistory();
-            },
-            onStompError: (frame) => {
-                console.error('STOMP 에러:', frame);
-            }
+        
+        const socket = new WebSocket('ws://localhost:8080/chat');
+        client.current = Stomp.over(socket);
+        client.current.connect({}, () => {
+            console.log('Connected');
+            // 메시지 수신
+            client.current.subscribe(`/sub/chat/rooms/${roomId}`, (message) => {
+            //누군가 발송했던 메시지를 리스트에 추가
+            const newMessage = JSON.parse(message.body);
+            setMessages((prevMessage) => [...prevMessage, newMessage]);
+            });
         });
-
-        stompClient.activate();
-        client.current = stompClient;
-    }, [roomId, userEmail, loadChatHistory]);
+          
+    }, [roomId, userEmail]);
 
 
     // roomId가 변경될 때마다 연결 재설정 및 메시지 초기화
@@ -75,10 +52,10 @@ export const useChat = (roomId, userEmail) => {
 
         return () => {
             if (client.current?.connected) {
-                client.current.deactivate();
-            }
+                client.current = { connected: false };
+            }  
         };
-    }, [roomId, userEmail, connect]);
+    }, [roomId, userEmail ]);
 
     // 메시지 전송 함수
     const sendMessage = useCallback((content) => {
@@ -97,13 +74,12 @@ export const useChat = (roomId, userEmail) => {
 
         console.log('전송할 메시지:', message);
 
-        client.current.publish({
-            destination: `/pub/chat/rooms/${roomId}/send`,
-            body: JSON.stringify(message)
-        });
+        // client.current.publish({
+        //     destination: `/pub/chat/rooms/${roomId}/send`,
+        //     body: JSON.stringify(message)
+        // });
+        client.current.send(`/pub/chat/rooms/${roomId}/send`, {}, JSON.stringify(message));
     }, [roomId, userEmail, connect]);
 
-    console.log("useChat에서 반환하는 messages:", messages);
-
-    return { messages, sendMessage, isConnected: !!client.current?.connected  };
+    return { messages, sendMessage, isConnected: !!client.current?.connected, loadChatHistory  };
 }; 
