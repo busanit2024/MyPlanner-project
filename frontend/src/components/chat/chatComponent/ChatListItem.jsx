@@ -59,7 +59,7 @@ const formatDate = (timestamp) => {
 };
 
 
-const ChatListItem = () => {
+const ChatListItem = ( { chatRooms: propsChatRooms, onSelectRoom}) => {
   const { user } = useAuth();
   const [chatRooms, setChatRooms] = useState([]);
 
@@ -77,7 +77,7 @@ const ChatListItem = () => {
   };
 
   useEffect(() => {
-    if (user?.email) {
+    if (user?.email && !propsChatRooms?.length) {
       fetchChatRooms();
 
       const interval = setInterval(() => {
@@ -87,6 +87,7 @@ const ChatListItem = () => {
       return () => clearInterval(interval);
     }
   }, [user]);
+  
   
   const getOtherUserInfo = (chatRoom) => {
     if (!Array.isArray(chatRoom.participants)) {
@@ -107,7 +108,11 @@ const ChatListItem = () => {
         const lastMessageDate = chatRoom.lastMessageAt ? formatDate(chatRoom.lastMessageAt) : '';
 
         return (
-          <Container key={chatRoom.id}>
+          <Container 
+            key={chatRoom.id}
+            onClick={() => onSelectRoom(chatRoom, otherUser)}
+            style={ { cursor : 'pointer'}}
+          >
             <ProfileImage
               src={otherUser.profileImageUrl || "/images/default/defaultProfileImage.png"}
               alt="프로필 이미지"

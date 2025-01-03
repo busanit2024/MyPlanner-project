@@ -5,7 +5,7 @@ import ChatListItem from "./chatComponent/ChatListItem";
 import ChatMessage from './chatComponent/ChatMessage';
 import NewChatButton from "./chatComponent/NewChatButton";
 import { useChat } from '../../hooks/useChat';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
 
@@ -99,6 +99,8 @@ export default function ChatPage() {
         selectedRoom?.id || roomId,
         user?.email  
     );
+    const messagesEndRef = useRef(null);
+    const [lastMessageSender, setLastMessageSender] = useState(null);
 
     // 현재 사용자 정보 가져오기
     useEffect(() => {
@@ -131,15 +133,43 @@ export default function ChatPage() {
         sendMessage(content);
     };
 
+
+    // 메시지 추가 스크롤 이동
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            setLastMessageSender(lastMessage.senderEmail);
+            
+            // 마지막 메시지가 내가 보낸 것일 때만 스크롤
+            if (lastMessage.senderEmail === user?.email) {
+                scrollToBottom();
+            }
+        }
+    }, [messages, user?.email]);
+
     useEffect(() => {
         console.log("현재 메시지 목록:", messages);  // 메시지 배열 확인
     }, [messages]);
+
+    const handleSelectRoom = (room, partner) => {
+        setSelectedRoom(room);
+
+        setChatPartner({
+            email : partner.email,
+            name: partner.username,
+            profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
+        });
+    };
 
     return (
         <ChatContainer>
             <ChatList>
                 <ChatListScroll>
-                    <ChatListItem chatRooms={chatRooms} /> 
+                    <ChatListItem chatRooms={chatRooms} onSelectRoom={handleSelectRoom}/> 
                 </ChatListScroll>
                 <NewChatButtonContainer>
                     <NewChatButton 
@@ -189,6 +219,7 @@ export default function ChatPage() {
                                 />
                             );
                         })}
+                        <div ref={messagesEndRef} />
                     </ChatMessages>
                     </ChatMessagesScroll>
                     <ChatInput>
