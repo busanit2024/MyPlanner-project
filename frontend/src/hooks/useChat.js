@@ -6,13 +6,32 @@ export const useChat = (roomId, userEmail) => {
     const [messages, setMessages] = useState([]);
     const client = useRef(null);
 
+    // 이전 메시지 로드 함수
+    const loadChatHistory = useCallback(() => {
+        if (!roomId) return;
+
+        fetch(`/api/chat/rooms/${roomId}/messages`)
+            .then(res => {
+                if (!res.ok) throw new Error(`Status: ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                console.log('채팅 이력 로드:', data);
+                setMessages(data); // 메시지 상태 초기화
+            })
+            .catch(error => {
+                console.error('채팅 이력 로딩 실패:', error);
+            });
+    }, [roomId]);
+
     const connect = useCallback(() => {
         if (!roomId || !userEmail) {
             console.log('roomId 또는 userEmail이 없음');
             return;
         }
 
-        if (client.current) {
+        // 기존 연결 정리
+        if (client.current?.connected) {
             client.current.deactivate();
         }
 
@@ -28,14 +47,13 @@ export const useChat = (roomId, userEmail) => {
                     try {
                         const receivedMessage = JSON.parse(message.body);
                         console.log('수신된 메시지:', receivedMessage);
-                        
                         setMessages(prev => [...prev, receivedMessage]);
                     } catch (error) {
                         console.error('메시지 처리 중 오류:', error);
                     }
                 });
                 
-                // 이전 메시지 가져오기
+                // 연결 성공 후 이전 메시지 로드
                 loadChatHistory();
             },
             onStompError: (frame) => {
@@ -45,38 +63,22 @@ export const useChat = (roomId, userEmail) => {
 
         stompClient.activate();
         client.current = stompClient;
-    }, [roomId, userEmail]);
+    }, [roomId, userEmail, loadChatHistory]);
 
-    // 이전 메시지 로드 함수
-    const loadChatHistory = useCallback(() => {
-        if (!roomId) return;
 
-        fetch(`/api/chat/rooms/${roomId}/messages`)
-            .then(res => {
-                if (!res.ok) throw new Error(`Status: ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                console.log('채팅 이력 로드:', data);
-                setMessages(data);
-            })
-            .catch(error => {
-                console.error('채팅 이력 로딩 실패:', error);
-            });
-    }, [roomId]);
-
-    // roomId나 userEmail이 변경될 때 연결 재설정
+    // roomId가 변경될 때마다 연결 재설정 및 메시지 초기화
     useEffect(() => {
-        if (roomId && userEmail && !client.current?.connected) {
+        setMessages([]); // 메시지 초기화
+        if (roomId && userEmail) {
             connect();
         }
-    
+
         return () => {
             if (client.current?.connected) {
                 client.current.deactivate();
             }
         };
-    }, [roomId, userEmail, connect]); 
+    }, [roomId, userEmail, connect]);
 
     // 메시지 전송 함수
     const sendMessage = useCallback((content) => {

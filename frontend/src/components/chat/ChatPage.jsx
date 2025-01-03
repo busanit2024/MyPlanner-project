@@ -32,8 +32,6 @@ const ChatListScroll = styled.div`
     flex-grow: 1;
 `;
 
-
-
 const NewChatButtonContainer = styled.span`
     position: absolute;
     width: 50px;
@@ -102,19 +100,39 @@ export default function ChatPage() {
     };
 
     const handleSelectRoom = (room, partner) => {
-        setSelectedRoom(room);
-
+        // 기존 선택된 방을 초기화하고 새로운 방 설정
+        setSelectedRoom(null);  // 추가: 먼저 선택 초기화
         setChatPartner({
-            email : partner.email,
+            email: partner.email,
             name: partner.username,
             profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
         });
+        
+        // 약간의 지연 후 새로운 방 설정
+        setTimeout(() => {
+            setSelectedRoom(room);
+        }, 0);
     };
-
     
+    // useChat 훅 의존성에 selectedRoom 추가
     useEffect(() => {
-        console.log("현재 메시지 목록:", messages);  // 메시지 배열 확인
-    }, [messages]);
+        if (selectedRoom) {
+            // 채팅방이 변경될 때마다 메시지 다시 로드
+            const fetchMessages = async () => {
+                try {
+                    const response = await fetch(`/api/chat/messages/${selectedRoom.id}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        // messages 상태 업데이트 로직
+                    }
+                } catch (error) {
+                    console.error('메시지 로드 실패:', error);
+                }
+            };
+            
+            fetchMessages();
+        }
+    }, [selectedRoom]);
 
     return (
         <ChatContainer>
