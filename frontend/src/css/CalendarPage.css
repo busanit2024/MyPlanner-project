@@ -104,3 +104,8 @@
     padding: 5px;
     border-radius: 4px;
 }
+
+.calendar-days .day.other-month .day-number {
+    color: lightgray;
+  }
+  

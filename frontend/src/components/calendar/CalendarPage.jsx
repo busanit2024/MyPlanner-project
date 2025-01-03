@@ -1,148 +1,149 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../../css/CalendarPage.css';
-import Modal from '../../ui/Modal'; // Modal.jsx 파일 경로
+import { formatDate } from '@fullcalendar/core';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
-const CalendarPage = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isYearMonthSelectorOpen, setIsYearMonthSelectorOpen] = useState(false);
-  const navigate = useNavigate();
+// 고유 이벤트 ID 생성 함수
+let eventGuid = 0;
+function createEventId() {
+  return String(eventGuid++);
+}
 
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-  };
 
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-  };
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
+// 초기 이벤트 배열
+const INITIAL_EVENTS = [
+  {
+    id: createEventId(),
+    title: '회의',
+    start: '2025-01-10',
+    end: '2025-01-12',
+  },
+  {
+    id: createEventId(),
+    title: '프로젝트 마감',
+    start: '2025-01-15',
+    allDay: true,
+  },
+];
 
-  const toggleYearMonthSelector = () => {
-    setIsYearMonthSelectorOpen(!isYearMonthSelectorOpen);
-  };
+export default function CalendarPage() {
+  const [weekendsVisible, setWeekendsVisible] = useState(true);
+  const [currentEvents, setCurrentEvents] = useState([]);
 
-  const handleYearMonthChange = (year, month) => {
-    setCurrentDate(new Date(year, month - 1, 1));
-    setIsYearMonthSelectorOpen(false);
-  };
+  function handleWeekendsToggle() {
+    setWeekendsVisible(!weekendsVisible);
+  }
 
-  const getDaysInMonth = (year, month) => {
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    return Array.from({ length: lastDay }, (_, i) => i + 1);
-  };
+  function handleDateSelect(selectInfo) {
+    let title = prompt('Please enter a new title for your event');
+    let calendarApi = selectInfo.view.calendar;
 
-  const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
-  const firstDayOfWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+    calendarApi.unselect(); // clear date selection
 
-  const goToDailyPage = (day) => {
-    const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    navigate(`/daily?date=${selectedDate.toISOString().split('T')[0]}`);
-  };
+    if (title) {
+      calendarApi.addEvent({
+        id: createEventId(),
+        title,
+        start: selectInfo.startStr,
+        end: selectInfo.endStr,
+        allDay: selectInfo.allDay,
+      });
+    }
+  }
+
+  function handleEventClick(clickInfo) {
+    if (window.confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'?`)) {
+      clickInfo.event.remove();
+    }
+  }
+
+  function handleEvents(events) {
+    setCurrentEvents(events);
+  }
 
   return (
-    <div className="calendar-page">
-      <header className="calendar-header">
-        <button onClick={goToPreviousMonth}>◀</button>
-        <h2 onClick={toggleYearMonthSelector} style={{ cursor: 'pointer' }}>
-          {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
-        </h2>
-        <button onClick={goToNextMonth}>▶</button>
-
-        {/* Modal for Year and Month Selector */}
-        <Modal
-          isOpen={isYearMonthSelectorOpen}
-          onClose={() => setIsYearMonthSelectorOpen(false)}
-          title="연도와 월 선택"
-        >
-          <div>
-            <h3>연도 선택</h3>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {Array.from({ length: 10 }).map((_, index) => {
-                const year = currentDate.getFullYear() - 5 + index;
-                return (
-                  <button
-                    key={year}
-                    onClick={() => handleYearMonthChange(year, currentDate.getMonth() + 1)}
-                  >
-                    {year}년
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div>
-            <h3>월 선택</h3>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {Array.from({ length: 12 }).map((_, index) => (
-                <button
-                  key={index + 1}
-                  onClick={() => handleYearMonthChange(currentDate.getFullYear(), index + 1)}
-                >
-                  {index + 1}월
-                </button>
-              ))}
-            </div>
-          </div>
-        </Modal>
-
-        {/* Profile Pictures */}
-        <div className="profile-pictures">
-          <img src="profile1.jpg" alt="Profile 1" className="profile-picture" />
-          <img src="profile2.jpg" alt="Profile 2" className="profile-picture" />
-          <img src="profile3.jpg" alt="Profile 3" className="profile-picture" />
-        </div>
-
-        {/* Category Dropdown */}
-        <div className="category-dropdown">
-          <button onClick={toggleDropdown}>카테고리 ▼</button>
-          {isDropdownOpen && (
-            <div className="dropdown-content">
-              <button onClick={() => navigate('/calendar')}>월간</button>
-              <button onClick={() => navigate('/weekly')}>주간</button>
-              <button onClick={() => navigate('/daily')}>매일</button>
-            </div>
-          )}
-        </div>
-
-        <button 
-          className="add-event-button" 
-          onClick={() => navigate('/calendarWrite')}
-          style={{ fontSize: '24px', marginLeft: '20px', background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          📅+
-        </button>
-      </header>
-
-      {/* Calendar Weekdays */}
-      <div className="calendar-weekdays">
-        {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
-          <div key={index} className="weekday">
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar Days */}
-      <div className="calendar-days">
-        {Array.from({ length: firstDayOfWeek }).map((_, index) => (
-          <div key={index} className="empty-day"></div>
-        ))}
-        {daysInMonth.map(day => (
-          <div key={day} 
-          className="day"
-          onClick={() => goToDailyPage(day)} // 날짜 클릭 시 매일 페이지로 이동
-          style={{ cursor: 'pointer' }}
-          >
-            <div className="day-number">{day}</div>
-          </div>
-        ))}
+    
+      <div className="demo-app-main">
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+          }}
+          initialView="dayGridMonth"
+          editable={true}
+          selectable={true}
+          selectMirror={true}
+          dayMaxEvents={true}
+          weekends={weekendsVisible}
+          initialEvents={INITIAL_EVENTS} // 초기 이벤트
+          select={handleDateSelect}
+          eventContent={renderEventContent} // 사용자 정의 렌더 함수
+          eventClick={handleEventClick}
+          eventsSet={handleEvents} // 이벤트 변경 시 호출
+        />
+        <div className="demo-app">
+      <Sidebar
+        weekendsVisible={weekendsVisible}
+        handleWeekendsToggle={handleWeekendsToggle}
+        currentEvents={currentEvents}
+      />
       </div>
     </div>
   );
-};
+}
+function SidebarEvent({ event }) {
+    return (
+      <li>
+        <b>{formatDate(event.start, { year: 'numeric', month: 'short', day: 'numeric' })}</b>
+        <i>{event.title}</i>
+      </li>
+    );
+  }
+function renderEventContent(eventInfo) {
+  return (
+    <>
+      <b>{eventInfo.timeText}</b>
+      <i>{eventInfo.event.title}</i>
+    </>
+  );
+}
 
-export default CalendarPage;
+function Sidebar({ weekendsVisible, handleWeekendsToggle, currentEvents }) {
+    return (
+      <div className="demo-app-sidebar">
+        <div className="demo-app-sidebar-section">
+          <h2>안내</h2>
+          <ul>
+            <li>클릭해서 작성</li>
+            <li>그래그앤드롭</li>
+            <li>클릭해서 삭제</li>
+          </ul>
+        </div>
+        <div className="demo-app-sidebar-section">
+          <label>
+            <input
+              type="checkbox"
+              checked={weekendsVisible}
+              onChange={handleWeekendsToggle}
+            />
+            주말 추가/제거 토글글
+          </label>
+        </div>
+        <div className="demo-app-sidebar-section">
+          <h2>All Events ({currentEvents.length})</h2>
+          <ul>
+            {currentEvents.map((event) => (
+              <SidebarEvent key={event.id} event={event} />
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
+

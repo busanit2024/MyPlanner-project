@@ -7,11 +7,11 @@ import ChatPage from './components/chat/ChatPage';
 import { AuthProvider } from './context/AuthContext';
 import GlobalStyles from './styles/GlobalStyles.styles';
 
-import CalendarPage from './components/calendar/CalendarPage';
+import CalendarWrite from './components/calendar/CalendarWrite';
 import WeeklyPage from './components/calendar/WeeklyPage';
 import DailyPage from './components/calendar/DailyPage';
-import CalendarWrite from './components/calendar/CalendarWrite';
 import Grid100Page from './components/calendar/Grid100Page';
+import CalendarPage from './components/calendar/CalendarPage';
 
 import IndexPage from './components/main/IndexPage';
 import FindPage from './components/user/FindPage';
@@ -33,13 +33,12 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path='/register' element={<RegisterPage />} />
             <Route path='/find' element={<FindPage />} />
-            <Route path='/' element={<Layout />} >
-              <Route path='search' element={<SearchPage />} />
-              <Route path="calendar" element={<CalendarPage />} />
-              <Route path="chat" element={<ChatPage />} />
-              <Route path='profile' element={<MyPage />} />
-              <Route path='profile/edit' element={<ProfileEditPage />} />
-              <Route path='notification' element={<NotificationPage />} />
+            <Route path='/' element={<Layout />} />
+            <Route path='search' element={<SearchPage />} />
+            <Route path="chat" element={<ChatPage />} />
+            <Route path='profile' element={<MyPage />} />
+            <Route path='profile/edit' element={<ProfileEditPage />} />
+            <Route path='notification' element={<NotificationPage />} />
             <Route element={<Layout />} >
               <Route path='/search' element={<SearchPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
