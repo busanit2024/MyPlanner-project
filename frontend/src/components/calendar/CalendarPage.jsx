@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { formatDate } from '@fullcalendar/core';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+
 
 // 고유 이벤트 ID 생성 함수
 let eventGuid = 0;
@@ -32,6 +33,13 @@ const INITIAL_EVENTS = [
 export default function CalendarPage() {
   const [weekendsVisible, setWeekendsVisible] = useState(true);
   const [currentEvents, setCurrentEvents] = useState([]);
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/schedules')
+      .then((response) => response.json())
+      .then((data) => setEvents(data));
+  }, []);
 
   function handleWeekendsToggle() {
     setWeekendsVisible(!weekendsVisible);
@@ -131,7 +139,7 @@ function Sidebar({ weekendsVisible, handleWeekendsToggle, currentEvents }) {
               checked={weekendsVisible}
               onChange={handleWeekendsToggle}
             />
-            주말 추가/제거 토글글
+            주말 추가/제거 토글
           </label>
         </div>
         <div className="demo-app-sidebar-section">
