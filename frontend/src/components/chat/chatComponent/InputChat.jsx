@@ -46,6 +46,12 @@ const SendButton = styled.button`
     &:active {
         opacity: 0.9;
     }
+
+    &:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
 `;
 
 const Dropdown = styled.div`
@@ -91,24 +97,38 @@ export default function InputChat({ onSendMessage }) {
         });
     };
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (message.trim()) {
-            onSendMessage(message);
-            setMessage('');
+            try {
+                await onSendMessage(message);  
+                setMessage('');
+            } catch (error) {
+                console.error('메시지 전송 실패:', error);
+            }
         }
     };
 
-    const handleKeyPress = (e) => {
+    const handleKeyPress = async (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            handleSend();
+            await handleSend();
         }
+    };
+
+    // 버튼 클릭 핸들러 분리
+    const handleButtonClick = async (e) => {
+        e.preventDefault();
+        await handleSend();
     };
 
     return (
         <>
             <InputChatBox>
-                <img src="images/icon/plus.svg" alt="plus" onClick={toggleDropdown} />
+                <img 
+                    src="images/icon/plus.svg" 
+                    alt="plus" 
+                    onClick={toggleDropdown} 
+                />
                 <Input 
                     type="text"
                     placeholder="메시지 보내기..."
@@ -116,7 +136,10 @@ export default function InputChat({ onSendMessage }) {
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                 />
-                <SendButton onClick={handleSend}>
+                <SendButton 
+                    onClick={handleButtonClick}
+                    disabled={!message.trim()}  // 빈 메시지일 때 비활성화
+                >
                     <img src="images/icon/sendMsg_48.png" alt="sent"/>
                 </SendButton>
                 {isDropdownOpen && (

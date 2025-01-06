@@ -155,7 +155,7 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
           resetState();
 
           // 기존 채팅 사용자 목록 및 기존 채팅방 목록 가져오기
-          fetch(`/api/chat/rooms/user/${user.id}`)
+          fetch(`/api/chat/rooms/user/${user.email}`)
             .then(res => res.json())
             .then(chatRooms => {
               const individualRooms = chatRooms.filter(room => room.chatRoomType === "INDIVIDUAL");
