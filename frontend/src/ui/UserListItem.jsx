@@ -3,13 +3,14 @@ import Button from "./Button";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import Modal from "./Modal";
+import { useNavigate } from "react-router-dom";
 import Chip from "./Chip";
 import Swal from "sweetalert2";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
 export default function UserListItem({ user: item }) {
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followsMe, setFollowsMe] = useState(false);
@@ -106,6 +107,79 @@ export default function UserListItem({ user: item }) {
     });
   }
 
+  //채팅기능
+  const handleMessageClick = async () => {
+    try {
+      const response = await axios.get(`/api/chat/rooms/user/${user.email}`);
+      const chatRooms = response.data;
+      
+      const existingRoom = chatRooms.find(room => 
+        room.chatRoomType === "INDIVIDUAL" && 
+        room.participants.some(p => p.email === item.email)
+      );
+
+      if (existingRoom) {
+        const otherUser = {
+          email: item.email,
+          name: item.username,
+          profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png'
+        };
+        navigate('/chat', { 
+          state: { 
+            initialRoom: {
+              ...existingRoom,
+              participants: existingRoom.participants.map(p => 
+                p.email === item.email 
+                  ? { ...p, name: item.username, profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png' }
+                  : p
+              )
+            },
+            initialPartner: otherUser
+          }
+        });
+      } else {
+        const chatRoomRequest = {
+          participantIds: [
+            { 
+              email: user.email,
+              name: user.username,
+              profileImage: user.profileImageUrl || '/images/default/defaultProfileImage.png',
+              status: "ACTIVE" 
+            },
+            { 
+              email: item.email,
+              name: item.username,
+              profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png',
+              status: "ACTIVE" 
+            }
+          ],
+          chatroomTitle: item.username,
+          chatroomType: "INDIVIDUAL"
+        };
+
+        const newRoomResponse = await axios.post('/api/chat/rooms', chatRoomRequest);
+        const newRoom = newRoomResponse.data;
+        
+        navigate('/chat', { 
+          state: { 
+            initialRoom: newRoom,
+            initialPartner: {
+              email: item.email,
+              name: item.username,
+              profileImage: item.profileImageUrl
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error('채팅방 생성/조회 실패:', error);
+      Swal.fire({
+        title: "오류",
+        text: "채팅방을 열 수 없습니다. 다시 시도해주세요.",
+        icon: "error",
+      });
+    }
+  };
 
   return (
     <Container className="user-list-item">
@@ -128,7 +202,7 @@ export default function UserListItem({ user: item }) {
         <>
         {isFollowing &&
           <div className="message-icon">
-            <img src="/images/icon/message.svg" alt="message" />
+            <img src="/images/icon/message.svg" alt="message" onClick={handleMessageClick}  />
           </div>
         }
         {isFollowing ? <Button onClick={handleUnfollowButton} >팔로잉</Button> : <Button color="primary" onClick={onFollow}>팔로우하기</Button>}
