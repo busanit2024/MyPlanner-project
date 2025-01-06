@@ -72,6 +72,7 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSen
     const scrollRef = useRef(null);
     const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
+    const [userScrolled, setUserScrolled] = useState(false);
     const lastMessageRef = useRef(null);
 
     // 스크롤 위치 감지
@@ -79,12 +80,41 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSen
         if(scrollRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
             const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+            
+            // 사용자가 스크롤 중임을 표시
+            setUserScrolled(true);
+            
             setShouldScrollToBottom(isNearBottom);
             if(isNearBottom) {
                 setShowNewMessageAlert(false);
+                setUserScrolled(false);  // 하단에 도달하면 사용자 스크롤 상태 초기화
             }
         }
     };
+
+    // 새 메시지 감지 및 스크롤 처리
+    useEffect(() => {
+        if (scrollRef.current && messages?.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            const isMyMessage = lastMessage.senderEmail === user?.email;
+
+            // 다음 조건에서만 자동 스크롤
+            if ((isMyMessage && !userScrolled) || // 내 메시지이고 사용자가 스크롤하지 않았거나
+                (!userScrolled && shouldScrollToBottom)) { // 사용자가 스크롤하지 않았고 이전에 하단에 있었을 때
+                scrollToBottom();
+            } else if (!isMyMessage && !shouldScrollToBottom) {
+                // 내 메시지가 아니고 스크롤이 위에 있을 때 알림 표시
+                setShowNewMessageAlert(true);
+            }
+        }
+    }, [messages, user?.email, shouldScrollToBottom, userScrolled]);
+
+    // 채팅방이 변경될 때마다 스크롤 초기화
+    useEffect(() => {
+        setUserScrolled(false);
+        setShouldScrollToBottom(true);
+        scrollToBottom();
+    }, [selectedRoom.id]);
 
     // 스크롤 하단으로 이동
     const scrollToBottom = () => {
@@ -92,6 +122,7 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSen
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
             setShowNewMessageAlert(false);
             setShouldScrollToBottom(true);
+            setUserScrolled(false);
         }
     };
 
@@ -191,7 +222,6 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSen
                     <img 
                         src="/images/icon/ArrowDown.svg" 
                         alt="아래로" 
-                        style={{ width: '16px', height: '16px' }}
                     />
                     새로운 메시지가 있습니다
                 </NewMessageAlert>
