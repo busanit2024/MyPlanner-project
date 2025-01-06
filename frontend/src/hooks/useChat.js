@@ -30,6 +30,7 @@ export const useChat = (roomId, userEmail) => {
         
         const socket = new WebSocket('ws://localhost:8080/chat');
         client.current = Stomp.over(socket);
+        
         client.current.connect({}, () => {
             console.log('Connected');
             // 메시지 수신
@@ -56,14 +57,16 @@ export const useChat = (roomId, userEmail) => {
         setMessages([]); // 메시지 초기화
         if (roomId && userEmail) {
             connect();
+            loadChatHistory();
         }
 
         return () => {
             if (client.current?.connected) {
-                client.current = { connected: false };
+                client.current.disconnect();
+                client.current = null;
             }  
         };
-    }, [roomId, userEmail ]);
+    }, [roomId, userEmail,  connect, loadChatHistory]);
 
     // 메시지 전송 함수
     const sendMessage = useCallback((content) => {
