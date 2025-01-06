@@ -20,12 +20,14 @@ import { SearchProvider } from './context/SearchContext';
 import MyPage from './components/user/MyPage';
 import ProfileEditPage from './components/user/ProfileEditPage';
 import NotificationPage from './components/user/NotificationPage';
+import { NotiProvider } from './context/NotiContext';
 
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <NotiProvider>
         <SearchProvider>
           <GlobalStyles />
           <Routes>
@@ -52,6 +54,7 @@ function App() {
             <Route path="chat/:roomId" element={<ChatPage />} />
           </Routes>
         </SearchProvider>
+        </NotiProvider>
       </Router>
     </AuthProvider>
   );
