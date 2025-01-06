@@ -16,6 +16,7 @@ import MyPage from './components/user/MyPage';
 import ProfileEditPage from './components/user/ProfileEditPage';
 import NotificationPage from './components/user/NotificationPage';
 import { NotiProvider } from './context/NotiContext';
+import FeedPage from './components/feed/FeedPage';
 
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
               <Route path='profile/edit' element={<ProfileEditPage />} />
               <Route path='notification' element={<NotificationPage />} />
               <Route path='calendarWrite' element={<CalendarWrite />} />
+              <Route path='feed' element={<FeedPage />} />
             </Route>
             <Route path="chat/:roomId" element={<ChatPage />} />
           </Routes>

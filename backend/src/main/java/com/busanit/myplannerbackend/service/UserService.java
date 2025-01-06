@@ -19,6 +19,8 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -104,8 +106,8 @@ public class UserService {
       return null;
     }
     Slice<Follow> followSlice = followRepository.findFollowToByFollowFrom(user, pageable);
-    Slice<User> followers = followSlice.map(Follow::getFollowTo);
-    return UserDTO.toDTO(followers);
+    Slice<User> follows = followSlice.map(Follow::getFollowTo);
+    return UserDTO.toDTO(follows);
   }
 
   @Transactional

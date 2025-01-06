@@ -57,7 +57,6 @@ export default function NotificationPage() {
     if (!loading && user) {
       fetchInviteList();
       fetchNotiList();
-      console.log("fetch notis");
     }
   }, [user, loading]);
 
