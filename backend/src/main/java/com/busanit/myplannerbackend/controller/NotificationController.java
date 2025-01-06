@@ -3,6 +3,7 @@ package com.busanit.myplannerbackend.controller;
 import com.busanit.myplannerbackend.domain.NotificationDTO;
 import com.busanit.myplannerbackend.entity.Notification;
 import com.busanit.myplannerbackend.service.NotificationService;
+import com.busanit.myplannerbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/notification")
 public class NotificationController {
   private final NotificationService notificationService;
+  private final UserService userService;
 
   @GetMapping(value = "/subscribe", produces = "text/event-stream")
   @ResponseStatus(HttpStatus.OK)
@@ -39,6 +41,15 @@ public class NotificationController {
     List<Long> longIdList = idList.stream().map(Long::parseLong).toList();
     notificationService.readAll(longIdList);
     return new ResponseEntity<>(HttpStatus.OK);
+  }
+
+  @GetMapping("/unreadCount")
+  public ResponseEntity<Integer> unreadCount(@RequestParam Long userId) {
+    Integer unreadCount = userService.getUnreadCount(userId);
+    if (unreadCount == null) {
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+    return new ResponseEntity<>(unreadCount, HttpStatus.OK);
   }
 
 }

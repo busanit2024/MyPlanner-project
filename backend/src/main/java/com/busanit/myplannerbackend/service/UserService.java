@@ -19,8 +19,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -164,5 +162,13 @@ public class UserService {
     }
     Slice<Notification> notis = notificationRepository.findAllByUserAndTypeOrderByUpdatedAtDesc(user, Notification.NotiType.INVITE, pageable);
     return NotificationDTO.toDTO(notis);
+  }
+
+  public Integer getUnreadCount(Long userId) {
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) {
+      return null;
+    }
+    return notificationRepository.countByUserAndIsRead(user, false);
   }
 }
