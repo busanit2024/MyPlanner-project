@@ -6,14 +6,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Chip from "./Chip";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
 export default function UserListItem({ user: item }) {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followsMe, setFollowsMe] = useState(false);
   const [isMyAccount, setIsMyAccount] = useState(false);
