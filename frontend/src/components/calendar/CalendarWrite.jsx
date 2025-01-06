@@ -190,6 +190,7 @@ const CalendarWrite = () => {
               onChange={(e) => setStartTime(e.target.value)}
             />
           )}
+          <p/>
           <span>끝 날짜</span>
           <input 
             type="date" 
