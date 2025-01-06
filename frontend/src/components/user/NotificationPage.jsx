@@ -1,13 +1,16 @@
 import styled from "styled-components";
 import NotiListItem from "./NotiListItem";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import Button from "../../ui/Button";
+import { useNoti } from "../../context/NotiContext";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function NotificationPage() {
   const size = 10;
   const { user, loading } = useAuth();
+  const { notifications, setUnreadCount, clearNotiList } = useNoti();
   const [notiList, setNotiList] = useState({
     invite: [],
     noti: [],
@@ -24,60 +27,77 @@ export default function NotificationPage() {
     invite: false,
     noti: false,
   });
+  const notiListRef = useRef(notiList);
 
   useEffect(() => {
-    if (!user && !loading) {
-      return;
-    }
+    notiListRef.current = notiList;
+  }, [notiList]);
 
-    if (user) {
-      subscribeToNotifications();
+  useEffect(() => {
+    const cleanNotis = () => {
+      const idList = [...notiListRef.current.invite, ...notiListRef.current.noti].filter((noti) => !noti.read).map((noti) => noti.id);
+      if (idList.length > 0) {
+        axios.post(`/api/notification/read`, idList).then((res) => {
+          setUnreadCount(0);
+          clearNotiList();
+          console.log("읽음 처리 완료");
+        }).catch((error) => {
+          console.error(error);
+        });
+      }
+    };
+
+    return () => {
+      cleanNotis();
+    };
+
+  }, []);
+
+  useEffect(() => {
+    if (!loading && user) {
       fetchInviteList();
       fetchNotiList();
+      console.log("fetch notis");
     }
   }, [user, loading]);
 
 
-  const subscribeToNotifications = () => {
-    console.log("subscribeToNotifications");
-    const eventSource = new EventSource(`http://localhost:8080/api/notification/subscribe?userId=${user.id}`,
-    );
+  useEffect(() => {
+    if (isloading.invite || isloading.noti) {
+      return;
+    }
+    if (notifications.invite.length > 0 || notifications.noti.length > 0) {
+      const newInvite = [...notiList.invite];
+      const newNoti = [...notiList.noti];
 
-    eventSource.onopen = () => {
-      console.log("SSE opened");
-    };
-
-    eventSource.onmessage = (event) => {
-      console.log("event", event);
-      try {
-        const data = JSON.parse(event.data);
-        console.log("data", data);
-        if (data.type === "INVITE") {
-          setNotiList((prev) => ({
-            ...prev,
-            invite: [data, ...prev.invite],
-          }));
-        } else {
-          setNotiList((prev) => ({
-            ...prev,
-            noti: [data, ...prev.noti],
-          }));
+      notifications.invite.forEach((noti) => {
+        const idx = newInvite.findIndex((item) => item.id === noti.id);
+        if (idx === -1) {
+          newInvite.push(noti);
+        } else if (newInvite[idx].read && !noti.read) {
+          newInvite[idx] = noti;
         }
-      } catch (error) {
-        console.log("EventStream Created");
-      }
-    };
+      });
 
-    eventSource.onerror = (error) => {
-      console.error("SSE error", error);
-      eventSource.close();
+      notifications.noti.forEach((noti) => {
+        const idx = newNoti.findIndex((item) => item.id === noti.id);
+        if (idx === -1) {
+          newNoti.push(noti);
+        } else if (newNoti[idx].read && !noti.read) {
+          newNoti[idx] = noti;
+        }
+      });
+
+      setNotiList({
+        invite: newInvite,
+        noti: newNoti,
+      });
+
+      console.log("new notifications", newInvite, newNoti);
+      
     }
+  }, [notifications, isloading]);
 
-    return () => {
-      eventSource.close();
-    }
-
-  };
 
   const fetchNotiList = async () => {
     setLoading((prev) => ({ ...prev, noti: true }));
@@ -126,6 +146,43 @@ export default function NotificationPage() {
   }
 
 
+  const handleClick = (item) => {
+    if (item.read) {
+      return;
+    }
+    axios.get(`/api/notification/read`, {
+      params: {
+        notificationId: item.id,
+      }
+    }).then((res) => {
+      if (item.type === "INVITE") {
+        setNotiList((prev) => ({
+          ...prev,
+          invite: prev.invite.map((noti) => {
+            if (noti.id === item.id) {
+              return { ...noti, read: true };
+            }
+            return noti;
+          })
+        }));
+      } else {
+        setNotiList((prev) => ({
+          ...prev,
+          noti: prev.noti.map((noti) => {
+            if (noti.id === item.id) {
+              return { ...noti, read: true };
+            }
+            return noti;
+          })
+        }));
+      }
+      setUnreadCount((prev) => prev - 1);
+    }).catch((error) => {
+      console.error(error);
+    });
+  };
+
+
   return (
     <Container>
       <InnerContainer>
@@ -133,24 +190,24 @@ export default function NotificationPage() {
         {isloading.invite && <p>로딩중...</p>}
         {notiList.invite.length === 0 && !isloading.invite && <p>받은 초대가 없어요.</p>}
         {notiList.invite.map((invite) => (
-          <NotiListItem key={invite.id} data={invite} />
+          <NotiListItem key={invite.id} data={invite} onClick={() => handleClick(invite)} />
         ))}
 
         <div className="button-wrap">
-        {hasNext.invite && (<Button onClick={() => setPage((prev) => ({ ...prev, invite: prev.invite + 1 }))}>더보기</Button>)}
+          {hasNext.invite && (<Button onClick={() => setPage((prev) => ({ ...prev, invite: prev.invite + 1 }))}>더보기</Button>)}
         </div>
       </InnerContainer>
       <InnerContainer>
-        
+
         <h2 className="title">반응</h2>
         {isloading.noti && <p>로딩중...</p>}
         {notiList.noti.length === 0 && !isloading.noti && <p>받은 알림이 없어요.</p>}
         {notiList.noti.map((noti) => (
-          <NotiListItem key={noti.id} data={noti} />
+          <NotiListItem key={noti.id} data={noti} onClick={() => handleClick(noti)} />
         ))}
-<div className="button-wrap">
-        {hasNext.noti && (<Button onClick={() => setPage((prev) => ({ ...prev, noti: prev.noti + 1 }))}>더보기</Button>)}
-</div>
+        <div className="button-wrap">
+          {hasNext.noti && (<Button onClick={() => setPage((prev) => ({ ...prev, noti: prev.noti + 1 }))}>더보기</Button>)}
+        </div>
       </InnerContainer>
     </Container>
   );
