@@ -22,16 +22,16 @@ export default function MyPage() {
     if (!loading && !user) {
       navigate("/login");
     }
-    console.log(user);
+    console.log("user", user);
   }, [user, loading]);
 
   useEffect(() => {
     if (!loading && user) {
+      setListLoading(true);
       setFollowList([]);
       setFollowerList([]);
       setPage(0);
       setHasNext(false);
-      setListLoading(true);
       fetchFollowList(followType);
     }
   }, [followType, loading, user]);
@@ -63,7 +63,7 @@ export default function MyPage() {
         <div className="left">
           <div className="inner-container">
             <ProfileImage>
-              <img src={user?.profileImageUrl ?? defaultProfileImage} alt="profile" onError={(e) => e.target.src = { defaultProfileImage }} />
+              <img src={user?.profileImageUrl ?? defaultProfileImage} alt="profile" onError={(e) => (e.target.src =defaultProfileImage)} />
             </ProfileImage>
             <div className="info">
               <span className="name">{user?.username}</span>
@@ -77,7 +77,7 @@ export default function MyPage() {
         </div>
 
         <div className="right">
-          <Button >프로필 수정</Button>
+          <Button onClick={() => navigate("edit")} >프로필 수정</Button>
         </div>
 
       </ProfileContainer>

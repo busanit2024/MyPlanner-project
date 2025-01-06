@@ -186,7 +186,7 @@ export default function RegisterPage() {
     }
     axios.get(`/api/user/checkEmail?email=${userInfo.email}`).then((res) => {
       setInputError(prev => ({ ...prev, email: "" }));
-      console.log(res.data);
+      console.log("check email", res.data);
       if (res.data === false) {
         setEmailCheck("ok");
       }
@@ -448,7 +448,7 @@ export default function RegisterPage() {
   return (
     <FullPageContainer style={{ paddingTop: "80px" }}>
       <Logo onClick={() => navigate("/")}>
-        <img src="images/logo/textLogo.svg" alt="CiRCLE" />
+        <img src="/images/logo/textLogo.svg" alt="CiRCLE" />
       </Logo>
       {step === 1 && firstStep}
       {step === 2 && secondStep}

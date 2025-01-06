@@ -142,6 +142,7 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [follows, setFollows] = useState([]);
+    const [existingChatUsers, setExistingChatUsers] = useState([]);
 
     const resetState = () => {
       setSelectedUsers([]);
@@ -151,6 +152,19 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     useEffect(() => {
       if (isOpen && user?.id) {  // user.id가 있을 때만 실행
           resetState();
+
+          // 기존 채팅방 사용자 목록 가져오기
+          fetch(`/api/chat/rooms/user/${user.id}`)
+            .then(res => res.json())
+            .then(chatRooms => {
+              const existingUsers = chatRooms
+                .filter(room => room.chatRoomType === "INDIVIDUAL")
+                .flatMap(room =>
+                  room.participants.filter(p => p.email !== user.email)
+                )
+                .map(p => p.email);
+              setExistingChatUsers(existingUsers);
+            });
 
           // 바로 following 목록 조회
           fetch(`/api/user/following?userId=${user.id}&page=0&size=20`)
@@ -176,6 +190,9 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     );
 
     const handleUserSelect = (user) => {
+      if (existingChatUsers.includes(user.email)) {
+        return;
+      }
       if (!selectedUsers.some(selectedUser => selectedUser.email === user.email)) {
         setSelectedUsers([...selectedUsers, {
             name: user.username, 
@@ -196,33 +213,36 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     };
 
     // start chat
-    const handleStartChat = () => {
+    const handleStartChat = async () => {
       if (selectedUsers.length > 0) {
-          const chatRoomRequest = {
-              participantIds: [
-                  { email: user.email, status: "ACTIVE" },
-                  ...selectedUsers.map(user => ({
-                      email: user.email,
-                      status: "ACTIVE"
-                  }))
-              ],
-              chatroomTitle: selectedUsers.map(user => user.name).join(', '),
-              chatroomType: selectedUsers.length === 1 ? "INDIVIDUAL" : "GROUP"
-          };
-  
-          fetch('/api/chat/rooms', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
-              },
-              body: JSON.stringify(chatRoomRequest)
-          })
-          .then(res => res.json())
-          .then(chatRoom => {
-              onClose();
-              onChatCreated(chatRoom);
+        const chatRoomRequest = {
+          participantIds: [
+            { email: user.email, status: "ACTIVE" },
+            ...selectedUsers.map(user => ({
+              email: user.email,
+              status: "ACTIVE"
+            }))
+          ],
+          chatroomTitle: selectedUsers.map(user => user.name).join(', '),
+          chatroomType: selectedUsers.length === 1 ? "INDIVIDUAL" : "GROUP"
+        };
+    
+        try {
+          const response = await fetch('/api/chat/rooms', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${sessionStorage.getItem('userToken')}`
+            },
+            body: JSON.stringify(chatRoomRequest)
           });
+          
+          const chatRoom = await response.json();
+          onChatCreated(chatRoom); // 채팅방 생성 후 콜백 호출
+          onClose();
+        } catch (error) {
+          console.error('채팅방 생성 중 오류:', error);
+        }
       }
     };
 
@@ -260,7 +280,7 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
                         />
                     ))}
                 </ChipsContainer>
-                <div className='user-list'>
+                {/* <div className='user-list'>
                     {filteredUsers.map(user => (
                         <div key={user.email} className='user-item' onClick={() => handleUserSelect(user)}>
                             <ProfileImage src={user.profileImageUrl|| 'images/default/defaultProfileImage.png'} alt="프로필 이미지" />
@@ -270,6 +290,33 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
                             </UserInfo>
                         </div>
                     ))}
+                </div> */}
+                <div className='user-list'>
+                    {filteredUsers.map(user => {
+                        const isExistingChat = existingChatUsers.includes(user.email);
+                        return (
+                            <div 
+                                key={user.email} 
+                                className='user-item' 
+                                onClick={() => handleUserSelect(user)}
+                                style={{
+                                    cursor: isExistingChat ? 'not-allowed' : 'pointer',
+                                    opacity: isExistingChat ? 0.5 : 1
+                                }}
+                            >
+                                <ProfileImage src={user.profileImageUrl|| 'images/default/defaultProfileImage.png'} alt="프로필 이미지" />
+                                <UserInfo style={{ marginLeft: '10px' }}>
+                                    <UserName>{user.username}</UserName>
+                                    <UserEmail>{user.email}</UserEmail>
+                                </UserInfo>
+                                {isExistingChat && (
+                                    <span style={{ marginLeft: 'auto', color: '#666', fontSize: '0.8em' }}>
+                                        이미 채팅방이 존재합니다
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </ModalContent>
         </ModalOverlay>

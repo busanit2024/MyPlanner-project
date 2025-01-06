@@ -29,21 +29,40 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
 
-  const login = (token) => {
+  const loadUser = () => {
+    const currentUser = auth.currentUser;
+    let token = null;
+    if (currentUser) {
+      token = currentUser.accessToken;
+    } else {
+      token = sessionStorage.getItem("userToken");
+    }
+    
     if (token) {
-      axios.get("/api/user/find", {
+      setLoading(true);
+      login(token);
+    }
+  }
+
+  const login = (token) => {
+    let loginResult = false;
+    if (token) {
+      loginResult = axios.get("/api/user/find", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }).then((res) => {
         setUser(res.data);
         setIsLoggedIn(true);
+        return true;
       }).catch((error) => {
         console.error(error);
+        return false;
       }).finally(() => {
         setLoading(false);
       });
     }
+    return loginResult;
   }
 
   const logout = () => {
@@ -54,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout, loadUser }}>
       {children}
     </AuthContext.Provider>
   );

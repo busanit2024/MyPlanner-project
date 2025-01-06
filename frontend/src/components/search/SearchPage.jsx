@@ -5,12 +5,16 @@ import styled from "styled-components";
 import UserListItem from "../../ui/UserListItem";
 import axios from "axios";
 import Button from "../../ui/Button";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SearchPage() {
   const { searchText, setOnSearch, searchType, setSearchType } = useSearch();
+  const { user, loading } = useAuth();
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [users, setUsers] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+  const [listLoading, setListLoading] = useState(false);
 
   useEffect(() => {
     setOnSearch(() => onSearch);
@@ -29,23 +33,30 @@ export default function SearchPage() {
 
 
   const onSearch = (searchText, searchType) => {
+    setListLoading(true);
     const size = 10;
-    console.log(searchText, searchType);
+    console.log("user", user);
+    const userId = user?.id;
+    if (!userId, !searchText) {
+      return;
+    }
+
     if (searchType === 'user') {
-    axios.get(`/api/user/search`, {params: {searchText, page, size}})
-      .then(res => {
-        console.log(res.data);
-        const data = res.data.content;
-        setUsers(data);
-        setHasNext(res.data.hasNext);
-      })
-      .catch(err => {
-        console.error(err);
-      });
+      axios.get(`/api/user/search`, { params: { searchText, userId, page, size } })
+        .then(res => {
+          console.log("user search", res.data);
+          const data = res.data.content;
+          setUsers(data);
+          setHasNext(res.data.hasNext);
+        })
+        .catch(err => {
+          console.error(err);
+        })
+        .finally(() => {
+          setListLoading(false);
+        });
     }
   };
-
-
 
 
   return (
@@ -60,12 +71,24 @@ export default function SearchPage() {
           <div></div>
         </div>
       </SearchTypeWrap>
-      <UserList>
-        {users && users.map((user, index) => (
-          <UserListItem key={index} user={user} />
-        ))}
-        {hasNext && <Button onClick={() => setPage(page + 1)}>더보기</Button>}
-      </UserList>
+        <SearchResultList>
+        {(listLoading) && <p className="no-result">로딩중...</p>}
+        {(!listLoading && searchType === 'user') &&
+        <>
+          {(users.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
+          {users.map((user, index) => (
+            <UserListItem key={index} user={user} />
+          ))}
+        </> }
+        {(!listLoading && searchType === 'schedule') &&
+        <>
+          {(schedules.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
+          {schedules.map((schedule, index) => (
+            <div key={index}>{schedule.title}</div>
+          ))}
+        </>}
+          {hasNext && <Button onClick={() => setPage(page + 1)}>더보기</Button>}
+        </SearchResultList>
     </Container>
   );
 
@@ -120,11 +143,18 @@ const SearchTypeWrap = styled.div`
   }
 `;
 
-const UserList = styled.div`
+const SearchResultList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 24px 128px;
   box-sizing: border-box;
   width: 100%;
+
+  & .no-result {
+    margin-top: 64px;
+    font-size: 18px;
+    text-align: center;
+    color: var(--mid-gray);
+  }
 `;
