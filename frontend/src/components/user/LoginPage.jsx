@@ -7,11 +7,13 @@ import {  useEffect, useState } from "react";
 import { auth } from "../../firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [inputData, setInputData] = useState({
     email: "",
     password: "",
@@ -19,6 +21,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [inputStart, setInputStart] = useState(false);
   const [loginFail, setLoginFail] = useState(false);
+  const [loginError, setLoginError] = useState(false);
   const [passwordView, setPasswordView] = useState(false);
 
 
@@ -34,11 +37,13 @@ export default function LoginPage() {
         setError("유효한 이메일 형식을 입력해주세요.");
       } else if (loginFail) {
         setError("아이디 또는 비밀번호가 일치하지 않습니다.");
+      } else if (loginError) {
+        setError("로그인 중 오류가 발생했습니다.");
       } else {
         setError("");
       }
     }
-  }, [inputData, error, loginFail]);
+  }, [inputData, error, loginFail, loginError]);
 
 
   const handleLogin = async () => {
@@ -60,7 +65,13 @@ export default function LoginPage() {
         setLoginFail(false);
         const userToken = await user.getIdToken();
         sessionStorage.setItem("userToken", userToken);
-        navigate("/calendar");
+        console.log(login(userToken));
+        if (login(userToken)) {
+          setLoginError(false);
+          navigate("/calendar");
+        } else {
+          setLoginError(true);
+        }
       }
     } catch (error) {
       console.error(error);

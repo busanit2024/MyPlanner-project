@@ -9,7 +9,7 @@ const ChipContainer = styled.div`
     border: solid 1px #e0e0e0;
     padding: 5px 8px;
     margin: 5px;
-    max-width: 100px;
+    width: fit-content
     overflow: hidden;
 `;
 
@@ -21,7 +21,8 @@ const ProfileImage = styled.img`
 `;
 
 const UserName = styled.span`
-    
+    white-space: nowrap;
+    overflow: hidden;
 `;
 
 const RemoveButton = styled.span`
