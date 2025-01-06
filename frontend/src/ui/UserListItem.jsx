@@ -118,6 +118,11 @@ export default function UserListItem({ user: item }) {
     navigate(`/user/${item?.id}`);
   }
 
+  const handleMessageButton = (e) => {
+    e.stopPropagation();
+    // 쪽지로 이동
+  }
+
 
 
   return (
@@ -141,7 +146,7 @@ export default function UserListItem({ user: item }) {
           <>
             {isFollowing &&
               <>
-                <div className="message-icon">
+                <div className="message-icon" onClick={handleMessageButton}>
                   <img src="/images/icon/message.svg" alt="message" />
                 </div>
                 <Button onClick={handleUnfollowButton}>팔로잉</Button>

@@ -111,6 +111,11 @@ export default function UserProfilePage() {
     });
   }
 
+  const handleMessageButton = (e) => {
+    e.stopPropagation();
+    // 쪽지로 이동
+  }
+
 
   return (
     <Container>
@@ -131,7 +136,7 @@ export default function UserProfilePage() {
         </LeftContainer>
         <RightContainer>
           {isFollowing && <>
-            <div className="button">
+            <div className="button" onClick={handleMessageButton}>
               <img src="/images/icon/message.svg" alt="message" />
             </div>
             <Button onClick={handleUnfollowButton}>팔로잉</Button>
