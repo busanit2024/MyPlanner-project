@@ -1,5 +1,8 @@
 import styled from "styled-components";
 
+const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
+const defaultScheduleImageUrl = "/images/default/defaultScheduleImage.png";
+
 export default function ScheduleListItem(props) {
   const { data, onClick } = props;
 
@@ -7,14 +10,14 @@ export default function ScheduleListItem(props) {
     <Container className="schedule-list-item" onClick={onClick}>
       <UserInfo>
         <div className="profileImage">
-          <img src={data?.user.profileImageUrl} alt="profile" />
+          <img src={data?.user.profileImageUrl ?? defaultProfileImageUrl}  onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />
         </div>
         <span className="username">{data?.user.username ?? "닉네임"}</span>
       </UserInfo>
       <InnerContainer>
         <div className="left">
           <div className="image-container">
-            <img src={data?.imageUrls[0]} alt="일정 이미지" />
+            <img src={data?.imageUrl ?? defaultScheduleImageUrl} onError={(e) => e.target.src=defaultScheduleImageUrl} alt="일정 이미지" />
           </div>
           <div className="info">
             <span className="title">{data?.title ?? "일정 제목"}</span>
@@ -97,6 +100,12 @@ const InnerContainer = styled.div`
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: all 0.3s;
+      }
+
+      &:hover img {
+        transform: scale(1.1);
+        filter: brightness(0.9);
       }
     }
 

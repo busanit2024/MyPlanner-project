@@ -29,6 +29,16 @@ export default function Layout() {
       "/search": "검색",
     };
 
+    const dynamicRoutes = [
+      { pattern: /\/user\/\d+/, name: "유저" },
+    ]
+
+    for (let route of dynamicRoutes) {
+      if (route.pattern.test(path)) {
+        return route.name;
+      }
+    }
+
     return pageNames[path] || "CiRCLE";
 
   };

@@ -3,11 +3,13 @@ import styled from "styled-components";
 import ScheduleListItem from "../../ui/ScheduleListItem";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
 export default function FeedPage() {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [feedType, setFeedType] = useState("follow");
   const [followFeed, setFollowFeed] = useState([]);
   const [exploreFeed, setExploreFeed] = useState([]);
@@ -64,7 +66,7 @@ export default function FeedPage() {
         {feedType === "follow" && <>
         <FollowingListContainer>
           {followingList.map((item) => (
-            <div className="item" key={item.id}>
+            <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
             <div className="avatar" key={item.id}>
               <img src={item.profileImageUrl || defaultProfileImageUrl} alt="profile" />
             </div>

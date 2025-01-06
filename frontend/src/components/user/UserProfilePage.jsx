@@ -6,6 +6,8 @@ import Button from "../../ui/Button";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 
+const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
+
 export default function UserProfilePage() {
   const { userId } = useParams();
   const { user, loading } = useAuth();
@@ -114,7 +116,7 @@ export default function UserProfilePage() {
       <UserInfoContainer>
         <LeftContainer>
           <div className="profileImage">
-            <img src={pageUser?.profileImageUrl} alt="profile" />
+            <img src={pageUser?.profileImageUrl ?? defaultProfileImageUrl} onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />
           </div>
           <div className="info">
             <div className="nameContainer">
