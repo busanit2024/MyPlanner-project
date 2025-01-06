@@ -6,11 +6,13 @@ import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import Chip from "./Chip";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
 export default function UserListItem({ user: item }) {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followsMe, setFollowsMe] = useState(false);
   const [isMyAccount, setIsMyAccount] = useState(false);
@@ -23,7 +25,8 @@ export default function UserListItem({ user: item }) {
     }
   }, [user]);
 
-  const onFollow = () => {
+  const onFollow = (e) => {
+    e.stopPropagation();
     if (loading || !user) {
       return;
     }
@@ -85,7 +88,9 @@ export default function UserListItem({ user: item }) {
     }
   }
 
-  const handleUnfollowButton = () => {
+  const handleUnfollowButton = (e) => {
+    e.stopPropagation();
+
     Swal.fire({
       title: "언팔로우하기",
       text: "이 회원을 언팔로우하시겠어요?",
@@ -106,16 +111,29 @@ export default function UserListItem({ user: item }) {
     });
   }
 
+  const handleClick = () => {
+    if (isMyAccount) {
+      return;
+    }
+    navigate(`/user/${item?.id}`);
+  }
+
+  const handleMessageButton = (e) => {
+    e.stopPropagation();
+    // 쪽지로 이동
+  }
+
+
 
   return (
-    <Container className="user-list-item">
+    <Container className="user-list-item" onClick={handleClick}>
       <div className="left">
         <Avatar>
-          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl )} />
+          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl)} />
         </Avatar>
         <Info>
           <span className="name">{item?.username}
-            {(!isMyAccount && followsMe) && <Chip size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip> }
+            {(!isMyAccount && followsMe) && <Chip size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip>}
           </span>
           <span className="email">{item?.email}</span>
 
@@ -124,15 +142,23 @@ export default function UserListItem({ user: item }) {
       </div>
 
       <div className="right">
-        { !isMyAccount && 
-        <>
-        {isFollowing &&
-          <div className="message-icon">
-            <img src="/images/icon/message.svg" alt="message" />
-          </div>
-        }
-        {isFollowing ? <Button onClick={handleUnfollowButton} >팔로잉</Button> : <Button color="primary" onClick={onFollow}>팔로우하기</Button>}
-        </> }
+        {!isMyAccount &&
+          <>
+            {isFollowing &&
+              <>
+                <div className="message-icon" onClick={handleMessageButton}>
+                  <img src="/images/icon/message.svg" alt="message" />
+                </div>
+                <Button onClick={handleUnfollowButton}>팔로잉</Button>
+              </>
+            }
+            {(!isFollowing && followsMe) &&
+              <Button color="primary" onClick={onFollow}>맞팔로우하기</Button>
+            }
+            {(!isFollowing && !followsMe) &&
+              <Button color="primary" onClick={onFollow}>팔로우하기</Button>
+            }
+          </>}
       </div>
     </Container>
   );
