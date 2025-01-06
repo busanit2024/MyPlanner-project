@@ -67,7 +67,7 @@ const CalendarWrite = () => {
     // 전송할 데이터 객체 생성
     const scheduleData = {
       title: title,
-      category: category === '카테고리' ? '카테고리 없음' : category,
+      //category: category === '카테고리' ? '카테고리 없음' : category,
       // participants: participants.length > 0 ? participants : [''],
       startDate: startDate || date,
       endDate: endDate || date,
