@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
+import axios from "axios";
 
 export const NotiContext = createContext();
 
@@ -10,24 +11,39 @@ export const NotiProvider = ({ children }) => {
     noti: [],
   });
   const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCountRef = useRef(unreadCount);
 
   useEffect(() => {
     if (user && !loading) {
       subscribeToNotifications();
+      fetchUnreadCount();
     }
   }, [user, loading]);
 
   useEffect(() => {
+    unreadCountRef.current = unreadCount;
+  }, [unreadCount]);
+
+  useEffect(() => {
     const getUnreadCount = () => {
       const unread = notifications.invite.filter((noti) => !noti.read).length + notifications.noti.filter((noti) => !noti.read).length;
-      console.log("unread", unread);
-      setUnreadCount(unread);
+      setUnreadCount(unreadCountRef.current + unread);
     }
     if (notifications.invite.length > 0 || notifications.noti.length > 0) {
       getUnreadCount();
     }
   }, [notifications]);
 
+  const fetchUnreadCount = () => {
+    axios.get("/api/notification/unreadCount", { params: { userId: user.id } })
+        .then (res => {
+          console.log("unreadCount", res.data);
+          setUnreadCount(res.data);
+        })
+        .catch(err => {
+          console.error(err);
+        });
+  }
 
   const clearNotiList = () => {
     setNotifications({

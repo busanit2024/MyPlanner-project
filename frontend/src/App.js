@@ -21,6 +21,9 @@ import MyPage from './components/user/MyPage';
 import ProfileEditPage from './components/user/ProfileEditPage';
 import NotificationPage from './components/user/NotificationPage';
 import { NotiProvider } from './context/NotiContext';
+import FeedPage from './components/feed/FeedPage';
+import UserProfilePage from './components/user/UserProfilePage';
+import GroupPage from './components/group/GroupPage';
 
 
 function App() {
@@ -31,25 +34,26 @@ function App() {
           <SearchProvider>
             <GlobalStyles />
             <Routes>
-
+              <Route index element={<IndexPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path='/register' element={<RegisterPage />} />
               <Route path='/find' element={<FindPage />} />
-
-              <Route element={<Layout />}>
-                <Route index element={<IndexPage />} />
+              <Route element={<Layout />} >
                 <Route path='/search' element={<SearchPage />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/weekly" element={<WeeklyPage />} />
                 <Route path="/daily" element={<DailyPage />} />
-                <Route path="/grid" element={<Grid100Page/>} />
+                <Route path="/grid" element={<Grid100Page />} />
                 <Route path="/chat" element={<ChatPage />} />
-                <Route path="chat/:roomId" element={<ChatPage />} />
-                <Route path='/profile' element={<MyPage />} />
+                <Route path='profile' element={<MyPage />} />
                 <Route path='profile/edit' element={<ProfileEditPage />} />
                 <Route path='notification' element={<NotificationPage />} />
                 <Route path='calendarWrite' element={<CalendarWrite />} />
+                <Route path='feed' element={<FeedPage />} />
+                <Route path='user/:userId' element={<UserProfilePage />} />
+                <Route path='group' element={<GroupPage />} />
               </Route>
+              <Route path="chat/:roomId" element={<ChatPage />} />
             </Routes>
           </SearchProvider>
         </NotiProvider>

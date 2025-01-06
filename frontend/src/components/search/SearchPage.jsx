@@ -6,6 +6,7 @@ import UserListItem from "../../ui/UserListItem";
 import axios from "axios";
 import Button from "../../ui/Button";
 import { useAuth } from "../../context/AuthContext";
+import ScheduleListItem from "../../ui/ScheduleListItem";
 
 export default function SearchPage() {
   const { searchText, setOnSearch, searchType, setSearchType } = useSearch();
@@ -56,6 +57,10 @@ export default function SearchPage() {
           setListLoading(false);
         });
     }
+    if (searchType === 'schedule') {
+      setListLoading(false);
+      /// 추후구현
+    }
   };
 
 
@@ -86,6 +91,7 @@ export default function SearchPage() {
           {schedules.map((schedule, index) => (
             <div key={index}>{schedule.title}</div>
           ))}
+          <ScheduleListItem />
         </>}
           {hasNext && <Button onClick={() => setPage(page + 1)}>더보기</Button>}
         </SearchResultList>
