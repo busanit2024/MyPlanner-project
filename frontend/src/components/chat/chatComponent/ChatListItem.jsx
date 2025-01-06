@@ -59,9 +59,9 @@ const formatDate = (timestamp) => {
 };
 
 
-const ChatListItem = () => {
+const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
   const { user } = useAuth();
-  const [chatRooms, setChatRooms] = useState([]);
+  const [localChatRooms, setLocalChatRooms] = useState([]);
 
   const fetchChatRooms = async () => {
     try {
@@ -70,7 +70,22 @@ const ChatListItem = () => {
         throw new Error('채팅방 목록을 불러오는데 실패했습니다.');
       }
       const data = await response.json();
-      setChatRooms(data);
+
+      // 기존 채팅방 정보 유지하면서 업데이트
+      setLocalChatRooms(prevRooms => {
+        const updatedRooms = data.map(newRoom => {
+          const existingRoom = prevRooms.find(room => room.id === newRoom.id);
+          if (existingRoom) {
+            // 기존 참가자 정보 유지
+            return {
+              ...newRoom,
+              participants: existingRoom.participants || newRoom.participants
+            };
+          }
+          return newRoom;
+        });
+        return updatedRooms;
+      });
     } catch (error) {
       console.error('채팅방 목록 로딩 에러: ', error);
     }
@@ -87,6 +102,22 @@ const ChatListItem = () => {
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  // props와 로컬 채팅방 목록 합치기
+  const allChatRooms = [...(propsChatRooms || []), ...localChatRooms].reduce((unique, room) => {
+    const exists = unique.find(r => r.id === room.id);
+    if (!exists) {
+      unique.push(room);
+    } else {
+      // 기존 방 정보 업데이트 하되, participants 정보 유지
+      const updatedRoom = {
+        ...room,
+        participants : exists.participants || room.participants
+      };
+      unique[unique.indexOf(exists)] = updatedRoom;
+    }
+    return unique;
+  }, []);
   
   const getOtherUserInfo = (chatRoom) => {
     if (!Array.isArray(chatRoom.participants)) {
@@ -99,15 +130,18 @@ const ChatListItem = () => {
     return otherUser || {};
   };
 
-  
   return (
     <>
-      {chatRooms.map(chatRoom => {
+      {allChatRooms.map(chatRoom => {
         const otherUser = getOtherUserInfo(chatRoom);
         const lastMessageDate = chatRoom.lastMessageAt ? formatDate(chatRoom.lastMessageAt) : '';
 
         return (
-          <Container key={chatRoom.id}>
+          <Container 
+            key={chatRoom.id}
+            onClick={() => onSelectRoom(chatRoom, otherUser)}
+            style={{ cursor: 'pointer' }}
+          >
             <ProfileImage
               src={otherUser.profileImageUrl || "/images/default/defaultProfileImage.png"}
               alt="프로필 이미지"
