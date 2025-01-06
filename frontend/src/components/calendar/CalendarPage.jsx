@@ -1,74 +1,157 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom'; // React Router import
-import '../../css/CalendarPage.css';
+import React, { useEffect, useState } from 'react';
+import { formatDate } from '@fullcalendar/core';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
-const CalendarPage = () => {
-  const navigate = useNavigate(); // useNavigate 훅 사용
 
-  // 더미 데이터
-  const events = [
-    { date: '2017-04-03', title: '1주간 프로젝트', time: '10:00' },
-    { date: '2017-04-10', title: '미팅', time: '15:00' },
-    { date: '2017-04-21', title: '회의', time: '14:00' },
-    { date: '2017-04-16', title: '팀 점검', time: '11:00' },
-  ];
+// 고유 이벤트 ID 생성 함수
+let eventGuid = 0;
+function createEventId() {
+  return String(eventGuid++);
+}
 
-  // 날짜를 계산하는 함수
-  const getDaysInMonth = (year, month) => {
-    const date = new Date(year, month + 1, 0);
-    return date.getDate();
-  };
 
-  const renderCalendarDays = () => {
-    const daysInMonth = getDaysInMonth(2024, 11); // 12월 달력
-    const days = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(
-        <div className="day" key={i}>
-          <div className="day-header">{i}</div>
-          {events
-            .filter(event => new Date(event.date).getDate() === i)
-            .map((event, index) => (
-              <div className="event" key={index}>
-                {event.title} {event.time}
-              </div>
-            ))}
-        </div>
-      );
+
+// 초기 이벤트 배열
+const INITIAL_EVENTS = [
+  {
+    id: createEventId(),
+    title: '회의',
+    start: '2025-01-10',
+    end: '2025-01-12',
+  },
+  {
+    id: createEventId(),
+    title: '프로젝트 마감',
+    start: '2025-01-15',
+    allDay: true,
+  },
+];
+
+export default function CalendarPage() {
+  const [weekendsVisible, setWeekendsVisible] = useState(true);
+  const [currentEvents, setCurrentEvents] = useState([]);
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/schedules')
+      .then((response) => response.json())
+      .then((data) => setEvents(data));
+  }, []);
+
+  function handleWeekendsToggle() {
+    setWeekendsVisible(!weekendsVisible);
+  }
+
+  function handleDateSelect(selectInfo) {
+    let title = prompt('Please enter a new title for your event');
+    let calendarApi = selectInfo.view.calendar;
+
+    calendarApi.unselect(); // clear date selection
+
+    if (title) {
+      calendarApi.addEvent({
+        id: createEventId(),
+        title,
+        start: selectInfo.startStr,
+        end: selectInfo.endStr,
+        allDay: selectInfo.allDay,
+      });
     }
-    return days;
-  };
+  }
+
+  function handleEventClick(clickInfo) {
+    if (window.confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'?`)) {
+      clickInfo.event.remove();
+    }
+  }
+
+  function handleEvents(events) {
+    setCurrentEvents(events);
+  }
 
   return (
-    <div className="calendar-page">
-      <div className="header">
-        <h1>캘린더</h1>
-        <div className="profile-pictures">
-          <img src="profile1.jpg" alt="Profile 1" className="profile-picture" />
-          <img src="profile2.jpg" alt="Profile 2" className="profile-picture" />
-          <img src="profile3.jpg" alt="Profile 3" className="profile-picture" />
-        </div>
-        <div className="category-dropdown">
-          <button>카테고리 ▼</button>
-          <div className="dropdown-content">
-            <p>카테고리1</p>
-            <p>카테고리2</p>
-            <p>카테고리3</p>
-          </div>
-        </div>
-        <button 
-          className="add-event-button" 
-          onClick={() => navigate('/calendarWrite')}
-          style={{ fontSize: '24px', marginLeft: '20px', background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          📅+
-        </button>
-      </div>
-      <div className="calendar">
-        {renderCalendarDays()}
+    
+      <div className="demo-app-main">
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+          }}
+          initialView="dayGridMonth"
+          editable={true}
+          selectable={true}
+          selectMirror={true}
+          dayMaxEvents={true}
+          weekends={weekendsVisible}
+          initialEvents={INITIAL_EVENTS} // 초기 이벤트
+          select={handleDateSelect}
+          eventContent={renderEventContent} // 사용자 정의 렌더 함수
+          eventClick={handleEventClick}
+          eventsSet={handleEvents} // 이벤트 변경 시 호출
+        />
+        <div className="demo-app">
+      <Sidebar
+        weekendsVisible={weekendsVisible}
+        handleWeekendsToggle={handleWeekendsToggle}
+        currentEvents={currentEvents}
+      />
       </div>
     </div>
   );
-};
+}
+function SidebarEvent({ event }) {
+    return (
+      <li>
+        <b>{formatDate(event.start, { year: 'numeric', month: 'short', day: 'numeric' })}</b>
+        <i>{event.title}</i>
+      </li>
+    );
+  }
+function renderEventContent(eventInfo) {
+  return (
+    <>
+      <b>{eventInfo.timeText}</b>
+      <i>{eventInfo.event.title}</i>
+    </>
+  );
+}
 
-export default CalendarPage;
+function Sidebar({ weekendsVisible, handleWeekendsToggle, currentEvents }) {
+    return (
+      <div className="demo-app-sidebar">
+        <div className="demo-app-sidebar-section">
+          <h2>안내</h2>
+          <ul>
+            <li>클릭해서 작성</li>
+            <li>그래그앤드롭</li>
+            <li>클릭해서 삭제</li>
+          </ul>
+        </div>
+        <div className="demo-app-sidebar-section">
+          <label>
+            <input
+              type="checkbox"
+              checked={weekendsVisible}
+              onChange={handleWeekendsToggle}
+            />
+            주말 추가/제거 토글
+          </label>
+        </div>
+        <div className="demo-app-sidebar-section">
+          <h2>All Events ({currentEvents.length})</h2>
+          <ul>
+            {currentEvents.map((event) => (
+              <SidebarEvent key={event.id} event={event} />
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
+
