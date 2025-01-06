@@ -1,12 +1,11 @@
 package com.busanit.myplannerbackend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Time;
 import java.util.Date;
-import java.util.List;
 
 @Entity
 @Table(name = "schedule")
@@ -23,9 +22,6 @@ public class Schedule {
 
     @Column(name = "title")
     private String title;   // 일정 제목
-
-    @Column(name = "detail")
-    private String detail;  // 상세 내용
 
     @Column(name = "start_date", nullable = false)
     private Date startDate; // 시작일
@@ -56,7 +52,7 @@ public class Schedule {
 
     @Column(name = "created_at", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;   // 등록 날짜
+    private java.util.Date createdAt;   // 등록 날짜
 
     @Column(name = "checkList")
     private List<String> checkList;   // 체크리스트
@@ -64,13 +60,11 @@ public class Schedule {
     @Column(name = "done", nullable = false)
     private Boolean done;  // 완료 여부
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnore
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;    // 사용자 아이디
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnore
+    @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;  // 카테고리 (Category 엔티티와의 관계)
 
@@ -81,13 +75,3 @@ public class Schedule {
 
 
 }
-
-
-
-
-
-
-
-
-
-

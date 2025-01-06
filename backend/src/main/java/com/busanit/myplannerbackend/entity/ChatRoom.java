@@ -22,5 +22,6 @@ public class ChatRoom {
     private String chatRoomType;
 
     private LocalDateTime createdAt;
+    private LocalDateTime lastMessageAt;
     private String lastMessage;
 }

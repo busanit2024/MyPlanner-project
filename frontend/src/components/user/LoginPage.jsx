@@ -73,10 +73,10 @@ export default function LoginPage() {
       <WelcomeContainer className="box">
         <LeftContainer>
           <div className="logo">
-            <img src="images/logo/logoWhite.svg" alt="CiRCLE" />
+            <img src="/images/logo/logoWhite.svg" alt="CiRCLE" />
           </div>
           <div className="logoText">
-            <img src="images/logo/textLogoWhite.svg" alt="CiRCLE" />
+            <img src="/images/logo/textLogoWhite.svg" alt="CiRCLE" />
           </div>
           <p className="description">
             친구들과 공유하는 일정관리 SNS

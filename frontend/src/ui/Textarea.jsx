@@ -12,6 +12,7 @@ const StyledTextarea = styled.textarea`
   box-sizing: border-box;
   font-family: inherit;
   resize: none;
+  height: ${props => props.height ? `${props.height}px` : 'auto'};
 
   ${props => props.underline && `
     border: none;
@@ -25,7 +26,7 @@ const StyledTextarea = styled.textarea`
 `;
 
 export default function Textarea(props){
-  const { grow, placeholder, value, onChange, id } = props;
+  const { grow, placeholder, value, onChange, id, size, height } = props;
 
   return (
     <StyledTextarea
@@ -34,6 +35,8 @@ export default function Textarea(props){
       onChange={onChange}
       grow={grow}
       id={id}
+      size={size}
+      height={height}
     />
   );
 
