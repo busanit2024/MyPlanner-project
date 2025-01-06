@@ -48,6 +48,15 @@ const ChatDate = styled.div`
 
 
 const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSendMessage }) => {
+    const scrollRef = useRef(null);
+
+    //스크롤 하단으로 이동
+    useEffect(()=> {
+        if(scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [messages]); 
+    
     const groupedMessages = messages?.reduce((groups, msg) => {
         const date = new Date(msg.sendTime).toLocaleDateString('ko-KR', {
             year: 'numeric',
@@ -91,7 +100,7 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSen
                     {!isConnected && '연결 중...'}
                 </div>
             </ChatTitleWrapper>
-            <ChatMessagesScroll>
+            <ChatMessagesScroll ref={scrollRef}>
                 <ChatMessages>
                     {groupedMessages && Object.entries(groupedMessages).map(([date, msgs]) => (
                         <React.Fragment key={date}>
