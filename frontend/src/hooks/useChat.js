@@ -36,11 +36,19 @@ export const useChat = (roomId, userEmail) => {
             client.current.subscribe(`/sub/chat/rooms/${roomId}`, (message) => {
             //누군가 발송했던 메시지를 리스트에 추가
             const newMessage = JSON.parse(message.body);
-            setMessages((prevMessage) => [...prevMessage, newMessage]);
+            // 중복체크
+            setMessages(prevMessages => {
+                const isDuplicate = prevMessages.some(msg => 
+                    msg.sendTime === newMessage.sendTime && 
+                    msg.senderEmail === newMessage.senderEmail && 
+                    msg.contents === newMessage.contents
+                );
+                if (isDuplicate) return prevMessages;
+                return [...prevMessages, newMessage];
             });
         });
-          
-    }, [roomId, userEmail]);
+    });
+}, [roomId, userEmail]);
 
 
     // roomId가 변경될 때마다 연결 재설정 및 메시지 초기화

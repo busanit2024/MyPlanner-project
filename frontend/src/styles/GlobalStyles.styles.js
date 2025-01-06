@@ -13,6 +13,7 @@ const GlobalStyles = createGlobalStyle`
     --white : #FFFFFF;
     --light-primary : #FFE7BA;
     --chat-gray : #f2f2f2;
+    --black : #000000;
   }
 
   /* 

@@ -35,7 +35,33 @@ const ChatInput = styled.div`
     border-top: 1px solid var(--light-gray);
 `;
 
+const ChatDate = styled.div`
+    text-align: center;
+    font-weight:600;
+    font-size:14px;
+    color: var(--black);
+    width: 100%;
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+`;
+
+
 const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSendMessage }) => {
+    const groupedMessages = messages?.reduce((groups, msg) => {
+        const date = new Date(msg.sendTime).toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        if (!groups[date]) {
+            groups[date] = [];
+        }
+        groups[date].push(msg);
+        return groups;
+    }, {});
+
     return (
         <ChatRoomContainer>
             <ChatTitleWrapper>
@@ -67,15 +93,20 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSen
             </ChatTitleWrapper>
             <ChatMessagesScroll>
                 <ChatMessages>
-                    {messages && messages.map(msg => (
-                        <ChatMessage
-                            key={msg.id} 
-                            message={msg.contents}
-                            time={msg.sendTime}
-                            isMine={msg.senderEmail === user?.email}
-                            senderName={msg.senderEmail === user?.email ? user.username : chatPartner.name}
-                            senderProfile={msg.senderEmail === user?.email ? user.profileImageUrl : chatPartner.profileImage}
-                        />
+                    {groupedMessages && Object.entries(groupedMessages).map(([date, msgs]) => (
+                        <React.Fragment key={date}>
+                            <ChatDate>{date}</ChatDate>
+                            {msgs.map(msg => (
+                                <ChatMessage
+                                    key={msg.id}
+                                    message={msg.contents}
+                                    time={msg.sendTime}
+                                    isMine={msg.senderEmail === user?.email}
+                                    senderName={msg.senderEmail === user?.email ? user.username : chatPartner.name}
+                                    senderProfile={msg.senderEmail === user?.email ? user.profileImageUrl : chatPartner.profileImage}
+                                />
+                            ))}
+                        </React.Fragment>
                     ))}
                 </ChatMessages>
             </ChatMessagesScroll>
