@@ -1,8 +1,9 @@
 import styled from "styled-components";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext, useAuth } from "../context/AuthContext";
 import Swal from "sweetalert2";
+import { useNoti } from "../context/NotiContext";
 
 const navItems = [
   {
@@ -35,7 +36,8 @@ const defaultProfileImage = "images/default/defaultProfileImage.png";
 
 
 export default function SideNavbar() {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout } = useAuth();
+  const { unreadCount } = useNoti();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -83,6 +85,7 @@ export default function SideNavbar() {
             <Link to={item.link} className={currentPath.includes(item.link) ? "active" : ""}>
               {item.name}
             </Link>
+            {item.name === "알림" && unreadCount > 0 && <span className="badge">{unreadCount}</span>}
           </NavItem>
         ))}
         <NavItem style={{ justifySelf: "flex-end", marginTop: "auto"}}>
@@ -123,6 +126,10 @@ const NavList = styled.ul`
 `;
 
 const NavItem = styled.li`
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
   
   & a {
     text-decoration: none;
@@ -145,6 +152,19 @@ const NavItem = styled.li`
     color: var(--dark-gray);
     cursor: pointer;
     text-decoration: underline;
+  }
+
+  & .badge {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--primary-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: bold;
   }
 
 
