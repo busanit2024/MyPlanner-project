@@ -5,6 +5,7 @@ import styled from "styled-components";
 import Button from "../../ui/Button";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
+import Chip from "../../ui/Chip";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
@@ -122,6 +123,7 @@ export default function UserProfilePage() {
             <div className="nameContainer">
               <div className="username">{pageUser?.username}</div>
               <div className="email">{pageUser?.email}</div>
+              {followsMe && <Chip size="small">나를 팔로우함</Chip>}
             </div>
             <div className="bio">{pageUser?.bio}</div>
           </div>
@@ -134,7 +136,10 @@ export default function UserProfilePage() {
             </div>
             <Button onClick={handleUnfollowButton}>팔로잉</Button>
           </>}
-          {!isFollowing &&
+          {(!isFollowing && followsMe) &&
+            <Button color="primary" onClick={onFollow}>맞팔로우하기</Button>
+          }
+          {(!isFollowing && !followsMe) &&
             <Button color="primary" onClick={onFollow}>팔로우하기</Button>
           }
         </RightContainer>

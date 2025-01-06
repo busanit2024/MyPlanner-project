@@ -90,7 +90,7 @@ export default function UserListItem({ user: item }) {
 
   const handleUnfollowButton = (e) => {
     e.stopPropagation();
-    
+
     Swal.fire({
       title: "언팔로우하기",
       text: "이 회원을 언팔로우하시겠어요?",
@@ -124,11 +124,11 @@ export default function UserListItem({ user: item }) {
     <Container className="user-list-item" onClick={handleClick}>
       <div className="left">
         <Avatar>
-          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl )} />
+          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl)} />
         </Avatar>
         <Info>
           <span className="name">{item?.username}
-            {(!isMyAccount && followsMe) && <Chip size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip> }
+            {(!isMyAccount && followsMe) && <Chip size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip>}
           </span>
           <span className="email">{item?.email}</span>
 
@@ -137,15 +137,23 @@ export default function UserListItem({ user: item }) {
       </div>
 
       <div className="right">
-        { !isMyAccount && 
-        <>
-        {isFollowing &&
-          <div className="message-icon">
-            <img src="/images/icon/message.svg" alt="message" />
-          </div>
-        }
-        {isFollowing ? <Button onClick={handleUnfollowButton} >팔로잉</Button> : <Button color="primary" onClick={onFollow}>팔로우하기</Button>}
-        </> }
+        {!isMyAccount &&
+          <>
+            {isFollowing &&
+              <>
+                <div className="message-icon">
+                  <img src="/images/icon/message.svg" alt="message" />
+                </div>
+                <Button onClick={handleUnfollowButton}>팔로잉</Button>
+              </>
+            }
+            {(!isFollowing && followsMe) &&
+              <Button color="primary" onClick={onFollow}>맞팔로우하기</Button>
+            }
+            {(!isFollowing && !followsMe) &&
+              <Button color="primary" onClick={onFollow}>팔로우하기</Button>
+            }
+          </>}
       </div>
     </Container>
   );

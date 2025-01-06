@@ -72,8 +72,8 @@ export default function SideNavbar() {
         </Link>
       </Logo>
       <NavList>
-        <NavItem className="profile">
-          <Link to="/profile">
+        <NavItem className={"profile"}>
+          <Link to="/profile" className={currentPath.includes("/profile") ? "active" : ""}>
             <ProfileImage>
               <img src={user?.profileImageUrl} onError={(e) => (e.target.src=defaultProfileImage)} alt="Profile" />
             </ProfileImage>
