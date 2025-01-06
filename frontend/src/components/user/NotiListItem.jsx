@@ -1,20 +1,49 @@
 import styled from "styled-components";
 import Button from "../../ui/Button";
+import { calculateDate } from "../../util/calculateDate";
+
+const defaultProfileImage = "/images/default/defaultProfileImage.png";
 
 export default function NotiListItem(props) {
+  const { data } = props;
+
+  console.log("notiListItem", data);
+
+  const makeText = () => {
+    if (!data) return "";
+    const fromUser = data.fromUser;
+    switch (data.type) {
+      case "FOLLOW":
+        return (
+          <>
+            <span>{fromUser.username}</span>님이 회원님을 팔로우했습니다.
+          </>
+        )
+      case "LIKE_POST":
+      case "COMMENT":
+      case "INVITE":
+      default:
+        return "";
+    }
+  }
 
   return (
     <Container className="noti-list-item">
       <div className="content">
         <Avatar>
-          <img src="/images/default/defaultProfileImage.png" alt="profile" />
+          <img src={data?.fromUser.profileImageUrl ?? defaultProfileImage} onError={(e) => e.target.src = defaultProfileImage} alt="profile" />
         </Avatar>
+
+        <NotiText>
+          {makeText()}
+          <span className="time"> {calculateDate(data?.updatedAt)} 전</span>
+        </NotiText>
       </div>
 
-      <div className="button-group">
+      {data?.type === "INVITE" && <div className="button-group">
         <Button size="small" >거절</Button>
         <Button color="primary" size="small">수락</Button>
-      </div>
+      </div>}
 
     </Container>
   )
@@ -28,6 +57,7 @@ const Container = styled.div`
   width: 100%;
   padding: 16px 0px;
   box-sizing: border-box;
+  cursor: pointer;
 
   & .content {
     display: flex;
@@ -53,5 +83,20 @@ const Avatar = styled.div`
     object-fit: cover;
     border-radius: 50%;
     image-rendering: auto;
+  }
+`;
+
+const NotiText = styled.div`
+  font-size: 18px;
+  display: flex;
+  gap: 8px;
+  
+  & span {
+    font-weight: bold;
+  }
+
+  & .time {
+    font-weight: normal;
+    color: var(--mid-gray);
   }
 `;
