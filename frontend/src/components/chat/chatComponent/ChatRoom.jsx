@@ -46,16 +46,83 @@ const ChatDate = styled.div`
     justify-content: center;
 `;
 
+const NewMessageAlert = styled.div`
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        &:hover {
+            opacity: 0.9;
+        }
+    `;
+
 
 const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSendMessage }) => {
     const scrollRef = useRef(null);
+    const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
+    const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
+    const lastMessageRef = useRef(null);
 
-    //스크롤 하단으로 이동
-    useEffect(()=> {
+    // 스크롤 위치 감지
+    const handleScroll = () => {
         if(scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+            const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+            setShouldScrollToBottom(isNearBottom);
+            if(isNearBottom) {
+                setShowNewMessageAlert(false);
+            }
         }
-    }, [messages]); 
+    };
+
+    // 스크롤 하단으로 이동
+    const scrollToBottom = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            setShowNewMessageAlert(false);
+            setShouldScrollToBottom(true);
+        }
+    };
+
+
+    // 새 메시지 알림 클릭했을 때
+    useEffect(() => {
+        const scrollContainer = scrollRef.current;
+        if (scrollContainer) {
+            scrollContainer.addEventListener('scroll', handleScroll);
+        }
+        return () => {
+            if (scrollContainer) {
+                scrollContainer.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, []);
+
+     // 새 메시지 감지 및 스크롤 처리
+     useEffect(() => {
+        if (scrollRef.current && messages?.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            const isMyMessage = lastMessage.senderEmail === user?.email;
+
+            if (isMyMessage || shouldScrollToBottom) {
+                scrollToBottom();
+            } else {
+                // 내 메시지가 아니고 스크롤이 위에 있을 때 알림 표시
+                setShowNewMessageAlert(true);
+            }
+        }
+    }, [messages, user?.email, shouldScrollToBottom]);
     
     const groupedMessages = messages?.reduce((groups, msg) => {
         const date = new Date(msg.sendTime).toLocaleDateString('ko-KR', {
@@ -119,6 +186,16 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSen
                     ))}
                 </ChatMessages>
             </ChatMessagesScroll>
+            {showNewMessageAlert && (
+                <NewMessageAlert onClick={scrollToBottom}>
+                    <img 
+                        src="/images/icon/ArrowDown.svg" 
+                        alt="아래로" 
+                        style={{ width: '16px', height: '16px' }}
+                    />
+                    새로운 메시지가 있습니다
+                </NewMessageAlert>
+            )}
             <ChatInput>
                 <InputChat onSendMessage={onSendMessage} />
             </ChatInput>
