@@ -47,56 +47,46 @@ const ChatDate = styled.div`
 `;
 
 const NewMessageAlert = styled.div`
-        position: fixed;
-        bottom: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: var(--primary-color);
-        color: white;
-        padding: 10px 20px;
-        border-radius: 20px;
-        cursor: pointer;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        
-        &:hover {
-            opacity: 0.9;
-        }
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    &:hover {
+        opacity: 0.9;
+    }
     `;
 
 
-const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSendMessage }) => {
+const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSendMessage }) => {
     const scrollRef = useRef(null);
-    const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
-    const lastMessageRef = useRef(null);
+    const [isUserNearBottom, setIsUserNearBottom] = useState(true);
+    const lastMessageWasMine = useRef(false);
 
-    // 스크롤 위치 감지
+    // 스크롤 위치 확인
     const handleScroll = () => {
-        if(scrollRef.current) {
+        if (scrollRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-            const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-            setShouldScrollToBottom(isNearBottom);
-            if(isNearBottom) {
+            const isNear = scrollHeight - scrollTop - clientHeight < 100;
+            setIsUserNearBottom(isNear);
+            if (isNear) {
                 setShowNewMessageAlert(false);
             }
         }
     };
 
-    // 스크롤 하단으로 이동
-    const scrollToBottom = () => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-            setShowNewMessageAlert(false);
-            setShouldScrollToBottom(true);
-        }
-    };
-
-
-    // 새 메시지 알림 클릭했을 때
+    // 스크롤 이벤트 리스너
     useEffect(() => {
         const scrollContainer = scrollRef.current;
         if (scrollContainer) {
@@ -109,21 +99,59 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSen
         };
     }, []);
 
-     // 새 메시지 감지 및 스크롤 처리
-     useEffect(() => {
-        if (scrollRef.current && messages?.length > 0) {
-            const lastMessage = messages[messages.length - 1];
-            const isMyMessage = lastMessage.senderEmail === user?.email;
+    // 메시지 전송 핸들러
+    const handleSendMessage = async (content) => {
+        try {
+            await onSendMessage(content);
+            lastMessageWasMine.current = true;
+            scrollToBottom();
+        } catch (error) {
+            console.error('메시지 전송 실패:', error);
+        }
+    };
 
-            if (isMyMessage || shouldScrollToBottom) {
+    // 메시지 업데이트 시 스크롤 처리
+    useEffect(() => {
+        if (!messages?.length) return;
+
+        const lastMessage = messages[messages.length - 1];
+        const isMyMessage = lastMessage.senderEmail === user?.email;
+
+        if (scrollRef.current) {
+            if (lastMessageWasMine.current) {
+                // 내가 방금 메시지를 보냈을 때만 스크롤
                 scrollToBottom();
-            } else {
-                // 내 메시지가 아니고 스크롤이 위에 있을 때 알림 표시
+                lastMessageWasMine.current = false;
+            } else if (!isMyMessage && !isUserNearBottom) {
+                // 상대방 메시지이고 스크롤이 위에 있을 때
                 setShowNewMessageAlert(true);
+            } else if (isUserNearBottom) {
+                // 사용자가 하단에 있을 때는 스크롤
+                scrollToBottom();
             }
         }
-    }, [messages, user?.email, shouldScrollToBottom]);
-    
+    }, [messages, user?.email]);
+
+    // 채팅방 변경 시 초기화
+    useEffect(() => {
+        if (selectedRoom?.id) {
+            setShowNewMessageAlert(false);
+            setIsUserNearBottom(true);
+            lastMessageWasMine.current = false;
+            setTimeout(scrollToBottom, 100);
+        }
+    }, [selectedRoom?.id]);
+
+    // 스크롤 하단으로 이동
+    const scrollToBottom = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            setShowNewMessageAlert(false);
+            setIsUserNearBottom(true);
+        }
+    };
+
+    // 메시지 그룹화
     const groupedMessages = messages?.reduce((groups, msg) => {
         const date = new Date(msg.sendTime).toLocaleDateString('ko-KR', {
             year: 'numeric',
@@ -188,16 +216,12 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected,onSen
             </ChatMessagesScroll>
             {showNewMessageAlert && (
                 <NewMessageAlert onClick={scrollToBottom}>
-                    <img 
-                        src="/images/icon/ArrowDown.svg" 
-                        alt="아래로" 
-                        style={{ width: '16px', height: '16px' }}
-                    />
+                    <img src="/images/icon/ArrowDown.svg" alt="아래로" />
                     새로운 메시지가 있습니다
                 </NewMessageAlert>
             )}
             <ChatInput>
-                <InputChat onSendMessage={onSendMessage} />
+                <InputChat onSendMessage={handleSendMessage} />
             </ChatInput>
         </ChatRoomContainer>
     );
