@@ -50,6 +50,10 @@ public class UserDTO {
     return builder.build();
   }
 
+  public static List<UserDTO> toDTO(List<User> users) {
+    return users.stream().map(UserDTO::toDTO).collect(Collectors.toList());
+  }
+
   public static Slice<UserDTO> toDTO(Slice<User> slice) {
     return slice.map(UserDTO::toDTO);
     }

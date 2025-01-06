@@ -104,8 +104,8 @@ public class UserService {
       return null;
     }
     Slice<Follow> followSlice = followRepository.findFollowToByFollowFrom(user, pageable);
-    Slice<User> followers = followSlice.map(Follow::getFollowTo);
-    return UserDTO.toDTO(followers);
+    Slice<User> follows = followSlice.map(Follow::getFollowTo);
+    return UserDTO.toDTO(follows);
   }
 
   @Transactional
@@ -162,5 +162,13 @@ public class UserService {
     }
     Slice<Notification> notis = notificationRepository.findAllByUserAndTypeOrderByUpdatedAtDesc(user, Notification.NotiType.INVITE, pageable);
     return NotificationDTO.toDTO(notis);
+  }
+
+  public Integer getUnreadCount(Long userId) {
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) {
+      return null;
+    }
+    return notificationRepository.countByUserAndIsRead(user, false);
   }
 }
