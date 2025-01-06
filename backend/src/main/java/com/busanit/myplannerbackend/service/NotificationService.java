@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -87,6 +88,22 @@ public class NotificationService {
               sendNotification(emitter, eventId, key, NotificationDTO.toDTO(notification));
             }
     );
+  }
+
+  public Notification read(Long id) {
+    Notification notification = notificationRepository.findById(id).orElse(null);
+    if (notification == null) {
+      return null;
+    }
+
+    notification.setRead(true);
+    return notificationRepository.save(notification);
+  }
+
+  public void readAll(List<Long> idList) {
+    for (Long id : idList) {
+      read(id);
+    }
   }
 
 }

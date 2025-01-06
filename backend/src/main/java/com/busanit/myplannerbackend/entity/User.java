@@ -46,6 +46,9 @@ public class User {
     ADMIN, USER
   }
 
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Schedule> schedules;
+
   @OneToMany(mappedBy = "followFrom")
   private List<Follow> follows;
 

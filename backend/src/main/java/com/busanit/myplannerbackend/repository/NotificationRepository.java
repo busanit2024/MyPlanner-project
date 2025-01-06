@@ -2,6 +2,7 @@ package com.busanit.myplannerbackend.repository;
 
 import com.busanit.myplannerbackend.entity.Notification;
 import com.busanit.myplannerbackend.entity.User;
+import org.aspectj.weaver.ast.Not;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
   Slice<Notification> findAllByUserAndTypeOrderByUpdatedAtDesc(User user, Notification.NotiType type, Pageable pageable);
 
   Optional<Notification> findByUserAndFromUser(User user, User fromUser);
+
 }

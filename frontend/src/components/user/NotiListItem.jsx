@@ -1,13 +1,12 @@
 import styled from "styled-components";
 import Button from "../../ui/Button";
 import { calculateDate } from "../../util/calculateDate";
+import axios from "axios";
 
 const defaultProfileImage = "/images/default/defaultProfileImage.png";
 
 export default function NotiListItem(props) {
-  const { data } = props;
-
-  console.log("notiListItem", data);
+  const { data, onClick } = props;
 
   const makeText = () => {
     if (!data) return "";
@@ -27,14 +26,16 @@ export default function NotiListItem(props) {
     }
   }
 
+
+
   return (
-    <Container className="noti-list-item">
+    <Container className="noti-list-item" onClick={onClick}>
       <div className="content">
         <Avatar>
           <img src={data?.fromUser.profileImageUrl ?? defaultProfileImage} onError={(e) => e.target.src = defaultProfileImage} alt="profile" />
         </Avatar>
 
-        <NotiText>
+        <NotiText className={data?.read ? "read" : ""}>
           {makeText()}
           <span className="time"> {calculateDate(data?.updatedAt)} 전</span>
         </NotiText>
@@ -90,6 +91,10 @@ const NotiText = styled.div`
   font-size: 18px;
   display: flex;
   gap: 8px;
+
+  &.read {
+    color: var(--mid-gray);
+  }
   
   & span {
     font-weight: bold;
