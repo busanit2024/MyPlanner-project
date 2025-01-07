@@ -103,21 +103,46 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     }
   }, [user]);
 
-  // props와 로컬 채팅방 목록 합치기
-  const allChatRooms = [...(propsChatRooms || []), ...localChatRooms].reduce((unique, room) => {
-    const exists = unique.find(r => r.id === room.id);
-    if (!exists) {
-      unique.push(room);
-    } else {
-      // 기존 방 정보 업데이트 하되, participants 정보 유지
-      const updatedRoom = {
-        ...room,
-        participants : exists.participants || room.participants
-      };
-      unique[unique.indexOf(exists)] = updatedRoom;
-    }
-    return unique;
-  }, []);
+  //props와 로컬 채팅방 목록 합치기
+  // const allChatRooms = [...(propsChatRooms || []), ...localChatRooms].reduce((unique, room) => {
+  //   const exists = unique.find(r => r.id === room.id);
+  //   if (!exists) {
+  //     unique.push(room);
+  //   } else {
+  //     // 기존 방 정보 업데이트 하되, participants 정보 유지
+  //     const updatedRoom = {
+  //       ...room,
+  //       participants : exists.participants || room.participants
+  //     };
+  //     unique[unique.indexOf(exists)] = updatedRoom;
+  //   }
+  //   return unique;
+  // }, []);
+  const allChatRooms = [...(propsChatRooms || []), ...localChatRooms]
+    .reduce((unique, room) => {
+      const exists = unique.find(r => r.id === room.id);
+      if (!exists) {
+        unique.push(room);
+      } else {
+        const updatedRoom = {
+          ...room,
+          participants: exists.participants || room.participants
+        };
+        unique[unique.indexOf(exists)] = updatedRoom;
+      }
+      return unique;
+    }, [])
+    .sort((a, b) => {
+      // lastMessageAt이 없는 경우 가장 뒤로 정렬
+      if (!a.lastMessageAt) return 1;
+      if (!b.lastMessageAt) return -1;
+      
+      // 날짜 문자열을 비교
+      const dateA = a.lastMessageAt.toString();
+      const dateB = b.lastMessageAt.toString();
+      
+      return dateB.localeCompare(dateA);
+    });
   
   const getOtherUserInfo = (chatRoom) => {
     if (!Array.isArray(chatRoom.participants)) {
