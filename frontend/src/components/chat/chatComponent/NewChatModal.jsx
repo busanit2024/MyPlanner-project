@@ -143,6 +143,7 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [follows, setFollows] = useState([]);
     const [existingChatUsers, setExistingChatUsers] = useState([]);
+    const [existingChatRooms, setExistingChatRooms] = useState([]);
 
     const resetState = () => {
       setSelectedUsers([]);
@@ -153,12 +154,14 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
       if (isOpen && user?.id) {  // user.id가 있을 때만 실행
           resetState();
 
-          // 기존 채팅방 사용자 목록 가져오기
-          fetch(`/api/chat/rooms/user/${user.id}`)
+          // 기존 채팅 사용자 목록 및 기존 채팅방 목록 가져오기
+          fetch(`/api/chat/rooms/user/${user.email}`)
             .then(res => res.json())
             .then(chatRooms => {
-              const existingUsers = chatRooms
-                .filter(room => room.chatRoomType === "INDIVIDUAL")
+              const individualRooms = chatRooms.filter(room => room.chatRoomType === "INDIVIDUAL");
+              setExistingChatRooms(individualRooms);
+              
+              const existingUsers = individualRooms
                 .flatMap(room =>
                   room.participants.filter(p => p.email !== user.email)
                 )
@@ -190,7 +193,21 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     );
 
     const handleUserSelect = (user) => {
+      // if (existingChatUsers.includes(user.email)) {
+      //   return;
+      // }
       if (existingChatUsers.includes(user.email)) {
+        // 기존 채팅방 찾기
+        const existingRoom = existingChatRooms.find(room => 
+          room.participants.some(p => p.email === user.email)
+        );
+        
+        if (existingRoom) {
+          // 상대방 정보 찾기
+          const otherUser = existingRoom.participants.find(p => p.email === user.email);
+          onChatCreated(existingRoom, otherUser); // 기존 채팅방으로 이동
+          onClose();
+        }
         return;
       }
       if (!selectedUsers.some(selectedUser => selectedUser.email === user.email)) {
@@ -280,43 +297,21 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
                         />
                     ))}
                 </ChipsContainer>
-                {/* <div className='user-list'>
-                    {filteredUsers.map(user => (
-                        <div key={user.email} className='user-item' onClick={() => handleUserSelect(user)}>
-                            <ProfileImage src={user.profileImageUrl|| 'images/default/defaultProfileImage.png'} alt="프로필 이미지" />
-                            <UserInfo style={{ marginLeft: '10px' }}>
-                                <UserName>{user.username}</UserName>
-                                <UserEmail>{user.email}</UserEmail>
-                            </UserInfo>
-                        </div>
-                    ))}
-                </div> */}
                 <div className='user-list'>
-                    {filteredUsers.map(user => {
-                        const isExistingChat = existingChatUsers.includes(user.email);
-                        return (
-                            <div 
-                                key={user.email} 
-                                className='user-item' 
-                                onClick={() => handleUserSelect(user)}
-                                style={{
-                                    cursor: isExistingChat ? 'not-allowed' : 'pointer',
-                                    opacity: isExistingChat ? 0.5 : 1
-                                }}
-                            >
-                                <ProfileImage src={user.profileImageUrl|| 'images/default/defaultProfileImage.png'} alt="프로필 이미지" />
-                                <UserInfo style={{ marginLeft: '10px' }}>
-                                    <UserName>{user.username}</UserName>
-                                    <UserEmail>{user.email}</UserEmail>
-                                </UserInfo>
-                                {isExistingChat && (
-                                    <span style={{ marginLeft: 'auto', color: '#666', fontSize: '0.8em' }}>
-                                        이미 채팅방이 존재합니다
-                                    </span>
-                                )}
-                            </div>
-                        );
-                    })}
+                  {filteredUsers.map(user => (
+                    <div 
+                        key={user.email} 
+                        className='user-item' 
+                        onClick={() => handleUserSelect(user)}
+                        style={{ cursor: 'pointer' }}
+                    >
+                        <ProfileImage src={user.profileImageUrl|| 'images/default/defaultProfileImage.png'} alt="프로필 이미지" />
+                        <UserInfo style={{ marginLeft: '10px' }}>
+                            <UserName>{user.username}</UserName>
+                            <UserEmail>{user.email}</UserEmail>
+                        </UserInfo>
+                    </div>
+                  ))}
                 </div>
             </ModalContent>
         </ModalOverlay>

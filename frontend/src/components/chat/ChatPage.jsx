@@ -4,7 +4,7 @@ import ChatRoom from "./chatComponent/ChatRoom";
 import NewChatButton from "./chatComponent/NewChatButton";
 import { useChat } from '../../hooks/useChat';
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
 
 const ChatContainer = styled.div`
@@ -53,6 +53,8 @@ const NewChatButtonContainer = styled.span`
 
 export default function ChatPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { initialRoom, initialPartner } = location.state || {};
     const { user, loading } = useAuth();  
     const { roomId } = useParams();
     const [selectedRoom, setSelectedRoom] = useState(null);
@@ -67,6 +69,14 @@ export default function ChatPage() {
         selectedRoom?.id || roomId,
         user?.email  
     );
+
+    useEffect(() => {
+        if (initialRoom && initialPartner) {
+          // 초기 채팅방과 상대방 정보가 있으면 바로 채팅방 열기
+          setSelectedRoom(initialRoom);
+          setChatPartner(initialPartner);
+        }
+      }, []);
 
     // 현재 사용자 정보 가져오기
     useEffect(() => {
@@ -117,7 +127,6 @@ export default function ChatPage() {
     // useChat 훅 의존성에 selectedRoom 추가
     useEffect(() => {
         if (selectedRoom) {
-            // 채팅방이 변경될 때마다 메시지 다시 로드
             const fetchMessages = async () => {
                 try {
                     loadChatHistory();
