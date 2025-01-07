@@ -43,6 +43,7 @@ const Message = styled.div`
   color: #333;
 `;
 
+// 날짜 포맷팅
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
   
@@ -60,9 +61,10 @@ const formatDate = (timestamp) => {
 
 
 const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
-  const { user } = useAuth();
-  const [localChatRooms, setLocalChatRooms] = useState([]);
+  const { user } = useAuth(); // 로그인한 유저
+  const [localChatRooms, setLocalChatRooms] = useState([]); // 로컬 채팅방
 
+  // 채팅방 목록 로딩
   const fetchChatRooms = async () => {
     try {
       const response = await fetch(`/api/chat/rooms/user/${user.email}`);
@@ -91,6 +93,7 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     }
   };
 
+  // 채팅방 목록 로딩(5초마다 새로고침)
   useEffect(() => {
     if (user?.email) {
       fetchChatRooms();
@@ -103,21 +106,7 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     }
   }, [user]);
 
-  //props와 로컬 채팅방 목록 합치기
-  // const allChatRooms = [...(propsChatRooms || []), ...localChatRooms].reduce((unique, room) => {
-  //   const exists = unique.find(r => r.id === room.id);
-  //   if (!exists) {
-  //     unique.push(room);
-  //   } else {
-  //     // 기존 방 정보 업데이트 하되, participants 정보 유지
-  //     const updatedRoom = {
-  //       ...room,
-  //       participants : exists.participants || room.participants
-  //     };
-  //     unique[unique.indexOf(exists)] = updatedRoom;
-  //   }
-  //   return unique;
-  // }, []);
+  // 채팅방 목록 중복 제거 및 마지막 채팅 순으로 정렬
   const allChatRooms = [...(propsChatRooms || []), ...localChatRooms]
     .reduce((unique, room) => {
       const exists = unique.find(r => r.id === room.id);
@@ -144,11 +133,13 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
       return dateB.localeCompare(dateA);
     });
   
+    // 채팅방 참가자
   const getOtherUserInfo = (chatRoom) => {
     if (!Array.isArray(chatRoom.participants)) {
       return {};
     }
     
+    // 채팅방 참가자 중 로그인한 유저 제외 유저 찾기
     const otherUser = chatRoom.participants.find(
       participant => participant.email !== user.email
     );
