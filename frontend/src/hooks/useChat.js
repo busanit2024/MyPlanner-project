@@ -51,6 +51,13 @@ export const useChat = (roomId, userEmail) => {
     });
 }, [roomId, userEmail]);
 
+    const disconnect = useCallback(() => {
+        if (client.current?.connected) {
+            client.current.disconnect();
+            client.current = null;
+            setMessages([]); // 메세지 초기화
+        }
+    }, []);
 
     // roomId가 변경될 때마다 연결 재설정 및 메시지 초기화
     useEffect(() => {
@@ -61,10 +68,7 @@ export const useChat = (roomId, userEmail) => {
         }
 
         return () => {
-            if (client.current?.connected) {
-                client.current.disconnect();
-                client.current = null;
-            }  
+            disconnect();
         };
     }, [roomId, userEmail,  connect, loadChatHistory]);
 
@@ -85,5 +89,5 @@ export const useChat = (roomId, userEmail) => {
         client.current.send(`/pub/chat/rooms/${roomId}/send`, {}, JSON.stringify(message));
     }, [roomId, userEmail, connect]);
 
-    return { messages, sendMessage, isConnected: !!client.current?.connected, loadChatHistory  };
+    return { messages, sendMessage, isConnected: !!client.current?.connected, loadChatHistory, disconnect };
 }; 

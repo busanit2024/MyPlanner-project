@@ -69,7 +69,7 @@ const NewMessageAlert = styled.div`
     `;
 
 
-const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSendMessage, onLeave }) => {
+const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSendMessage, onLeaveChat }) => {
     const scrollRef = useRef(null);
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
     const [isUserNearBottom, setIsUserNearBottom] = useState(true);
@@ -184,9 +184,10 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                 throw new Error('채팅방 나가기 실패');
             }
     
-            // onLeave가 함수인지 확인 후 실행
+            // 채팅방 나가기 성공 후 상위 컴포넌트에 알림
             if (typeof onLeave === 'function') {
-                onLeave();
+                onLeaveChat(selectedRoom.id);  // 채팅방 ID를 전달
+                console.log('ChatRoom: onLeaveChat 실행됨');
             }
             
         } catch (error) {
