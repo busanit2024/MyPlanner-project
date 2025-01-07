@@ -17,6 +17,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 
 @RestController
@@ -65,5 +66,11 @@ public class ChatController {
                 .doOnNext(response ->
                         messagingTemplate.convertAndSend("/sub/chat/rooms/" + chatRoomId, response))
                 .then();
+    }
+
+    @PostMapping("/rooms/{roomId}/leave")
+    public Mono<ChatRoom> leaveChatRoom(@PathVariable String roomId, @RequestBody Map<String, String> request) {
+        String userEmail = request.get("userEmail");
+        return chatRoomService.leaveChatRoom(roomId, userEmail);
     }
 }

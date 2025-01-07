@@ -81,4 +81,33 @@ public class ChatRoomService {
                 })
                 .flatMap(chatRoomRepository::save);
     }
+
+    @Transactional
+    public Mono<ChatRoom> leaveChatRoom(String roomId, String userEmail) {
+        return findById(roomId)
+                .flatMap(chatRoom -> {
+                    List<Participant> updatedParticipants = chatRoom.getParticipants().stream()
+                            .filter(p -> !p.getEmail().equals(userEmail))
+                            .collect(Collectors.toList());
+
+                    // 마지막 참가자가 나갈 경우 (참가자가 없을 경우)
+                    if (updatedParticipants.isEmpty()) {
+                        // 채팅방의 메시지를 먼저 삭제하고
+                        return messageRepository.deleteByChatRoomId(roomId)
+                                // 채팅방을 삭제
+                                .then(chatRoomRepository.deleteById(roomId))
+                                // 삭제 완료 후 빈 Mono 반환
+                                .then(Mono.empty());
+                    }
+
+                    // 아직 참가자가 남아있는 경우
+                    chatRoom.setParticipants(updatedParticipants);
+                    return chatRoomRepository.save(chatRoom);
+                })
+                // 에러 처리 추가
+                .onErrorResume(e -> {
+                    System.err.println("채팅방 나가기 실패: " + e.getMessage());
+                    return Mono.error(e);
+                });
+    }
 }
