@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import ChatTitle from './ChatTitle';
 import ChatMessage from './ChatMessage';
 import InputChat from './InputChat';
+import TeamChatProfileImage from './TeamChatProfileImage';
 
 const ChatRoomContainer = styled.div`
     flex-grow: 1;
@@ -73,6 +74,9 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
     const [isUserNearBottom, setIsUserNearBottom] = useState(true);
     const lastMessageWasMine = useRef(false);
+    const isTeamChat = selectedRoom.chatRoomType === "TEAM";
+
+    const otherParticipant = selectedRoom.participants.find(p => p.email !== user.email);
 
     // 스크롤 위치 확인
     const handleScroll = () => {
@@ -151,7 +155,7 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
         }
     };
 
-    // 메시지 그룹화
+    // 메시지 그룹화(날짜별로)
     const groupedMessages = messages?.reduce((groups, msg) => {
         const date = new Date(msg.sendTime).toLocaleDateString('ko-KR', {
             year: 'numeric',
@@ -171,55 +175,56 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
             <ChatTitleWrapper>
                 <img src="/images/icon/ArrowLeft.svg" alt="뒤로 가기" />
                 <ChatTitle 
-                    profileImage={chatPartner.profileImage}
-                    userName={
-                        selectedRoom.chatRoomType === "INDIVIDUAL" 
-                            ? chatPartner.name 
-                            : `그룹 채팅 (${selectedRoom.participants.length}명)`
-                    }
-                    userEmail={chatPartner.email}
-                    isGroup={selectedRoom.chatRoomType !== "INDIVIDUAL"}
-                    participantCount={
-                        selectedRoom.chatRoomType !== "INDIVIDUAL" 
-                            ? selectedRoom.participants.length 
-                            : null
-                    }
+                    profileImage={!isTeamChat ? otherParticipant?.profileImageUrl : null}
+                    userName={isTeamChat 
+                        ? selectedRoom.participants
+                            .filter(p => p.email !== user.email)
+                            .map(p => p.username)
+                            .join(', ')
+                        : otherParticipant?.username}
+                    userEmail={isTeamChat ? null : otherParticipant?.email}
+                    isTeam={isTeamChat}
+                    participants={isTeamChat ? selectedRoom.participants : null}
+                    currentUserEmail={user.email}
                 />
-                <div style={{
-                    color: 'gray',
-                    fontSize: '14px',
-                    minHeight: '20px',
-                    display: 'flex',
-                    alignItems: 'center'
-                }}>
-                    {!isConnected && '연결 중...'}
-                </div>
+                {!isConnected && <div style={{ color: 'gray', fontSize: '14px' }}>연결 중...</div>}
             </ChatTitleWrapper>
+
             <ChatMessagesScroll ref={scrollRef}>
                 <ChatMessages>
                     {groupedMessages && Object.entries(groupedMessages).map(([date, msgs]) => (
                         <React.Fragment key={date}>
                             <ChatDate>{date}</ChatDate>
-                            {msgs.map(msg => (
-                                <ChatMessage
-                                    key={msg.id}
-                                    message={msg.contents}
-                                    time={msg.sendTime}
-                                    isMine={msg.senderEmail === user?.email}
-                                    senderName={msg.senderEmail === user?.email ? user.username : chatPartner.name}
-                                    senderProfile={msg.senderEmail === user?.email ? user.profileImageUrl : chatPartner.profileImage}
-                                />
-                            ))}
+                            {msgs.map(msg => {
+                                const isMyMessage = msg.senderEmail === user?.email;
+                                const sender = isTeamChat && !isMyMessage 
+                                    ? selectedRoom.participants.find(p => p.email === msg.senderEmail)
+                                    : null;
+
+                                return (
+                                    <ChatMessage
+                                        key={msg.id}
+                                        message={msg.contents}
+                                        time={msg.sendTime}
+                                        isMine={isMyMessage}
+                                        senderName={isMyMessage ? user.username : sender?.name || chatPartner.name}
+                                        senderProfile={isMyMessage ? user.profileImageUrl : sender?.profileImage || chatPartner.profileImage}
+                                        showSenderInfo={isTeamChat && !isMyMessage}
+                                    />
+                                );
+                            })}
                         </React.Fragment>
                     ))}
                 </ChatMessages>
             </ChatMessagesScroll>
+
             {showNewMessageAlert && (
                 <NewMessageAlert onClick={scrollToBottom}>
                     <img src="/images/icon/ArrowDown.svg" alt="아래로" />
                     새로운 메시지가 있습니다
                 </NewMessageAlert>
             )}
+
             <ChatInput>
                 <InputChat onSendMessage={handleSendMessage} />
             </ChatInput>

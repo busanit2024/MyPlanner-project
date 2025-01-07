@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import styled from 'styled-components';
+import TeamChatProfileImage from './TeamChatProfileImage';
 
 const TitleContainer = styled.div`
   display: flex;
@@ -22,15 +23,15 @@ const UserInfo = styled.div`
 
 const Name = styled.span`
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;  // 적절한 최대 너비 설정
 `;
 
 const SubText = styled.span`
   color: #666;
   font-size: 0.9em;
-`;
-
-const ParticipantCount = styled(SubText)`
-  color: var(--primary-color);
 `;
 
 const MenuContainer = styled.div`
@@ -73,7 +74,7 @@ const DropdownItem = styled.div`
 
 `;
 
-const ChatTitle = ({ profileImage, userName, userEmail,isGroup, participantCount, ...props }) => {
+const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, currentUserEmail, ...props }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
 
   const toggleDropdown = (e) => {
@@ -83,22 +84,24 @@ const ChatTitle = ({ profileImage, userName, userEmail,isGroup, participantCount
 
   return (
     <TitleContainer {...props}>
-      <ProfileImage 
-          src={profileImage || (isGroup ? '/images/default/defaultGroupImage.png' : '/images/default/defaultProfileImage.png')} 
-          alt={isGroup ? "그룹" : "프로필"} 
+      {isTeam && participants ? (
+        <TeamChatProfileImage 
+          participants={participants}
+          currentUserEmail={currentUserEmail}
+        />
+      ) : (
+        <ProfileImage 
+          src={profileImage || '/images/default/defaultProfileImage.png'} 
+          alt={isTeam ? "그룹" : "프로필"} 
           onError={(e) => {
-              e.target.src = isGroup ? '/images/default/defaultGroupImage.png' : '/images/default/defaultProfileImage.png';
+            e.target.src = '/images/default/defaultProfileImage.png';
           }}
-      />
+        />
+      )}
       <UserInfo>
         <Name>{userName}</Name>
-        {!isGroup && userEmail && (
-            <SubText>{userEmail}</SubText>
-        )}
-        {isGroup && participantCount && (
-            <ParticipantCount>
-                참여자 {participantCount}명
-            </ParticipantCount>
+        {!isTeam && userEmail && (
+          <SubText>{userEmail}</SubText>
         )}
       </UserInfo>
       <MenuContainer>
@@ -120,7 +123,7 @@ const ChatTitle = ({ profileImage, userName, userEmail,isGroup, participantCount
 };
 
 ChatTitle.defaultProps = {
-  isGroup: false,
+  isTeam: false,
   profileImage: null,
   userName: '',
   userEmail: '',
