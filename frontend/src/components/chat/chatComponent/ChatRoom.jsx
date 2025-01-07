@@ -184,7 +184,10 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                 throw new Error('채팅방 나가기 실패');
             }
     
-            onLeave();  // 상위 컴포넌트의 handleLeaveChat 호출
+            // onLeave가 함수인지 확인 후 실행
+            if (typeof onLeave === 'function') {
+                onLeave();
+            }
             
         } catch (error) {
             console.error('채팅방 나가기 실패:', error);
