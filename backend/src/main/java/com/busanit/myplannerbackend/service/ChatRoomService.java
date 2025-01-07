@@ -86,6 +86,7 @@ public class ChatRoomService {
     public Mono<ChatRoom> leaveChatRoom(String roomId, String userEmail) {
         return findById(roomId)
                 .flatMap(chatRoom -> {
+                    // 나간 유저를 제외한 참가자 목록 생성
                     List<Participant> updatedParticipants = chatRoom.getParticipants().stream()
                             .filter(p -> !p.getEmail().equals(userEmail))
                             .collect(Collectors.toList());
@@ -102,6 +103,17 @@ public class ChatRoomService {
 
                     // 아직 참가자가 남아있는 경우
                     chatRoom.setParticipants(updatedParticipants);
+
+                    // 나가기 메시지를 마지막 메시지로 설정
+                    String leaveMessage = chatRoom.getParticipants().stream()
+                            .filter(p -> p.getEmail().equals(userEmail))
+                            .findFirst()
+                            .map(p -> p.getUsername() + "님이 나갔습니다.")
+                            .orElse("사용자가 나갔습니다.");
+
+                    chatRoom.setLastMessage(leaveMessage);
+                    chatRoom.setLastMessageAt(LocalDateTime.now());
+
                     return chatRoomRepository.save(chatRoom);
                 })
                 // 에러 처리 추가
