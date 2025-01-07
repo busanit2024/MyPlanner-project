@@ -24,12 +24,17 @@ const ChatMessagesScroll = styled.div`
     flex: 1;
     overflow-x: hidden;
     overflow-y: auto;
+    max-width: 100%; 
     padding: 0 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 `;
 
 const ChatMessages = styled.div`
     display: flex;
     flex-direction: column;
+    
 `;
 
 const ChatInput = styled.div`
@@ -78,6 +83,13 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
     const isTeamChat = selectedRoom.chatRoomType === "TEAM";
 
     const otherParticipant = selectedRoom.participants.find(p => p.email !== user.email);
+
+    useEffect(() => {
+        const { scrollWidth, clientWidth } = scrollRef.current || {};
+        if (scrollWidth > clientWidth) {
+            console.error('메시지 버블이 부모를 초과하고 있습니다.');
+        }
+    }, [messages]);
 
     // 스크롤 위치 확인
     const handleScroll = () => {
@@ -199,7 +211,6 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                             {msgs.map(msg => {
                                 const isMyMessage = msg.senderEmail === user?.email;
                                 const sender = selectedRoom.participants.find(p => p.email === msg.senderEmail);
-                                const isLongMessage = msg.contents.length > 16;
 
                                 return (
                                     <ChatMessage
@@ -212,7 +223,6 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                                             ? user.profileImageUrl 
                                             : sender?.profileImageUrl || '/images/default/defaultProfileImage.png'}
                                         showSenderInfo={isTeamChat && !isMyMessage} 
-                                        isLongMessage={isLongMessage}
                                     />
                                 );
                             })}
