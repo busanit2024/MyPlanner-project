@@ -61,6 +61,12 @@ const StyledButton = styled.button`
           color: black;
           border: none;
         `; 
+      case 'white':
+        return `
+          background-color: white;
+          color: var(--dark-gray);
+          border: none;
+        `;
       default:
         return '';
     }
