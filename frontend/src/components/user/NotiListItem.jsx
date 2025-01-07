@@ -56,7 +56,7 @@ const Container = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 16px 0px;
+  padding: 12px 0px;
   box-sizing: border-box;
   cursor: pointer;
 
@@ -91,6 +91,7 @@ const NotiText = styled.div`
   font-size: 18px;
   display: flex;
   gap: 8px;
+  align-items: center;
 
   &.read {
     color: var(--mid-gray);
@@ -101,6 +102,7 @@ const NotiText = styled.div`
   }
 
   & .time {
+    font-size: 16px;
     font-weight: normal;
     color: var(--mid-gray);
   }

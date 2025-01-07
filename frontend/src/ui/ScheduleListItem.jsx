@@ -60,8 +60,8 @@ const UserInfo = styled.div`
   gap: 12px;
 
   & .profileImage {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background-color: var(--light-gray);
 
@@ -74,7 +74,7 @@ const UserInfo = styled.div`
   }
 
   & .username {
-    font-size: 18px;
+    font-size: 16px;
   }
 `;
 
@@ -159,8 +159,8 @@ const Comment = styled.div`
   gap: 8px;
 
   & .commentIcon {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
 
     & img {
       width: 100%;

@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Chip from "./Chip";
 import Swal from "sweetalert2";
+import { goToChat } from "../components/user/UserProfilePage";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
+
 
 export default function UserListItem({ user: item }) {
   const navigate = useNavigate();
@@ -117,83 +119,9 @@ export default function UserListItem({ user: item }) {
     navigate(`/user/${item?.id}`);
   }
 
-  const handleMessageButton = async (e) => {
+    const handleMessageButton = async (e) => {
     e.stopPropagation();
-    try {
-      // 기존 채팅방 확인
-      const response = await axios.get(`/api/chat/rooms/user/${user.email}`);
-      const chatRooms = response.data;
-      
-      // Individual 타입의 채팅방 중 현재 선택된 사용자와의 채팅방 찾기
-      const existingRoom = chatRooms.find(room => 
-        room.chatRoomType === "INDIVIDUAL" && 
-        room.participants.some(p => p.email === item.email)
-      );
-
-      if (existingRoom) {
-        // 기존 채팅방이 있으면 해당 채팅방으로 이동
-        const otherUser = {
-          email: item.email,
-          name: item.username,
-          profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png'
-        };
-        
-        navigate('/chat', { 
-          state: { 
-            initialRoom: {
-              ...existingRoom,
-              participants: existingRoom.participants.map(p => 
-                p.email === item.email 
-                  ? { ...p, name: item.username, profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png' }
-                  : p
-              )
-            },
-            initialPartner: otherUser
-          }
-        });
-      } else {
-        // 새로운 채팅방 생성
-        const chatRoomRequest = {
-          participantIds: [
-            { 
-              email: user.email,
-              name: user.username,
-              profileImage: user.profileImageUrl || '/images/default/defaultProfileImage.png',
-              status: "ACTIVE" 
-            },
-            { 
-              email: item.email,
-              name: item.username,
-              profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png',
-              status: "ACTIVE" 
-            }
-          ],
-          chatroomTitle: item.username,
-          chatroomType: "INDIVIDUAL"
-        };
-
-        const newRoomResponse = await axios.post('/api/chat/rooms', chatRoomRequest);
-        const newRoom = newRoomResponse.data;
-        
-        navigate('/chat', { 
-          state: { 
-            initialRoom: newRoom,
-            initialPartner: {
-              email: item.email,
-              name: item.username,
-              profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png'
-            }
-          }
-        });
-      }
-    } catch (error) {
-      console.error('채팅방 생성/조회 실패:', error);
-      Swal.fire({
-        title: "오류",
-        text: "채팅방을 열 수 없습니다. 다시 시도해주세요.",
-        icon: "error",
-      });
-    }
+    goToChat(user, item, navigate);
   };
 
 
@@ -241,7 +169,7 @@ const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 0;
+  padding: 12px 0;
 
   & .left {
     display: flex;
@@ -269,8 +197,8 @@ const Container = styled.div`
 `;
 
 const Avatar = styled.div`
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background-color: var(--light-gray);
   

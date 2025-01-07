@@ -173,8 +173,6 @@ const NavItem = styled.li`
 const ProfileImage = styled.div`
   width: 42px;
   height: 42px;
-  border: 1px solid;
-  border-color: var(--light-gray);
   display: flex;
   align-items: center;
   border-radius: 50%;
