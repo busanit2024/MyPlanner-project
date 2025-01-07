@@ -141,23 +141,6 @@ export default function ChatPage() {
             setSelectedRoom(room);
         }, 0);
     };
-
-    const handleLeaveChat = () => {
-        // 선택된 채팅방 초기화
-        setSelectedRoom(null);
-
-        // 채팅방 목록 새로고침
-        if (user?.email) {
-            fetch(`/api/chat/rooms/user/${user.email}`)
-            .then(res => res.json())
-            .then(rooms => {
-                setChatRooms(rooms);
-            })
-            .catch(error => {
-                console.error('채팅방 목록 로드 실패:', error);
-            });
-        }
-    };
     
     // useChat 훅 의존성에 selectedRoom 추가
     useEffect(() => {
@@ -195,7 +178,6 @@ export default function ChatPage() {
                     user={user}
                     isConnected={isConnected}
                     onSendMessage={handleSendMessage}
-                    onLeaveChat={handleLeaveChat}
                 />
             ) : (
                 <div style={{ 
