@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../../../context/AuthContext';
 import { useEffect, useState } from 'react';
+import TeamChatProfileImage from './TeamChatProfileImage';
 
 const Container = styled.div`
   display: flex;
@@ -48,7 +49,6 @@ const formatDate = (timestamp) => {
   if (!timestamp) return '';
   
   try {
-    // 문자열 형식의 날짜를 직접 파싱
     const [datePart] = timestamp.toString().split('T');
     const [year, month, day] = datePart.split('-');
     
@@ -59,10 +59,9 @@ const formatDate = (timestamp) => {
   }
 };
 
-
 const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
-  const { user } = useAuth(); // 로그인한 유저
-  const [localChatRooms, setLocalChatRooms] = useState([]); // 로컬 채팅방
+  const { user } = useAuth();
+  const [localChatRooms, setLocalChatRooms] = useState([]);
 
   // 채팅방 목록 로딩
   const fetchChatRooms = async () => {
@@ -73,12 +72,10 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
       }
       const data = await response.json();
 
-      // 기존 채팅방 정보 유지하면서 업데이트
       setLocalChatRooms(prevRooms => {
         const updatedRooms = data.map(newRoom => {
           const existingRoom = prevRooms.find(room => room.id === newRoom.id);
           if (existingRoom) {
-            // 기존 참가자 정보 유지
             return {
               ...newRoom,
               participants: existingRoom.participants || newRoom.participants
@@ -93,7 +90,6 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     }
   };
 
-  // 채팅방 목록 로딩(5초마다 새로고침)
   useEffect(() => {
     if (user?.email) {
       fetchChatRooms();
@@ -106,7 +102,6 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     }
   }, [user]);
 
-  // 채팅방 목록 중복 제거 및 마지막 채팅 순으로 정렬
   const allChatRooms = [...(propsChatRooms || []), ...localChatRooms]
     .reduce((unique, room) => {
       const exists = unique.find(r => r.id === room.id);
@@ -122,49 +117,69 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
       return unique;
     }, [])
     .sort((a, b) => {
-      // lastMessageAt이 없는 경우 가장 뒤로 정렬
       if (!a.lastMessageAt) return 1;
       if (!b.lastMessageAt) return -1;
       
-      // 날짜 문자열을 비교
       const dateA = a.lastMessageAt.toString();
       const dateB = b.lastMessageAt.toString();
       
       return dateB.localeCompare(dateA);
     });
-  
-    // 채팅방 참가자
-  const getOtherUserInfo = (chatRoom) => {
+
+  // 채팅방 정보 가져오기
+  const getChatRoomInfo = (chatRoom) => {
     if (!Array.isArray(chatRoom.participants)) {
       return {};
     }
     
-    // 채팅방 참가자 중 로그인한 유저 제외 유저 찾기
-    const otherUser = chatRoom.participants.find(
+    const isTeamChat = chatRoom.chatRoomType === "TEAM";
+    const otherParticipants = chatRoom.participants.filter(
       participant => participant.email !== user.email
     );
-    return otherUser || {};
+
+    if (isTeamChat) {
+      return {
+        isTeam: true,
+        name: otherParticipants.map(p => p.username).join(', '),
+        participants: chatRoom.participants
+      };
+    } else {
+      return {
+        isTeam: false,
+        ...otherParticipants[0]
+      };
+    }
   };
 
   return (
     <>
       {allChatRooms.map(chatRoom => {
-        const otherUser = getOtherUserInfo(chatRoom);
+        const chatInfo = getChatRoomInfo(chatRoom);
         const lastMessageDate = chatRoom.lastMessageAt ? formatDate(chatRoom.lastMessageAt) : '';
 
         return (
           <Container 
             key={chatRoom.id}
-            onClick={() => onSelectRoom(chatRoom, otherUser)}
+            onClick={() => onSelectRoom(chatRoom, chatInfo)}
             style={{ cursor: 'pointer' }}
           >
-            <ProfileImage
-              src={otherUser.profileImageUrl || "/images/default/defaultProfileImage.png"}
-              alt="프로필 이미지"
-            />
+            {chatInfo.isTeam ? (
+              <TeamChatProfileImage 
+                participants={chatRoom.participants}
+                currentUserEmail={user.email}
+              />
+            ) : (
+              <ProfileImage
+                src={chatInfo.profileImageUrl || "/images/default/defaultProfileImage.png"}
+                alt="프로필 이미지"
+                onError={(e) => {
+                  e.target.src = "/images/default/defaultProfileImage.png";
+                }}
+              />
+            )}
             <ChatInfo>
               <ChatHeader>
-                <Name>{otherUser.username || "알 수 없음"}</Name>
+                <Name>{chatInfo.name || "알 수 없음"}</Name>
                 <Date>{lastMessageDate}</Date>
               </ChatHeader>
               <Message>

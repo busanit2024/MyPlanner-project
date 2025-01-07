@@ -197,9 +197,7 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                             <ChatDate>{date}</ChatDate>
                             {msgs.map(msg => {
                                 const isMyMessage = msg.senderEmail === user?.email;
-                                const sender = isTeamChat && !isMyMessage 
-                                    ? selectedRoom.participants.find(p => p.email === msg.senderEmail)
-                                    : null;
+                                const sender = selectedRoom.participants.find(p => p.email === msg.senderEmail);
 
                                 return (
                                     <ChatMessage
@@ -207,9 +205,11 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                                         message={msg.contents}
                                         time={msg.sendTime}
                                         isMine={isMyMessage}
-                                        senderName={isMyMessage ? user.username : sender?.name || chatPartner.name}
-                                        senderProfile={isMyMessage ? user.profileImageUrl : sender?.profileImage || chatPartner.profileImage}
-                                        showSenderInfo={isTeamChat && !isMyMessage}
+                                        senderName={isMyMessage ? user.username : sender?.username}
+                                        senderProfile={isMyMessage 
+                                            ? user.profileImageUrl 
+                                            : sender?.profileImageUrl || '/images/default/defaultProfileImage.png'}
+                                        showSenderInfo={isTeamChat && !isMyMessage} 
                                     />
                                 );
                             })}
