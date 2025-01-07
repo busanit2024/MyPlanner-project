@@ -217,9 +217,14 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
 
     // start chat
     const handleStartChat = async () => {
+
       if (selectedUsers.length > 0) {
+        // 채팅방 타입 결정
+        const isTeamChat = selectedUsers.length > 1;
+        const chatRoomType = isTeamChat ? "TEAM" : "INDIVIDUAL";
+
         // 1:1 채팅인 경우에만 기존 채팅방 확인
-        if (selectedUsers.length === 1) {
+        if (!isTeamChat) {
           const existingRoom = existingChatRooms.find(room => 
             room.participants.some(p => p.email === selectedUsers[0].email)
           );
@@ -227,7 +232,7 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
           if (existingRoom) {
             // 기존 채팅방이 있는 경우, 해당 채팅방으로 이동
             const otherUser = existingRoom.participants.find(p => p.email === selectedUsers[0].email);
-            onChatCreated(existingRoom, otherUser);
+            onChatCreated(existingRoom, [otherUser]);
             onClose();
             return;
           }
@@ -236,14 +241,23 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
         // 채팅방 생성
         const chatRoomRequest = {
           participantIds: [
-            { email: user.email, status: "ACTIVE" },
+            { 
+              email: user.email,
+              name: user.username,
+              profileImage: user.profileImageUrl || '/images/default/defaultProfileImage.png',
+              status: "ACTIVE" 
+            },
             ...selectedUsers.map(user => ({
               email: user.email,
+              name: user.name,
+              profileImage: user.profileImage || '/images/default/defaultProfileImage.png',
               status: "ACTIVE"
             }))
           ],
-          chatroomTitle: selectedUsers.map(user => user.name).join(', '),
-          chatroomType: selectedUsers.length === 1 ? "INDIVIDUAL" : "GROUP"
+          chatroomTitle: isTeamChat 
+            ? selectedUsers.map(user => user.name).join(', ')
+            : selectedUsers[0].name,
+          chatroomType: chatRoomType
         };
     
         try {
@@ -257,7 +271,7 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
           });
           
           const chatRoom = await response.json();
-          onChatCreated(chatRoom); // 채팅방 생성 후 콜백 호출
+          onChatCreated(chatRoom, selectedUsers); // 채팅방 생성 후 콜백 호출
           onClose();
         } catch (error) {
           console.error('채팅방 생성 중 오류:', error);

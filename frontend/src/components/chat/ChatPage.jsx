@@ -85,9 +85,19 @@ export default function ChatPage() {
         }
     }, [user, loading]);
 
-    const handleNewChat = (newChatRoom) => {
+    const handleNewChat = (newChatRoom, selectedUsers) => {
+        //인원수에 따른 채팅방 타입 결정
+        const isTeamChat = selectedUsers.length > 1;
+        const chatRoomType = isTeamChat ? "TEAM" : "INDIVIDUAL";
+
+        //채팅방 정보 설정
+        const updatedChatRoom = {
+            ...newChatRoom,
+            chatRoomType: chatRoomType
+        };
+
         setSelectedRoom(newChatRoom);
-        setChatRooms(prevChatRooms => [...prevChatRooms, newChatRoom]);
+        setChatRooms(prevChatRooms => [...prevChatRooms, updatedChatRoom]);
 
         if (newChatRoom.chatRoomType === "INDIVIDUAL") {
             // 현재 로그인한 사용자와 다른 참여자 찾기
@@ -102,6 +112,14 @@ export default function ChatPage() {
                     profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
                 });               
             }
+        } else {
+            const otherParticipants = newChatRoom.participants.filter(p => p.email !== user.email);
+            setChatPartner({
+                email: null,
+                name: otherParticipants.map(p => p.username).join(', '), 
+                participants: otherParticipants,
+                isTeam: true
+            });
         }
     };
 
