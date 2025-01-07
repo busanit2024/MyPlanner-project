@@ -69,7 +69,7 @@ const NewMessageAlert = styled.div`
     `;
 
 
-const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSendMessage }) => {
+const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSendMessage, onLeave }) => {
     const scrollRef = useRef(null);
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
     const [isUserNearBottom, setIsUserNearBottom] = useState(true);
@@ -170,6 +170,28 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
         return groups;
     }, {});
 
+    const handleLeaveChat = async () => {
+        try {
+            const response = await fetch(`/api/chat/rooms/${selectedRoom.id}/leave`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userEmail: user.email })
+            });
+    
+            if (!response.ok) {
+                throw new Error('채팅방 나가기 실패');
+            }
+    
+            onLeave();  // 상위 컴포넌트의 handleLeaveChat 호출
+            
+        } catch (error) {
+            console.error('채팅방 나가기 실패:', error);
+            alert('채팅방 나가기에 실패했습니다.');
+        }
+    };
+
     return (
         <ChatRoomContainer>
             <ChatTitleWrapper>
@@ -186,6 +208,7 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                     isTeam={isTeamChat}
                     participants={isTeamChat ? selectedRoom.participants : null}
                     currentUserEmail={user.email}
+                    onLeaveChat={handleLeaveChat}
                 />
                 {!isConnected && <div style={{ color: 'gray', fontSize: '14px' }}>연결 중...</div>}
             </ChatTitleWrapper>
