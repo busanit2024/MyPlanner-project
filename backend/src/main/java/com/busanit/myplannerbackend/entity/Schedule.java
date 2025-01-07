@@ -55,6 +55,7 @@ public class Schedule {
     @Temporal(TemporalType.TIMESTAMP)
     private java.util.Date createdAt;   // 등록 날짜
 
+//    @OneToMany
     @Column(name = "checkList")
     private String checkList;   // 체크리스트
 
