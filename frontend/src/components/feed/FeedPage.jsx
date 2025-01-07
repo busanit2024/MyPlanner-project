@@ -178,7 +178,7 @@ const FeedResultList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 24px 128px;
+  padding: 24px 96px;
   box-sizing: border-box;
   width: 100%;
 

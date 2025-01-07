@@ -19,6 +19,7 @@ export default function MyPage() {
   const [listLoading, setListLoading] = useState(true);
 
   useEffect(() => {
+    // 로그인하지 않은 경우 로그인 페이지로 이동
     if (!loading && !user) {
       navigate("/login");
     }
@@ -26,6 +27,7 @@ export default function MyPage() {
   }, [user, loading]);
 
   useEffect(() => {
+    // 유저 정보 불러오기
     if (!loading && user) {
       setListLoading(true);
       setFollowList([]);
