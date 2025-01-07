@@ -65,6 +65,8 @@ export default function CalendarPage() {
 
   return (
     <div className="demo-app-main">
+      <div>프로필1 프로필2 프로필3 카테고리 일정작성</div>
+      <div>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         headerToolbar={{
@@ -86,6 +88,7 @@ export default function CalendarPage() {
         locale="ko"
         dayCellContent={handleDayCellContent}
       />
+      </div>
       <div className="demo-app">
         <Sidebar
           weekendsVisible={weekendsVisible}
