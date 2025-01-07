@@ -193,23 +193,6 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     );
 
     const handleUserSelect = (user) => {
-      // if (existingChatUsers.includes(user.email)) {
-      //   return;
-      // }
-      if (existingChatUsers.includes(user.email)) {
-        // 기존 채팅방 찾기
-        const existingRoom = existingChatRooms.find(room => 
-          room.participants.some(p => p.email === user.email)
-        );
-        
-        if (existingRoom) {
-          // 상대방 정보 찾기
-          const otherUser = existingRoom.participants.find(p => p.email === user.email);
-          onChatCreated(existingRoom, otherUser); // 기존 채팅방으로 이동
-          onClose();
-        }
-        return;
-      }
       if (!selectedUsers.some(selectedUser => selectedUser.email === user.email)) {
         setSelectedUsers([...selectedUsers, {
             name: user.username, 
@@ -232,6 +215,20 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     // start chat
     const handleStartChat = async () => {
       if (selectedUsers.length > 0) {
+        // 1:1 채팅인 경우에만 기존 채팅방 확인
+        if (selectedUsers.length === 1) {
+          const existingRoom = existingChatRooms.find(room => 
+            room.participants.some(p => p.email === selectedUsers[0].email)
+          );
+          
+          if (existingRoom) {
+            // 기존 채팅방이 있는 경우, 해당 채팅방으로 이동
+            const otherUser = existingRoom.participants.find(p => p.email === selectedUsers[0].email);
+            onChatCreated(existingRoom, otherUser);
+            onClose();
+            return; // 여기서 함수 실행을 종료
+          }
+        }
         const chatRoomRequest = {
           participantIds: [
             { email: user.email, status: "ACTIVE" },
