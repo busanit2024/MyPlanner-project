@@ -193,9 +193,6 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
     );
 
     const handleUserSelect = (user) => {
-      // if (existingChatUsers.includes(user.email)) {
-      //   return;
-      // }
       if (existingChatUsers.includes(user.email)) {
         // 기존 채팅방 찾기
         const existingRoom = existingChatRooms.find(room => 
