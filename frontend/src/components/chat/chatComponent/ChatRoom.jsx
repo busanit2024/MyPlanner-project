@@ -22,6 +22,7 @@ const ChatTitleWrapper = styled.div`
 
 const ChatMessagesScroll = styled.div`
     flex: 1;
+    overflow-x: hidden;
     overflow-y: auto;
     padding: 0 24px;
 `;
@@ -198,6 +199,7 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                             {msgs.map(msg => {
                                 const isMyMessage = msg.senderEmail === user?.email;
                                 const sender = selectedRoom.participants.find(p => p.email === msg.senderEmail);
+                                const isLongMessage = msg.contents.length > 16;
 
                                 return (
                                     <ChatMessage
@@ -210,6 +212,7 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                                             ? user.profileImageUrl 
                                             : sender?.profileImageUrl || '/images/default/defaultProfileImage.png'}
                                         showSenderInfo={isTeamChat && !isMyMessage} 
+                                        isLongMessage={isLongMessage}
                                     />
                                 );
                             })}

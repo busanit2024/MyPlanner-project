@@ -33,9 +33,17 @@ const MessageBubble = styled.div`
   color: ${props => props.isMine ? 'white' : 'black'};
   padding: 8px 12px;
   border-radius: 12px;
-  max-width: 70%;
-  word-break: keep-all;
-  white-space: ${props => props.message?.length > 16 ? 'nowrap' : 'normal'}; // 메세지 길이 16자 이상일 시 줄바꿈
+  display: inline-block; 
+  
+  ${props => props.isLongMessage ? `
+    max-width: 70%;
+    white-space: normal;
+    word-break: break-word;
+  ` : `
+    max-width: 30ch;  // 30자로 늘림
+    white-space: normal;  
+    word-break: keep-all;   // 단어 단위로 줄바꿈
+  `}
 `;
 
 const TimeStamp = styled.span`
@@ -44,7 +52,7 @@ const TimeStamp = styled.span`
   margin-top: 4px;
 `;
 
-const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
+const ChatMessage = ({ message, time, isMine, senderName, senderProfile, isLongMessage }) => {
   return (
     <MessageContainer isMine={isMine}>
       <ProfileImage 
@@ -57,7 +65,7 @@ const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
       />
       <MessageContent isMine={isMine}>
         <SenderName isMine={isMine}>{senderName}</SenderName>
-        <MessageBubble isMine={isMine}>{message}</MessageBubble>
+        <MessageBubble isMine={isMine}  isLongMessage={isLongMessage}>{message}</MessageBubble>
         <TimeStamp>
           {new Date(time).toLocaleTimeString('ko-KR', {
             hour: '2-digit',
