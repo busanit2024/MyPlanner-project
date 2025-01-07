@@ -82,13 +82,6 @@ export const useChat = (roomId, userEmail) => {
             contents: content,
             sendTime: new Date().toISOString()
         };
-
-        console.log('전송할 메시지:', message);
-
-        // client.current.publish({
-        //     destination: `/pub/chat/rooms/${roomId}/send`,
-        //     body: JSON.stringify(message)
-        // });
         client.current.send(`/pub/chat/rooms/${roomId}/send`, {}, JSON.stringify(message));
     }, [roomId, userEmail, connect]);
 
