@@ -144,9 +144,14 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
         participants: chatRoom.participants
       };
     } else {
+      // 개인 채팅의 경우 상대방 정보를 직접 반환
+      const otherUser = otherParticipants[0];
       return {
         isTeam: false,
-        ...otherParticipants[0]
+        name: otherUser.username,  
+        email: otherUser.email,
+        profileImageUrl: otherUser.profileImageUrl,
+        ...otherUser  
       };
     }
   };
