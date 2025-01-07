@@ -3,13 +3,14 @@ import Button from "./Button";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import Modal from "./Modal";
+import { useNavigate } from "react-router-dom";
 import Chip from "./Chip";
 import Swal from "sweetalert2";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
 export default function UserListItem({ user: item }) {
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followsMe, setFollowsMe] = useState(false);
@@ -23,7 +24,8 @@ export default function UserListItem({ user: item }) {
     }
   }, [user]);
 
-  const onFollow = () => {
+  const onFollow = (e) => {
+    e.stopPropagation();
     if (loading || !user) {
       return;
     }
@@ -85,7 +87,9 @@ export default function UserListItem({ user: item }) {
     }
   }
 
-  const handleUnfollowButton = () => {
+  const handleUnfollowButton = (e) => {
+    e.stopPropagation();
+
     Swal.fire({
       title: "언팔로우하기",
       text: "이 회원을 언팔로우하시겠어요?",
@@ -106,16 +110,103 @@ export default function UserListItem({ user: item }) {
     });
   }
 
+  const handleClick = () => {
+    if (isMyAccount) {
+      return;
+    }
+    navigate(`/user/${item?.id}`);
+  }
+
+  const handleMessageButton = async (e) => {
+    e.stopPropagation();
+    try {
+      // 기존 채팅방 확인
+      const response = await axios.get(`/api/chat/rooms/user/${user.email}`);
+      const chatRooms = response.data;
+      
+      // Individual 타입의 채팅방 중 현재 선택된 사용자와의 채팅방 찾기
+      const existingRoom = chatRooms.find(room => 
+        room.chatRoomType === "INDIVIDUAL" && 
+        room.participants.some(p => p.email === item.email)
+      );
+
+      if (existingRoom) {
+        // 기존 채팅방이 있으면 해당 채팅방으로 이동
+        const otherUser = {
+          email: item.email,
+          name: item.username,
+          profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png'
+        };
+        
+        navigate('/chat', { 
+          state: { 
+            initialRoom: {
+              ...existingRoom,
+              participants: existingRoom.participants.map(p => 
+                p.email === item.email 
+                  ? { ...p, name: item.username, profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png' }
+                  : p
+              )
+            },
+            initialPartner: otherUser
+          }
+        });
+      } else {
+        // 새로운 채팅방 생성
+        const chatRoomRequest = {
+          participantIds: [
+            { 
+              email: user.email,
+              name: user.username,
+              profileImage: user.profileImageUrl || '/images/default/defaultProfileImage.png',
+              status: "ACTIVE" 
+            },
+            { 
+              email: item.email,
+              name: item.username,
+              profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png',
+              status: "ACTIVE" 
+            }
+          ],
+          chatroomTitle: item.username,
+          chatroomType: "INDIVIDUAL"
+        };
+
+        const newRoomResponse = await axios.post('/api/chat/rooms', chatRoomRequest);
+        const newRoom = newRoomResponse.data;
+        
+        navigate('/chat', { 
+          state: { 
+            initialRoom: newRoom,
+            initialPartner: {
+              email: item.email,
+              name: item.username,
+              profileImage: item.profileImageUrl || '/images/default/defaultProfileImage.png'
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error('채팅방 생성/조회 실패:', error);
+      Swal.fire({
+        title: "오류",
+        text: "채팅방을 열 수 없습니다. 다시 시도해주세요.",
+        icon: "error",
+      });
+    }
+  };
+
+
 
   return (
-    <Container className="user-list-item">
+    <Container className="user-list-item" onClick={handleClick}>
       <div className="left">
         <Avatar>
-          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl )} />
+          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl)} />
         </Avatar>
         <Info>
           <span className="name">{item?.username}
-            {(!isMyAccount && followsMe) && <Chip size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip> }
+            {(!isMyAccount && followsMe) && <Chip size="small" style={{ marginLeft: "8px" }}>나를 팔로우함</Chip>}
           </span>
           <span className="email">{item?.email}</span>
 
@@ -124,15 +215,23 @@ export default function UserListItem({ user: item }) {
       </div>
 
       <div className="right">
-        { !isMyAccount && 
-        <>
-        {isFollowing &&
-          <div className="message-icon">
-            <img src="/images/icon/message.svg" alt="message" />
-          </div>
-        }
-        {isFollowing ? <Button onClick={handleUnfollowButton} >팔로잉</Button> : <Button color="primary" onClick={onFollow}>팔로우하기</Button>}
-        </> }
+        {!isMyAccount &&
+          <>
+            {isFollowing &&
+              <>
+                <div className="message-icon" onClick={handleMessageButton}>
+                  <img src="/images/icon/message.svg" alt="message" />
+                </div>
+                <Button onClick={handleUnfollowButton}>팔로잉</Button>
+              </>
+            }
+            {(!isFollowing && followsMe) &&
+              <Button color="primary" onClick={onFollow}>맞팔로우하기</Button>
+            }
+            {(!isFollowing && !followsMe) &&
+              <Button color="primary" onClick={onFollow}>팔로우하기</Button>
+            }
+          </>}
       </div>
     </Container>
   );

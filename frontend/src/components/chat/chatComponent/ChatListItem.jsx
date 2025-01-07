@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../../../context/AuthContext';
 import { useEffect, useState } from 'react';
+import TeamChatProfileImage from './TeamChatProfileImage';
 
 const Container = styled.div`
   display: flex;
@@ -43,11 +44,11 @@ const Message = styled.div`
   color: #333;
 `;
 
+// 날짜 포맷팅
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
   
   try {
-    // 문자열 형식의 날짜를 직접 파싱
     const [datePart] = timestamp.toString().split('T');
     const [year, month, day] = datePart.split('-');
     
@@ -58,11 +59,11 @@ const formatDate = (timestamp) => {
   }
 };
 
-
 const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
   const { user } = useAuth();
   const [localChatRooms, setLocalChatRooms] = useState([]);
 
+  // 채팅방 목록 로딩
   const fetchChatRooms = async () => {
     try {
       const response = await fetch(`/api/chat/rooms/user/${user.email}`);
@@ -71,12 +72,10 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
       }
       const data = await response.json();
 
-      // 기존 채팅방 정보 유지하면서 업데이트
       setLocalChatRooms(prevRooms => {
         const updatedRooms = data.map(newRoom => {
           const existingRoom = prevRooms.find(room => room.id === newRoom.id);
           if (existingRoom) {
-            // 기존 참가자 정보 유지
             return {
               ...newRoom,
               participants: existingRoom.participants || newRoom.participants
@@ -103,52 +102,89 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     }
   }, [user]);
 
-  // props와 로컬 채팅방 목록 합치기
-  const allChatRooms = [...(propsChatRooms || []), ...localChatRooms].reduce((unique, room) => {
-    const exists = unique.find(r => r.id === room.id);
-    if (!exists) {
-      unique.push(room);
-    } else {
-      // 기존 방 정보 업데이트 하되, participants 정보 유지
-      const updatedRoom = {
-        ...room,
-        participants : exists.participants || room.participants
-      };
-      unique[unique.indexOf(exists)] = updatedRoom;
-    }
-    return unique;
-  }, []);
-  
-  const getOtherUserInfo = (chatRoom) => {
+  const allChatRooms = [...(propsChatRooms || []), ...localChatRooms]
+    .reduce((unique, room) => {
+      const exists = unique.find(r => r.id === room.id);
+      if (!exists) {
+        unique.push(room);
+      } else {
+        const updatedRoom = {
+          ...room,
+          participants: exists.participants || room.participants
+        };
+        unique[unique.indexOf(exists)] = updatedRoom;
+      }
+      return unique;
+    }, [])
+    .sort((a, b) => {
+      if (!a.lastMessageAt) return 1;
+      if (!b.lastMessageAt) return -1;
+      
+      const dateA = a.lastMessageAt.toString();
+      const dateB = b.lastMessageAt.toString();
+      
+      return dateB.localeCompare(dateA);
+    });
+
+  // 채팅방 정보 가져오기
+  const getChatRoomInfo = (chatRoom) => {
     if (!Array.isArray(chatRoom.participants)) {
       return {};
     }
     
-    const otherUser = chatRoom.participants.find(
+    const isTeamChat = chatRoom.chatRoomType === "TEAM";
+    const otherParticipants = chatRoom.participants.filter(
       participant => participant.email !== user.email
     );
-    return otherUser || {};
+
+    if (isTeamChat) {
+      return {
+        isTeam: true,
+        name: otherParticipants.map(p => p.username).join(', '),
+        participants: chatRoom.participants
+      };
+    } else {
+      // 개인 채팅의 경우 상대방 정보를 직접 반환
+      const otherUser = otherParticipants[0];
+      return {
+        isTeam: false,
+        name: otherUser.username,  
+        email: otherUser.email,
+        profileImageUrl: otherUser.profileImageUrl,
+        ...otherUser  
+      };
+    }
   };
 
   return (
     <>
       {allChatRooms.map(chatRoom => {
-        const otherUser = getOtherUserInfo(chatRoom);
+        const chatInfo = getChatRoomInfo(chatRoom);
         const lastMessageDate = chatRoom.lastMessageAt ? formatDate(chatRoom.lastMessageAt) : '';
 
         return (
           <Container 
             key={chatRoom.id}
-            onClick={() => onSelectRoom(chatRoom, otherUser)}
+            onClick={() => onSelectRoom(chatRoom, chatInfo)}
             style={{ cursor: 'pointer' }}
           >
-            <ProfileImage
-              src={otherUser.profileImageUrl || "/images/default/defaultProfileImage.png"}
-              alt="프로필 이미지"
-            />
+            {chatInfo.isTeam ? (
+              <TeamChatProfileImage 
+                participants={chatRoom.participants}
+                currentUserEmail={user.email}
+              />
+            ) : (
+              <ProfileImage
+                src={chatInfo.profileImageUrl || "/images/default/defaultProfileImage.png"}
+                alt="프로필 이미지"
+                onError={(e) => {
+                  e.target.src = "/images/default/defaultProfileImage.png";
+                }}
+              />
+            )}
             <ChatInfo>
               <ChatHeader>
-                <Name>{otherUser.username || "알 수 없음"}</Name>
+                <Name>{chatInfo.name || "알 수 없음"}</Name>
                 <Date>{lastMessageDate}</Date>
               </ChatHeader>
               <Message>
