@@ -34,14 +34,26 @@ public class ScheduleController {
 //        Schedule createdSchedule = scheduleService.createSchedule(schedule);
 //        return ResponseEntity.ok(createdSchedule);
 //    }
-@PostMapping
-public ResponseEntity<Schedule> createSchedule(@RequestBody Schedule schedule) {
-    // 유저 정보는 인증 시스템을 사용하여 자동으로 가져오는 방식으로 개선 가능
-    User user = userRepository.findById(1L).orElseThrow(() -> new RuntimeException("User not found"));
-    schedule.setUser(user);
-    Schedule savedSchedule = scheduleService.createSchedule(schedule);
-    return ResponseEntity.ok(savedSchedule);
-}
+//@PostMapping
+//public ResponseEntity<Schedule> createSchedule(@RequestBody Schedule schedule) {
+//    // 유저 정보는 인증 시스템을 사용하여 자동으로 가져오는 방식으로 개선 가능
+//    User user = userRepository.findById(1L).orElseThrow(() -> new RuntimeException("User not found"));
+//    schedule.setUser(user);
+//    Schedule savedSchedule = scheduleService.createSchedule(schedule);
+//    return ResponseEntity.ok(savedSchedule);
+//}
+
+    // 일정 추가
+    @PostMapping
+    public ResponseEntity<Schedule> createSchedule(@RequestParam Long userId, @RequestBody Schedule schedule) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        schedule.setUser(user);
+        Schedule savedSchedule = scheduleService.createSchedule(schedule);
+        return ResponseEntity.ok(savedSchedule);
+    }
+
+
     // 일정 수정
     @PutMapping("/{id}")
     public ResponseEntity<Schedule> updateSchedule(@PathVariable Long id, @RequestBody Schedule schedule) {

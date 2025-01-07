@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../../css/CalendarWrite.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const CalendarWrite = () => {
@@ -21,6 +21,10 @@ const CalendarWrite = () => {
   const [image, setImage] = useState(null); // 이미지 상태
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // URL로부터 전달된 데이터
+  const { startDate: initialStartDate, endDate: initialEndDate } = location.state || {};
 
   // 컴포넌트가 마운트될 때 오늘 날짜로 초기화
   useEffect(() => {

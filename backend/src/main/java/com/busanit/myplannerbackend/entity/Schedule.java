@@ -64,7 +64,7 @@ public class Schedule {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;    // 사용자 아이디
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;  // 카테고리 (Category 엔티티와의 관계)
 
