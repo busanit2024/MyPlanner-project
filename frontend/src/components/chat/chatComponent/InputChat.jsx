@@ -85,6 +85,8 @@ export default function InputChat({ onSendMessage }) {
         setDropdownOpen(!isDropdownOpen);
     };
 
+    const MaxImages = 5;
+
     const attachImg = () => {
         setImageModalOpen(true);
         setDropdownOpen(false);
