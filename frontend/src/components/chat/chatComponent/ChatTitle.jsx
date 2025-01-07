@@ -74,7 +74,7 @@ const DropdownItem = styled.div`
 
 `;
 
-const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, currentUserEmail, ...props }) => {
+const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, currentUserEmail, selectedRoom, onEditTitle, ...props }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
 
   const toggleDropdown = (e) => {
@@ -112,6 +112,14 @@ const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, cu
         />
         {isDropdownOpen && (
           <Dropdown>
+            {isTeam && (  
+                <DropdownItem onClick={() => {
+                    onEditTitle();  
+                    setDropdownOpen(false);  
+                }}>
+                    <p>채팅방 이름 수정</p>
+                </DropdownItem>
+            )}
             <DropdownItem>
               <p>채팅방 나가기</p>
             </DropdownItem>
