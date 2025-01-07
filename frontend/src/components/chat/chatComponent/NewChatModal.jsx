@@ -138,16 +138,16 @@ const UserEmail = styled.span`
 `;
 
 const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {   
-    const { user } = useAuth();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedUsers, setSelectedUsers] = useState([]);
-    const [follows, setFollows] = useState([]);
-    const [existingChatUsers, setExistingChatUsers] = useState([]);
-    const [existingChatRooms, setExistingChatRooms] = useState([]);
+    const { user } = useAuth(); // 로그인한 유저
+    const [searchTerm, setSearchTerm] = useState(''); // 검색 키워드
+    const [selectedUsers, setSelectedUsers] = useState([]); // 대화할 상대 유저
+    const [follows, setFollows] = useState([]); // 로그인한 유저의 팔로우 유저
+    const [existingChatUsers, setExistingChatUsers] = useState([]); // 기존 채팅 유저
+    const [existingChatRooms, setExistingChatRooms] = useState([]); // 기존 채팅방
 
     const resetState = () => {
-      setSelectedUsers([]);
-      setSearchTerm('');
+      setSelectedUsers([]); // 대화할 상대 유저 초기화
+      setSearchTerm(''); // 검색 키워드 초기화
     }
 
     useEffect(() => {
@@ -192,6 +192,7 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
         user.username?.includes(searchTerm) || user.email?.includes(searchTerm)
     );
 
+    // 대화할 상대 유저 선택 로직
     const handleUserSelect = (user) => {
       if (!selectedUsers.some(selectedUser => selectedUser.email === user.email)) {
         setSelectedUsers([...selectedUsers, {
@@ -202,10 +203,12 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
       }
     };
 
+    // 대화할 상대 유저 칩 삭제
     const handleUserRemove = (email) => {
         setSelectedUsers(prevSelectedUsers => prevSelectedUsers.filter(user => user.email !== email));
     };
 
+    // 모달 닫기(선택 유저 및 검색어 초기화)
     const handleModalClose = (e) => {
       e.stopPropagation();
       resetState();
@@ -226,9 +229,11 @@ const NewChatModal = ({ isOpen, onClose, onChatCreated }) => {
             const otherUser = existingRoom.participants.find(p => p.email === selectedUsers[0].email);
             onChatCreated(existingRoom, otherUser);
             onClose();
-            return; // 여기서 함수 실행을 종료
+            return;
           }
         }
+        
+        // 채팅방 생성
         const chatRoomRequest = {
           participantIds: [
             { email: user.email, status: "ACTIVE" },

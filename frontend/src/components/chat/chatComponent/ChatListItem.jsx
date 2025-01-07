@@ -103,21 +103,6 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     }
   }, [user]);
 
-  //props와 로컬 채팅방 목록 합치기
-  // const allChatRooms = [...(propsChatRooms || []), ...localChatRooms].reduce((unique, room) => {
-  //   const exists = unique.find(r => r.id === room.id);
-  //   if (!exists) {
-  //     unique.push(room);
-  //   } else {
-  //     // 기존 방 정보 업데이트 하되, participants 정보 유지
-  //     const updatedRoom = {
-  //       ...room,
-  //       participants : exists.participants || room.participants
-  //     };
-  //     unique[unique.indexOf(exists)] = updatedRoom;
-  //   }
-  //   return unique;
-  // }, []);
   const allChatRooms = [...(propsChatRooms || []), ...localChatRooms]
     .reduce((unique, room) => {
       const exists = unique.find(r => r.id === room.id);
