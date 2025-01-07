@@ -1,45 +1,74 @@
 package com.busanit.myplannerbackend.controller;
 
+import com.busanit.myplannerbackend.domain.ScheduleDTO;
+import com.busanit.myplannerbackend.entity.Category;
 import com.busanit.myplannerbackend.entity.Schedule;
 import com.busanit.myplannerbackend.entity.User;
+import com.busanit.myplannerbackend.repository.UserRepository;
+import com.busanit.myplannerbackend.service.CategoryService;
 import com.busanit.myplannerbackend.service.ScheduleService;
+import com.busanit.myplannerbackend.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/schedules")
+@RequiredArgsConstructor
 public class ScheduleController {
 
-    @Autowired
-    private ScheduleService scheduleService;
+    private final ScheduleService scheduleService;
+    private final UserService userService;
+    private final CategoryService categoryService;
 
-    // 일정 추가
+    // 일정 등록
     @PostMapping
-    public ResponseEntity<Schedule> createSchedule(@RequestBody Schedule schedule) {
-        // 유저정보 강제 입력(추후 db에서 불러옴)
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("sorimchuku@gmail.com");
-        user.setFirebaseUid("WtYjJSX3FPQAuA47TXYTG7PI8w52");
-        user.setPhone("01011112222");
+    public ResponseEntity<Void> createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
+        // Schedule 엔티티에서 userId를 통해 User 엔티티 조회
+        System.out.println(scheduleDTO);
+//        if (scheduleDTO.getUser() == null || scheduleDTO.getUser().getId() == null) {
+//            return ResponseEntity.badRequest().body(null);
+//        }
 
-        schedule.setUser(user);
-        schedule.setCreatedAt(new Date());  // 현재 시간 설정
-        Schedule createdSchedule = scheduleService.createSchedule(schedule);
-        return ResponseEntity.ok(createdSchedule);
+        // 문자열 체크리스트를 배열로 변환
+        if (scheduleDTO.getCheckList() != null && !scheduleDTO.getCheckList().isEmpty()) {
+            String[] checkListArray = scheduleDTO.getCheckList().split(","); // 쉼표로 구분하기
+            scheduleDTO.setCheckList(String.join(",", checkListArray)); // 필요에 따라 다시 문자열로 저장
+        } else {
+            scheduleDTO.setCheckList(""); // 비어있는 경우
+        }
+
+        User user = userService.findById(scheduleDTO.getUserId());  // 사용자 존재 여부 확인
+        Category category = categoryService.findById(scheduleDTO.getCategoryId());  // 사용자 존재 여부 확인
+
+        scheduleDTO.setUser(user);
+        scheduleDTO.setCategory(category);
+
+        scheduleService.createSchedule(scheduleDTO);
+        return ResponseEntity.noContent().build();
+    }
+
+    // 모든 일정 조회
+    @GetMapping
+    public List<Schedule> getAllSchedules() {
+        return scheduleService.getAllSchedules();
+    }
+
+    // 특정 일정 조회
+    @GetMapping("/{id}")
+    public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
+        return scheduleService.getScheduleById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // 일정 수정
     @PutMapping("/{id}")
-    public ResponseEntity<Schedule> updateSchedule(@PathVariable Long id, @RequestBody Schedule schedule) {
-        Optional<Schedule> updatedSchedule = scheduleService.updateSchedule(id, schedule);
-        return updatedSchedule.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public Schedule updateSchedule(@PathVariable Long id, @RequestBody Schedule scheduleDetails) {
+        return scheduleService.updateSchedule(id, scheduleDetails);
     }
 
     // 일정 삭제
@@ -47,20 +76,5 @@ public class ScheduleController {
     public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
         scheduleService.deleteSchedule(id);
         return ResponseEntity.noContent().build();
-    }
-
-    // 일정 목록 조회
-    @GetMapping
-    public ResponseEntity<List<Schedule>> getAllSchedules() {
-        List<Schedule> schedules = scheduleService.getAllSchedules();
-        return ResponseEntity.ok(schedules);
-    }
-
-    // 특정 일정 조회
-    @GetMapping("/{id}")
-    public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
-        Optional<Schedule> schedule = scheduleService.getScheduleById(id);
-        return schedule.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

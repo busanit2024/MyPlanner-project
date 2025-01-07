@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.sql.Time;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "schedule")
@@ -47,7 +48,7 @@ public class Schedule {
     @Column(name = "is_private", nullable = false)
     private Boolean isPrivate;  // 공개 여부
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
     private String imageUrl;  // 이미지 URL
 
     @Column(name = "created_at", updatable = false)
@@ -55,7 +56,7 @@ public class Schedule {
     private java.util.Date createdAt;   // 등록 날짜
 
     @Column(name = "checkList")
-    private List<String> checkList;   // 체크리스트
+    private String checkList;   // 체크리스트
 
     @Column(name = "done", nullable = false)
     private Boolean done;  // 완료 여부
