@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import '../../css/CalendarWrite.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { imageFileUpload } from '../../firebase';
 
 const CalendarWrite = () => {
+  const { user, loading } = useAuth();
+
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('카테고리');
+  const [categoryId, setCategoryId] = useState(0); // 카테고리 ID
   const [participants, setParticipants] = useState([]);
   const [date, setDate] = useState(''); // 오늘 날짜 상태
   const [startDate, setStartDate] = useState(''); // 시작 날짜 상태
@@ -16,9 +21,10 @@ const CalendarWrite = () => {
   const [repeat, setRepeat] = useState(false);  // 반복 여부
   const [reminder, setReminder] = useState(false);  // 5분 전 알림 여부
   const [viewOnlyMe, setViewOnlyMe] = useState(false);  // 
-  const [checklist, setChecklist] = useState(['체크리스트1', '체크리스트2']);
+  const [checklist, setChecklist] = useState(['', '']);
   const [detail, setDetail] = useState('');
   const [image, setImage] = useState(null); // 이미지 상태
+  const [createdAt, setCreatedAt] = useState(''); // 등록 시간
 
   const navigate = useNavigate();
 
@@ -30,6 +36,20 @@ const CalendarWrite = () => {
     setStartDate(''); // 시작 날짜 초기화
     setEndDate(''); // 끝 날짜 초기화
   }, []);
+
+  // // 사용자 ID 가져오는 로직 추가
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const response = await axios.get('/api/user'); // 사용자 정보 API 호출
+  //       setUserId(response.data.id); // 사용자 ID 설정
+  //     } catch (error) {
+  //       console.error('사용자 정보를 가져오는 데 실패했습니다:', error);
+  //     }
+  //   };
+
+  //   fetchUserData();
+  // }, []);
 
   const handleAddParticipant = () => {
     setParticipants([...participants, `참가자${participants.length + 1}`]);
@@ -52,23 +72,27 @@ const CalendarWrite = () => {
     setChecklist(updatedChecklist);
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0]; // 업로드한 파일
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result); // 이미지 미리보기
-      };
-      reader.readAsDataURL(file); // 파일을 base64로 읽기
+      try {
+        const { url } = await imageFileUpload(file);
+        setImage(url);
+      } catch (error) {
+        console.error("이미지 업로드 중 오류 발생: ", error);
+      }
     }
   };
 
   const handleSubmit = async () => {
+    console.log("user: ", user);
+    console.log("user.id: ", user.id);
+
     // 전송할 데이터 객체 생성
     const scheduleData = {
       title: title,
-      //category: category === '카테고리' ? '카테고리 없음' : category,
-      // participants: participants.length > 0 ? participants : [''],
+      categoryId: categoryId,
+      participants: participants.length > 0 ? participants : [],
       startDate: startDate || date,
       endDate: endDate || date,
       startTime: startTime,
@@ -77,17 +101,19 @@ const CalendarWrite = () => {
       isRepeat: repeat,
       isAlarm: reminder,
       isPrivate: viewOnlyMe,
-      // checkList: checklist,
+      checkList: checklist.length > 0 ? checklist.join(',') : '', // 배열을 문자열로 변환하기
       detail: detail,
-      // imageUrl: image,
-      done: true,      
+      imageUrl: image || '',
+      done: true,
+      createdAt: createdAt || new Date().toISOString(), // 현재 시간
+      userId: user.id || '',
     };
 
     console.log("전송할 데이터: ", scheduleData);
 
     try {
       // POST 요청
-      const response = await axios.post('/api/schedules', scheduleData, {
+      const response = await axios.post('/api/schedules', JSON.stringify(scheduleData), {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -95,7 +121,7 @@ const CalendarWrite = () => {
       console.log('일정이 저장되었습니다:', response.data);
       navigate('/calendar');
     } catch (error) {
-      console.error('일정 저장 중 오류 발생:', error);
+      console.error('일정 저장 중 오류 발생:', error.response.data);
       alert('일정 저장에 실패했습니다. 다시 시도해 주세요.');
     }
   };
@@ -133,12 +159,12 @@ const CalendarWrite = () => {
           </p>
           <select 
             value={category} 
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => setCategoryId(e.target.value)}
           >
-            <option value="카테고리">카테고리</option>
-            <option value="미팅">미팅</option>
-            <option value="일정">일정</option>
-            <option value="기타">기타</option>
+            <option value="0">카테고리</option>
+            <option value="1">미팅</option>
+            <option value="2">약속</option>
+            <option value="3">기타</option>
           </select>
         </div>
         <hr />
@@ -188,6 +214,7 @@ const CalendarWrite = () => {
               onChange={(e) => setStartTime(e.target.value)}
             />
           )}
+          <p/>
           <span>끝 날짜</span>
           <input 
             type="date" 
@@ -258,6 +285,7 @@ const CalendarWrite = () => {
                 type="text" 
                 value={item} 
                 onChange={(e) => handleChecklistChange(index, e.target.value)} 
+                placeholder={`체크리스트 ${index + 1}`}
                 style={{ flex: 1 }}
               />
               <button 
