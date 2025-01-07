@@ -4,7 +4,7 @@ import ChatRoom from "./chatComponent/ChatRoom";
 import NewChatButton from "./chatComponent/NewChatButton";
 import { useChat } from '../../hooks/useChat';
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
 
 const ChatContainer = styled.div`
@@ -53,6 +53,8 @@ const NewChatButtonContainer = styled.span`
 
 export default function ChatPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { initialRoom, initialPartner } = location.state || {};
     const { user, loading } = useAuth();  
     const { roomId } = useParams();
     const [selectedRoom, setSelectedRoom] = useState(null);
@@ -68,6 +70,14 @@ export default function ChatPage() {
         user?.email  
     );
 
+    useEffect(() => {
+        if (initialRoom && initialPartner) {
+          // 초기 채팅방과 상대방 정보가 있으면 바로 채팅방 열기
+          setSelectedRoom(initialRoom);
+          setChatPartner(initialPartner);
+        }
+      }, []);
+
     // 현재 사용자 정보 가져오기
     useEffect(() => {
         if (!loading && !user) {
@@ -75,9 +85,19 @@ export default function ChatPage() {
         }
     }, [user, loading]);
 
-    const handleNewChat = (newChatRoom) => {
+    const handleNewChat = (newChatRoom, selectedUsers) => {
+        //인원수에 따른 채팅방 타입 결정
+        const isTeamChat = selectedUsers.length > 1;
+        const chatRoomType = isTeamChat ? "TEAM" : "INDIVIDUAL";
+
+        //채팅방 정보 설정
+        const updatedChatRoom = {
+            ...newChatRoom,
+            chatRoomType: chatRoomType
+        };
+
         setSelectedRoom(newChatRoom);
-        setChatRooms(prevChatRooms => [...prevChatRooms, newChatRoom]);
+        setChatRooms(prevChatRooms => [...prevChatRooms, updatedChatRoom]);
 
         if (newChatRoom.chatRoomType === "INDIVIDUAL") {
             // 현재 로그인한 사용자와 다른 참여자 찾기
@@ -92,6 +112,14 @@ export default function ChatPage() {
                     profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
                 });               
             }
+        } else {
+            const otherParticipants = newChatRoom.participants.filter(p => p.email !== user.email);
+            setChatPartner({
+                email: null,
+                name: otherParticipants.map(p => p.username).join(', '), 
+                participants: otherParticipants,
+                isTeam: true
+            });
         }
     };
 
@@ -117,7 +145,6 @@ export default function ChatPage() {
     // useChat 훅 의존성에 selectedRoom 추가
     useEffect(() => {
         if (selectedRoom) {
-            // 채팅방이 변경될 때마다 메시지 다시 로드
             const fetchMessages = async () => {
                 try {
                     loadChatHistory();

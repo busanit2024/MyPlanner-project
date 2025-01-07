@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 export default function NotificationPage() {
   const size = 10;
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { notifications, setUnreadCount, clearNotiList } = useNoti();
   const [notiList, setNotiList] = useState({
@@ -40,7 +41,6 @@ export default function NotificationPage() {
         axios.post(`/api/notification/read`, idList).then((res) => {
           setUnreadCount(0);
           clearNotiList();
-          console.log("읽음 처리 완료");
         }).catch((error) => {
           console.error(error);
         });
@@ -48,7 +48,7 @@ export default function NotificationPage() {
     };
 
     return () => {
-      cleanNotis();
+      clearNotiList();
     };
 
   }, []);
@@ -57,7 +57,6 @@ export default function NotificationPage() {
     if (!loading && user) {
       fetchInviteList();
       fetchNotiList();
-      console.log("fetch notis");
     }
   }, [user, loading]);
 
@@ -147,6 +146,26 @@ export default function NotificationPage() {
 
 
   const handleClick = (item) => {
+    readNoti(item);
+    const targetId = item.targetId;
+    switch (item.type) {
+      case "INVITE":
+        navigate(`/schedule/${targetId}`);
+        break;
+      case "FOLLOW":
+        navigate(`/user/${targetId}`);
+        break;
+      case "LIKE":
+      case "COMMENT":
+        navigate(`/schedule/${targetId}`);
+        break;
+      default:
+        break;
+    }
+  };
+
+
+  const readNoti = (item) => {
     if (item.read) {
       return;
     }
@@ -181,6 +200,7 @@ export default function NotificationPage() {
       console.error(error);
     });
   };
+
 
 
   return (

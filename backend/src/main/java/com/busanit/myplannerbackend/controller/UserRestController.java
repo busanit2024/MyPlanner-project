@@ -21,6 +21,16 @@ import org.springframework.web.bind.annotation.*;
 public class UserRestController {
   private final UserService userService;
 
+  @GetMapping("/{userId}")
+  public ResponseEntity<UserDTO> getUser(@PathVariable Long userId) {
+    // 추후 다른 정보와 조인해서 가져올 것
+    User user = userService.findById(userId);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(UserDTO.toDTO(user));
+  }
+
   @GetMapping("/checkEmail")
   public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
     boolean response = userService.checkEmailExist(email);
@@ -106,7 +116,7 @@ public class UserRestController {
     userService.unfollow(userId, targetUserId);
   }
 
-  @GetMapping("/api/user/find/{email}")
+  @GetMapping("/find/{email}")
   public ResponseEntity<?> findUserByEmail(@PathVariable String email) {
     // 사용자 정보 조회 로직
     return ResponseEntity.ok(userService.findByEmail(email));
