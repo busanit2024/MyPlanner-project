@@ -1,7 +1,6 @@
 package com.busanit.myplannerbackend.entity;
 
 import com.busanit.myplannerbackend.domain.UserDTO;
-import com.busanit.myplannerbackend.domain.UserProfileDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
@@ -26,17 +25,13 @@ public class Notification {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  //알림을 받은 유저
   @ManyToOne
   @JoinColumn(name = "user_id")
   private User user;
 
   @Enumerated(EnumType.STRING)
   private NotiType type;
-
-  @Type(JsonType.class)
-  @Column(columnDefinition = "json")
-  @JdbcTypeCode(SqlTypes.JSON)
-  private NotiArgs args;
 
   @CreationTimestamp
   @Column(updatable = false)
@@ -47,18 +42,14 @@ public class Notification {
 
   private LocalDateTime deletedAt;
 
+  //알림을 발생시킨 유저
   @ManyToOne
   @JoinColumn(name = "from_user_id")
   private User fromUser;
 
+  //알림 연결 대상 id (팔로우-유저 id, 초대/좋아요/댓글-게시물 id)
+  //알림 클릭 시 해당 페이지로 이동을 위해 필요
   private Long targetId;
-
-  @Data
-  @AllArgsConstructor
-  public static class NotiArgs {
-    private UserProfileDTO fromUser;
-    private Long targetId;
-  }
 
   private boolean isRead;
 

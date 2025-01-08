@@ -3,9 +3,11 @@ package com.busanit.myplannerbackend.service;
 import com.busanit.myplannerbackend.domain.NotificationDTO;
 import com.busanit.myplannerbackend.domain.UserDTO;
 import com.busanit.myplannerbackend.domain.UserEditDTO;
+import com.busanit.myplannerbackend.entity.ChatRoom;
 import com.busanit.myplannerbackend.entity.Follow;
 import com.busanit.myplannerbackend.entity.Notification;
 import com.busanit.myplannerbackend.entity.User;
+import com.busanit.myplannerbackend.repository.ChatRoomRepository;
 import com.busanit.myplannerbackend.repository.FollowRepository;
 import com.busanit.myplannerbackend.repository.NotificationRepository;
 import com.busanit.myplannerbackend.repository.UserRepository;
@@ -16,8 +18,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +31,8 @@ public class UserService {
   private final FollowRepository followRepository;
   private final NotificationRepository notificationRepository;
   private final ApplicationEventPublisher eventPublisher;
+  private final SimpMessagingTemplate messagingTemplate;  // WebSocket 의존성 추가
+  private final ChatRoomRepository chatRoomRepository;
 
   public void save(User user) {
     userRepository.save(user);
@@ -81,6 +88,15 @@ public class UserService {
     user.setProfileImageUrl(editDTO.getProfileImageUrl());
     
     save(user);
+
+    // 해당 사용자가 참여한 모든 채팅방의 participants 정보 업데이트
+    chatRoomRepository.findByParticipantsEmailContaining(user.getEmail())
+            .map(chatRoom -> {
+              chatRoom.updateParticipantInfo(user);
+              return chatRoom;
+            })
+            .flatMap(chatRoomRepository::save)
+            .subscribe();
   }
 
   public Slice<UserDTO> searchUser(Long userId, String searchText, Pageable pageable) {
@@ -126,11 +142,8 @@ public class UserService {
     }
     followRepository.save(follow);
 
+    //팔로우 시 notification 이벤트 발행 (follow객체에서 처리 -> NotificationListener에서 받음)
     follow.publishEvent(eventPublisher);
-
-//    Notification noti = Notification.of(targetUser, Notification.NotiType.FOLLOW, new Notification.NotiArgs(UserDTO.toDTO(user), userId));
-//    notificationRepository.save(noti);
-
   }
 
   public void unfollow(Long userId, Long targetUserId) {
@@ -146,6 +159,7 @@ public class UserService {
     followRepository.delete(follow);
   }
 
+  //유저가 받은 알림 (일정 초대 제외) 불러오기
   public Slice<NotificationDTO> notifications(Long userId, Pageable pageable) {
     User user = userRepository.findById(userId).orElse(null);
     if (user == null) {
@@ -155,6 +169,7 @@ public class UserService {
     return NotificationDTO.toDTO(notifications);
   }
 
+  //유저가 받은 알림(일정 초대만) 불러오기
   public Slice<NotificationDTO> inviteNotis(Long userId, Pageable pageable) {
     User user = userRepository.findById(userId).orElse(null);
     if (user == null) {
@@ -164,6 +179,7 @@ public class UserService {
     return NotificationDTO.toDTO(notis);
   }
 
+  //읽지 않은 알림 수
   public Integer getUnreadCount(Long userId) {
     User user = userRepository.findById(userId).orElse(null);
     if (user == null) {

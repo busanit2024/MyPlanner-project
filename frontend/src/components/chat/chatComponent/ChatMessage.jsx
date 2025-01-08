@@ -33,10 +33,20 @@ const MessageBubble = styled.div`
   color: ${props => props.isMine ? 'white' : 'black'};
   padding: 8px 12px;
   border-radius: 12px;
+  box-sizing: border-box;
+  display: inline-block;
   max-width: 70%;
-  word-break: keep-all;
-  white-space: ${props => props.message?.length > 16 ? 'nowrap' : 'normal'}; // 메세지 길이 16자 이상일 시 줄바꿈
+  min-width: min-content;
+  width: fit-content;
+  
+  /* 16자 기준으로 줄바꿈 처리 */
+  white-space: ${props => props.message?.length > 30 ? 'pre-wrap' : 'nowrap'};
+  word-break: ${props => props.message?.length > 30 ? 'break-word' : 'keep-all'};
+  overflow-wrap: ${props => props.message?.length > 30 ? 'break-word' : 'normal'};
+  
+  text-align: left;
 `;
+
 
 const TimeStamp = styled.span`
   font-size: 10px;
@@ -57,7 +67,9 @@ const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
       />
       <MessageContent isMine={isMine}>
         <SenderName isMine={isMine}>{senderName}</SenderName>
-        <MessageBubble isMine={isMine}>{message}</MessageBubble>
+        <MessageBubble isMine={isMine} message={message}>
+          {message}
+        </MessageBubble>
         <TimeStamp>
           {new Date(time).toLocaleTimeString('ko-KR', {
             hour: '2-digit',

@@ -1,9 +1,9 @@
 import styled from "styled-components";
-import { FullPageContainer, Title,  TextAndLink } from "../../styles/Login.styles";
+import { FullPageContainer, Title, TextAndLink } from "../../styles/Login.styles";
 import Button from "../../ui/Button";
 import Input from "../../ui/Input";
 import { Link, useNavigate } from "react-router-dom";
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "../../firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -80,7 +80,7 @@ export default function LoginPage() {
   };
 
   return (
-    <FullPageContainer style={{justifyContent: "center", height: "100%"}} className="container">
+    <FullPageContainer style={{ justifyContent: "center", height: "100%" }} className="container">
       <WelcomeContainer className="box">
         <LeftContainer>
           <div className="logo">
@@ -94,31 +94,31 @@ export default function LoginPage() {
           </p>
         </LeftContainer>
 
-        <RightContainer>
-          <Title className="title">
-            로그인
-          </Title>
-          <InputWrap>
-            <Input size="large" id="email" grow placeholder="이메일을 입력하세요" onChange={(e) => setInputData({ ...inputData, email: e.target.value })} />
-            <PasswordInputWrap>
-            <input size="large" id="password" type={passwordView ? "text" : "password"} grow placeholder="비밀번호를 입력하세요" onChange={(e) => setInputData({ ...inputData, password: e.target.value })} />
-            <div className="password-view" onClick={() => setPasswordView(!passwordView)}>
-              {passwordView ? <FaEye /> : <FaEyeSlash />}
-              </div>
-            </PasswordInputWrap>
-            {error && <ErrorText>{error}</ErrorText>}
-          </InputWrap>
+        <RightContainer onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => e.key === 'Enter' && handleLogin()}>
+            <Title className="title">
+              로그인
+            </Title>
+            <InputWrap>
+              <Input size="large" id="email" grow placeholder="이메일을 입력하세요" onChange={(e) => setInputData({ ...inputData, email: e.target.value })} />
+              <PasswordInputWrap>
+                <input size="large" id="password" type={passwordView ? "text" : "password"} grow placeholder="비밀번호를 입력하세요" onChange={(e) => setInputData({ ...inputData, password: e.target.value })} />
+                <div className="password-view" onClick={() => setPasswordView(!passwordView)}>
+                  {passwordView ? <FaEye /> : <FaEyeSlash />}
+                </div>
+              </PasswordInputWrap>
+              {error && <ErrorText>{error}</ErrorText>}
+            </InputWrap>
 
-          <TextAndLink style={{ marginBottom: "24px" }}>
-            이메일 또는 비밀번호를 잊어버리셨나요?
-            <Link to="/find">이메일/비밀번호 찾기</Link>
-          </TextAndLink>
+            <TextAndLink style={{ marginBottom: "24px" }}>
+              이메일 또는 비밀번호를 잊어버리셨나요?
+              <Link to="/find">이메일/비밀번호 찾기</Link>
+            </TextAndLink>
 
-          <Button color="primary" size="large" onClick={handleLogin}>로그인</Button>
-          <TextAndLink>
-            회원이 아니신가요?
-            <Link to="/register">회원가입</Link>
-          </TextAndLink>
+            <Button color="primary" size="large" onClick={handleLogin}>로그인</Button>
+            <TextAndLink>
+              회원이 아니신가요?
+              <Link to="/register">회원가입</Link>
+            </TextAndLink>
         </RightContainer>
 
       </WelcomeContainer>
@@ -169,7 +169,7 @@ const LeftContainer = styled.div`
   }
 `;
 
-const RightContainer = styled.div`
+const RightContainer = styled.form`
   display: flex;
   flex-direction: column;
   justify-content: center;

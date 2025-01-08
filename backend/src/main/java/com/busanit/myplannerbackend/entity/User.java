@@ -46,7 +46,6 @@ public class User {
     ADMIN, USER
   }
 
-
   @OneToMany(mappedBy = "followFrom")
   private List<Follow> follows;
 
