@@ -74,7 +74,7 @@ const DropdownItem = styled.div`
 
 `;
 
-const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, currentUserEmail, selectedRoom, onEditTitle, ...props }) => {
+const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, currentUserEmail, selectedRoom, onEditTitle, onLeaveChat, ...props }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
 
   const toggleDropdown = (e) => {
@@ -120,7 +120,10 @@ const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, cu
                     <p>채팅방 이름 수정</p>
                 </DropdownItem>
             )}
-            <DropdownItem>
+            <DropdownItem onClick={() => {
+              if (window.confirm("채팅방을 나가시겠습니까?")) {
+                onLeaveChat();
+              }}}>
               <p>채팅방 나가기</p>
             </DropdownItem>
           </Dropdown>
