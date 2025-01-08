@@ -15,7 +15,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -57,8 +59,8 @@ public class ScheduleController {
 
     // 모든 일정 조회
     @GetMapping
-    public List<Schedule> getAllSchedules() {
-        return scheduleService.getAllSchedules();
+    public List<Schedule> getAllSchedules(Long id) {
+        return scheduleService.getAllSchedules(id);
     }
 
     // 특정 일정 조회
