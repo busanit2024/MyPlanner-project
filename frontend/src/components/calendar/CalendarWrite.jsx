@@ -103,7 +103,7 @@ const CalendarWrite = () => {
       isPrivate: viewOnlyMe,
       checkList: checklist.map(item => ({
         content: item,
-        isDone: false,  // 기본적으로 완료 여부는 false
+        isDone: false  // 기본적으로 완료 여부는 false
       })),
       detail: detail,
       imageUrl: image || '',

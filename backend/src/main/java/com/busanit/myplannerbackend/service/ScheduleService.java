@@ -18,12 +18,13 @@ public class ScheduleService {
 
     @Autowired
     private ScheduleRepository scheduleRepository;
-  @Autowired
-  private UserRepository userRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     // 일정 등록
     public void createSchedule(ScheduleDTO scheduleDTO) {
-      //userId에 해당하는 User객체를 찾아서 엔티티로 변환시 사용
+      //userId에 해당하는 User 객체를 찾아서 엔티티로 변환시 사용
       Long userId = scheduleDTO.getUserId();
       User user = userRepository.findById(userId).orElse(null);
       if (user == null) {

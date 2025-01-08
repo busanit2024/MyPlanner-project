@@ -46,7 +46,7 @@ public class ScheduleDTO {
 
     private Date createdAt;             // 등록 날짜
 
-    private List<CheckListDTO> checkList;           // 체크리스트
+    private List<CheckList> checkList;           // 체크리스트
 
     private Boolean done;                // 완료 여부
 
@@ -75,7 +75,7 @@ public class ScheduleDTO {
         schedule.setIsPrivate(scheduleDTO.getIsPrivate());
         schedule.setImageUrl(scheduleDTO.getImageUrl());
         schedule.setCreatedAt(scheduleDTO.getCreatedAt());
-        schedule.setCheckList(schedule.getCheckList());
+//        schedule.setCheckList(schedule.getCheckList());
         schedule.setDone(scheduleDTO.getDone());
         schedule.setDetail(scheduleDTO.getDetail());
         schedule.setUser(user);
@@ -110,7 +110,7 @@ public class ScheduleDTO {
                 .imageUrl(schedule.getImageUrl())
                 .createdAt(schedule.getCreatedAt())
                 .detail(schedule.getDetail())
-                .checkList(checkListDTOS)
+                .checkList(schedule.getCheckList())
                 .done(schedule.getDone())
                 //보안상 User필드를 UserDTO로 변환
                 .user(UserDTO.toDTO(schedule.getUser()))

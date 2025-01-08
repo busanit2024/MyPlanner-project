@@ -9,6 +9,7 @@ import com.busanit.myplannerbackend.entity.Schedule;
 import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.repository.UserRepository;
 import com.busanit.myplannerbackend.service.CategoryService;
+import com.busanit.myplannerbackend.service.CheckListService;
 import com.busanit.myplannerbackend.service.ScheduleService;
 import com.busanit.myplannerbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     private final UserService userService;
     private final CategoryService categoryService;
+    private final CheckListService checkListService;
 
     // 일정 등록
     @PostMapping
@@ -45,20 +47,9 @@ public class ScheduleController {
         schedule.setUser(user);
         schedule.setCategory(category);
 
-        // 체크리스트 설정
-        List<CheckList> checkLists = new ArrayList<>();
-        for (CheckListDTO checkListDTO : scheduleDTO.getCheckList()) {
-            CheckList checkList = new CheckList();
-            checkList.setId(checkListDTO.getId());
-            checkList.setContent(checkListDTO.getContent());
-            checkList.setIsDone(checkListDTO.getIsDone());
-            checkList.setSchedule(schedule);    // 현재 일정과 연결하기
-            checkLists.add(checkList);
-        }
-
-        schedule.setCheckList(checkLists);
-
         scheduleService.createSchedule(scheduleDTO);
+        checkListService.saveCheckList(scheduleDTO.getCheckList());
+
         return ResponseEntity.noContent().build();
     }
 
