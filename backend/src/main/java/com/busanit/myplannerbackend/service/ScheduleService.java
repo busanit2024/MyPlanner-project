@@ -2,8 +2,12 @@ package com.busanit.myplannerbackend.service;
 
 import com.busanit.myplannerbackend.domain.ScheduleDTO;
 import com.busanit.myplannerbackend.entity.Schedule;
+import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.repository.ScheduleRepository;
+import com.busanit.myplannerbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,10 +18,18 @@ public class ScheduleService {
 
     @Autowired
     private ScheduleRepository scheduleRepository;
+  @Autowired
+  private UserRepository userRepository;
 
     // 일정 등록
     public void createSchedule(ScheduleDTO scheduleDTO) {
-        scheduleRepository.save(ScheduleDTO.toEntity(scheduleDTO));
+      //userId에 해당하는 User객체를 찾아서 엔티티로 변환시 사용
+      Long userId = scheduleDTO.getUserId();
+      User user = userRepository.findById(userId).orElse(null);
+      if (user == null) {
+        throw new RuntimeException("User not found");
+      }
+        scheduleRepository.save(ScheduleDTO.toEntity(scheduleDTO, user));
     }
 
     // 모든 일정 조회
@@ -56,5 +68,25 @@ public class ScheduleService {
     // 일정 삭제
     public void deleteSchedule(Long id) {
         scheduleRepository.deleteById(id);
+    }
+
+    // 모든 일정 최신순 슬라이스
+    public Slice<Schedule> getAllScheduleSlice(Pageable pageable) {
+        return scheduleRepository.findAllByOrderByCreatedAtDesc(pageable);
+    }
+
+    //내가 팔로우하는 사람의 일정 최신순 슬라이스
+    public Slice<Schedule> getFollwingScheduleSlice(Long userId, Pageable pageable) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return null;
+        }
+        List<Long> follows = user.getFollows().stream().map(follow -> follow.getFollowTo().getId()).toList();
+        return scheduleRepository.findAllByUserIdInOrderByCreatedAtDesc(follows, pageable);
+    }
+
+    //일정 제목으로 검색(임시)
+    public Slice<Schedule> searchByTitle(String title, Pageable pageable) {
+      return scheduleRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(title, pageable);
     }
 }

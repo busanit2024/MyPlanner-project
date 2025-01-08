@@ -23,6 +23,13 @@ export const useChat = (roomId, userEmail) => {
             });
     }, [roomId]);
 
+    const disconnect = useCallback(() => {
+        if (client.current?.connected) {
+            client.current.disconnect();
+            client.current = null;
+        }
+    }, []);
+
     const connect = useCallback(() => {
         if (!roomId || !userEmail) {
             return;
@@ -85,5 +92,5 @@ export const useChat = (roomId, userEmail) => {
         client.current.send(`/pub/chat/rooms/${roomId}/send`, {}, JSON.stringify(message));
     }, [roomId, userEmail, connect]);
 
-    return { messages, sendMessage, isConnected: !!client.current?.connected, loadChatHistory  };
+    return { messages, sendMessage, isConnected: !!client.current?.connected, loadChatHistory, disconnect };
 }; 

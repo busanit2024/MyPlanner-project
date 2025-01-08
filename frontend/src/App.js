@@ -24,6 +24,7 @@ import { NotiProvider } from './context/NotiContext';
 import FeedPage from './components/feed/FeedPage';
 import UserProfilePage from './components/user/UserProfilePage';
 import GroupPage from './components/group/GroupPage';
+import GroupDetail from './components/group/GroupDetail';
 
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
                 <Route path='feed' element={<FeedPage />} />
                 <Route path='user/:userId' element={<UserProfilePage />} />
                 <Route path='group' element={<GroupPage />} />
+                <Route path='group/:groupId' element={<GroupDetail />} />
               </Route>
               <Route path="chat/:roomId" element={<ChatPage />} />
             </Routes>

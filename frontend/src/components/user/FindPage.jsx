@@ -20,6 +20,8 @@ export default function FindPage() {
   const [errorMessege, setErrorMessege] = useState("");
 
 
+  ///크롬 자동완성 input 처리
+
   useEffect(() => {
     const inputs = document.querySelectorAll("input");
     inputs.forEach((input) => {
@@ -27,7 +29,6 @@ export default function FindPage() {
       input.addEventListener("input", handleChangeInput);
     });
 
-    // Cleanup event listeners on unmount
     return () => {
       inputs.forEach((input) => {
         input.removeEventListener("change", handleChangeInput);
@@ -44,7 +45,6 @@ export default function FindPage() {
       input.addEventListener("input", handleChangeInput);
     });
 
-    // Cleanup event listeners on unmount
     return () => {
       inputs.forEach((input) => {
         input.removeEventListener("change", handleChangeInput);
@@ -55,7 +55,6 @@ export default function FindPage() {
 
 
   useEffect(() => {
-    // Detect autofill changes after component mounts
     setTimeout(() => {
       const inputs = document.querySelectorAll("input");
       inputs.forEach((input) => {
@@ -171,6 +170,7 @@ export default function FindPage() {
       });
   };
 
+  // 전화번호 입력
   const findEmail = (
     <InputWrap>
       <Input id="phone" type="tel" size="large" grow placeholder="가입시 등록한 전화번호를 입력하세요." value={input.phone} onChange={handleChangeInput} onInput={handleChangeInput} />
@@ -179,6 +179,7 @@ export default function FindPage() {
     </InputWrap>
   );
 
+  // 이메일 입력
   const findPassword = (
     <InputWrap>
       <Input id="email" type="email" size="large" grow placeholder="내 계정 이메일을 입력하세요." value={input.email} onChange={handleChangeInput} onInput={handleChangeInput} />
@@ -187,6 +188,7 @@ export default function FindPage() {
     </InputWrap>
   );
 
+  // 이메일 찾기 결과
   const emailFound = (
     <InputWrap>
       {foundEmail === "notFound" &&
@@ -206,6 +208,7 @@ export default function FindPage() {
     </InputWrap>
   );
 
+  // 비밀번호 재설정 메일 전송
   const mailSent = (
     <InputWrap>
       <p className="emailSent">

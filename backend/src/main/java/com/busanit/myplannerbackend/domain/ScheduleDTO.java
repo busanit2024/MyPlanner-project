@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Slice;
 
 import java.util.Date;
 import java.util.List;
@@ -50,7 +51,9 @@ public class ScheduleDTO {
 
     private String detail;              // 상세 내용
 
-    private User user;                  // 유저
+    private String detail;              // 상세 내용
+
+    private UserDTO user;                  // 유저
 
     private Long userId;                // 사용자 아이디
 
@@ -58,7 +61,7 @@ public class ScheduleDTO {
 
     private Long categoryId;            // 카테고리 아이디
 
-    public static Schedule toEntity(ScheduleDTO scheduleDTO) {
+    public static Schedule toEntity(ScheduleDTO scheduleDTO, User user) {
         Schedule schedule = new Schedule();
         schedule.setId(scheduleDTO.getId());
         schedule.setType(scheduleDTO.getType());
@@ -79,5 +82,33 @@ public class ScheduleDTO {
         schedule.setUser(scheduleDTO.getUser());
         schedule.setCategory(scheduleDTO.getCategory());
         return schedule;
+    }
+
+    public static ScheduleDTO toDTO(Schedule schedule) {
+        ScheduleDTOBuilder builder = ScheduleDTO.builder()
+                .id(schedule.getId())
+                .type(schedule.getType())
+                .title(schedule.getTitle())
+                .startDate(schedule.getStartDate())
+                .startTime(schedule.getStartTime())
+                .endDate(schedule.getEndDate())
+                .endTime(schedule.getEndTime())
+                .allDay(schedule.getAllDay())
+                .isRepeat(schedule.getIsRepeat())
+                .isAlarm(schedule.getIsAlarm())
+                .isPrivate(schedule.getIsPrivate())
+                .imageUrl(schedule.getImageUrl())
+                .createdAt(schedule.getCreatedAt())
+                .checkList(schedule.getCheckList())
+                .done(schedule.getDone())
+                //보안상 User필드를 UserDTO로 변환
+                .user(UserDTO.toDTO(schedule.getUser()))
+                .category(schedule.getCategory());
+
+        return builder.build();
+    }
+
+    public static Slice<ScheduleDTO> toDTO(Slice<Schedule> slice) {
+        return slice.map(ScheduleDTO::toDTO);
     }
 }
