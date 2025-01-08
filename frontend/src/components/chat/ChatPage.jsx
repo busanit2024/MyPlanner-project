@@ -224,6 +224,7 @@ export default function ChatPage() {
                     isConnected={isConnected}
                     onSendMessage={handleSendMessage}
                     onChatRoomUpdate={handleChatRoomUpdate}
+                    onLeaveChat={handleLeaveChat}
                 />
             ) : (
                 <div style={{ 

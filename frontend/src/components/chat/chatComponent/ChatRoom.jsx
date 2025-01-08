@@ -225,7 +225,7 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
         }
     };
 
-    return (
+    return selectedRoom ? (
         <ChatRoomContainer>
             <ChatTitleWrapper>
                 <img src="/images/icon/ArrowLeft.svg" alt="뒤로 가기" />
@@ -243,6 +243,7 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                     participants={isTeamChat ? selectedRoom.participants : null}
                     currentUserEmail={user.email}
                     onEditTitle={() => setIsEditingTitle(true)}
+                    onLeaveChat={() => onLeaveChat(selectedRoom.id)}
                 />
                 {isTeamChat && isEditingTitle && (
                     <EditTeamChatTitle
@@ -292,7 +293,7 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                 <InputChat onSendMessage={handleSendMessage} />
             </ChatInput>
         </ChatRoomContainer>
-    );
+    ) : null;
 };
 
 export default ChatRoom;
