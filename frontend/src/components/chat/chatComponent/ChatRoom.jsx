@@ -76,7 +76,7 @@ const NewMessageAlert = styled.div`
     `;
 
 
-const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected, onSendMessageChat, onLeaveChat }) => {
+const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected, onSendMessage, onLeaveChat }) => {
     const scrollRef = useRef(null);
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
     const [isUserNearBottom, setIsUserNearBottom] = useState(true);
