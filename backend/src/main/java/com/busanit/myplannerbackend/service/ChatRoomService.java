@@ -81,4 +81,14 @@ public class ChatRoomService {
                 })
                 .flatMap(chatRoomRepository::save);
     }
+
+    //채팅방 제목 업데이트
+    public Mono<ChatRoom> updateChatRoomTitle(String roomId, String newTitle) {
+        return chatRoomRepository.findById(roomId)
+                .switchIfEmpty(Mono.error(new RuntimeException("채팅방을 찾을 수 없습니다.")))
+                .flatMap(chatRoom -> {
+                    chatRoom.setChatroomTitle(newTitle);
+                    return chatRoomRepository.save(chatRoom);
+                });
+    }
 }
