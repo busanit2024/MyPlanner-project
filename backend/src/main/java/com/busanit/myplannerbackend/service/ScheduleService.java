@@ -60,6 +60,7 @@ public class ScheduleService {
         schedule.setImageUrl(scheduleDetails.getImageUrl());
         schedule.setCheckList(scheduleDetails.getCheckList());
         schedule.setDone(scheduleDetails.getDone());
+        schedule.setDetail(scheduleDetails.getDetail());
         schedule.setCreatedAt(scheduleDetails.getCreatedAt());
 
         return scheduleRepository.save(schedule);

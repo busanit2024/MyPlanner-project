@@ -51,8 +51,6 @@ public class ScheduleDTO {
 
     private String detail;              // 상세 내용
 
-    private String detail;              // 상세 내용
-
     private UserDTO user;                  // 유저
 
     private Long userId;                // 사용자 아이디
@@ -99,6 +97,7 @@ public class ScheduleDTO {
                 .isPrivate(schedule.getIsPrivate())
                 .imageUrl(schedule.getImageUrl())
                 .createdAt(schedule.getCreatedAt())
+                .detail(schedule.getDetail())
                 .checkList(schedule.getCheckList())
                 .done(schedule.getDone())
                 //보안상 User필드를 UserDTO로 변환

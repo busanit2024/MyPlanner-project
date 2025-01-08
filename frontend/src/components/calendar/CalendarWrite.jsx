@@ -158,7 +158,7 @@ const CalendarWrite = () => {
             {date} {/* 오늘 날짜 표시 */}
           </p>
           <select 
-            value={category} 
+            value={categoryId} 
             onChange={(e) => setCategoryId(e.target.value)}
           >
             <option value="0">카테고리</option>
