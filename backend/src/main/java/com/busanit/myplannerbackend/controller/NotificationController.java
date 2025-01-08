@@ -21,12 +21,14 @@ public class NotificationController {
   private final NotificationService notificationService;
   private final UserService userService;
 
+  //SSE 구독 시작
   @GetMapping(value = "/subscribe", produces = "text/event-stream")
   @ResponseStatus(HttpStatus.OK)
   public SseEmitter subscribe(@RequestParam Long userId, @RequestHeader(value = "Last-Event-ID", required = false, defaultValue = "") String lastEventId) {
     return notificationService.subscribe(userId, lastEventId);
   }
 
+  //읽음 처리
   @GetMapping("/read")
   public ResponseEntity<NotificationDTO> read(@RequestParam Long notificationId) {
     Notification notification = notificationService.read(notificationId);
@@ -36,6 +38,7 @@ public class NotificationController {
     return ResponseEntity.ok(NotificationDTO.toDTO(notification));
   }
 
+  //읽음 처리(리스트)
   @PostMapping("/read")
   public ResponseEntity<String> readAll(@RequestBody List<String> idList) {
     List<Long> longIdList = idList.stream().map(Long::parseLong).toList();
@@ -43,6 +46,7 @@ public class NotificationController {
     return new ResponseEntity<>(HttpStatus.OK);
   }
 
+  //읽지 않은 알림 갯수
   @GetMapping("/unreadCount")
   public ResponseEntity<Integer> unreadCount(@RequestParam Long userId) {
     Integer unreadCount = userService.getUnreadCount(userId);

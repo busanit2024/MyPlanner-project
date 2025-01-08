@@ -29,6 +29,7 @@ export default function Layout() {
       "/search": "검색",
     };
 
+    // 동적 라우트 목록 (필요시 추가)
     const dynamicRoutes = [
       { pattern: /\/user\/\d+/, name: "유저" },
     ]
@@ -43,6 +44,7 @@ export default function Layout() {
 
   };
 
+  // 뒤로가기 버튼 표시 여부
   const checkBackButton = () => {
     if (location.pathname === "/" || location.pathname === "/calendar") {
       return false;

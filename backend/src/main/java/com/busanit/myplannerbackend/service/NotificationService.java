@@ -25,6 +25,7 @@ public class NotificationService {
   private final long timeout = 60L * 1000L * 60L;
   private final NotificationRepository notificationRepository;
 
+  //SSE 구독
   public SseEmitter subscribe(Long userId, String lastEventId) {
     log.debug("subscribe start");
     String emitterId = makeTimeIncludeId(userId);
@@ -74,6 +75,7 @@ public class NotificationService {
             .forEach(entry -> sendNotification(emitter, entry.getKey(), emitterId, entry.getValue()));
   }
 
+  //실제로 알림 발생 & 서버에 전송
   public void send(Notification sendedNotification) {
     if (sendedNotification.getType().equals(Notification.NotiType.FOLLOW)) {
       notificationRepository.findByUserAndFromUser(sendedNotification.getUser(), sendedNotification.getFromUser()).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
@@ -90,6 +92,7 @@ public class NotificationService {
     );
   }
 
+  //읽음 처리
   public Notification read(Long id) {
     Notification notification = notificationRepository.findById(id).orElse(null);
     if (notification == null) {

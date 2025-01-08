@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {
+  //유저 정보 출력용 DTO
   private Long id;
 
   private String email;

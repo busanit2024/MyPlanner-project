@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserEditDTO {
+  //유저 프로필 편집용 DTO
   private Long id;
 
   private String email;

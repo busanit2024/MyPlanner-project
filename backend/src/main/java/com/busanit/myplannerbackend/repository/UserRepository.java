@@ -16,6 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByFirebaseUid(String firebaseUid);
   Optional<User> findByPhone(String phone);
 
+  //유저 검색 시 검색결과에서 나를 제외
   @Query("select u from User u where (u.email LIKE %:email% OR u.username LIKE %:username%) and u.id != :id")
   Slice<User> findByEmailOrUsernameAndIdNot(@Param("email") String email, String username, @Param("id") Long id, Pageable pageable);
 

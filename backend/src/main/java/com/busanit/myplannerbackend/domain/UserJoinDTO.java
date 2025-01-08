@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserJoinDTO {
+  //회원가입용 DTO (Id 제외한 모든 정보 있음)
 
   private String firebaseUid;
 

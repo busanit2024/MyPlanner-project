@@ -142,11 +142,8 @@ public class UserService {
     }
     followRepository.save(follow);
 
+    //팔로우 시 notification 이벤트 발행 (follow객체에서 처리 -> NotificationListener에서 받음)
     follow.publishEvent(eventPublisher);
-
-//    Notification noti = Notification.of(targetUser, Notification.NotiType.FOLLOW, new Notification.NotiArgs(UserDTO.toDTO(user), userId));
-//    notificationRepository.save(noti);
-
   }
 
   public void unfollow(Long userId, Long targetUserId) {
@@ -162,6 +159,7 @@ public class UserService {
     followRepository.delete(follow);
   }
 
+  //유저가 받은 알림 (일정 초대 제외) 불러오기
   public Slice<NotificationDTO> notifications(Long userId, Pageable pageable) {
     User user = userRepository.findById(userId).orElse(null);
     if (user == null) {
@@ -171,6 +169,7 @@ public class UserService {
     return NotificationDTO.toDTO(notifications);
   }
 
+  //유저가 받은 알림(일정 초대만) 불러오기
   public Slice<NotificationDTO> inviteNotis(Long userId, Pageable pageable) {
     User user = userRepository.findById(userId).orElse(null);
     if (user == null) {
@@ -180,6 +179,7 @@ public class UserService {
     return NotificationDTO.toDTO(notis);
   }
 
+  //읽지 않은 알림 수
   public Integer getUnreadCount(Long userId) {
     User user = userRepository.findById(userId).orElse(null);
     if (user == null) {

@@ -15,9 +15,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class NotificationDTO {
   private Long id;
-  private UserProfileDTO user;
+  private UserDTO user;
   private Notification.NotiType type;
-  private UserProfileDTO fromUser;
+  private UserDTO fromUser;
   private Long targetId;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
@@ -27,9 +27,9 @@ public class NotificationDTO {
   public static NotificationDTO toDTO(Notification notification) {
     NotificationDTOBuilder builder = NotificationDTO.builder()
             .id(notification.getId())
-            .user(UserProfileDTO.toDTO(notification.getUser()))
+            .user(UserDTO.toDTO(notification.getUser()))
             .type(notification.getType())
-            .fromUser(UserProfileDTO.toDTO(notification.getFromUser()))
+            .fromUser(UserDTO.toDTO(notification.getFromUser()))
             .targetId(notification.getTargetId())
             .createdAt(notification.getCreatedAt())
             .updatedAt(notification.getUpdatedAt())

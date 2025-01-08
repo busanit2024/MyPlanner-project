@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import Button from "../../ui/Button";
 import { useAuth } from "../../context/AuthContext";
@@ -9,12 +9,91 @@ import Chip from "../../ui/Chip";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
+export const goToChat = async (user, targetUser, navigate) => {
+  try {
+    // 기존 채팅방 확인
+    const response = await axios.get(`/api/chat/rooms/user/${user.email}`);
+    const chatRooms = response.data;
+    
+    // Individual 타입의 채팅방 중 현재 선택된 사용자와의 채팅방 찾기
+    const existingRoom = chatRooms.find(room => 
+      room.chatRoomType === "INDIVIDUAL" && 
+      room.participants.some(p => p.email === targetUser.email)
+    );
+
+    if (existingRoom) {
+      // 기존 채팅방이 있으면 해당 채팅방으로 이동
+      const otherUser = {
+        email: targetUser.email,
+        name: targetUser.username,
+        profileImage: targetUser.profileImageUrl || defaultProfileImageUrl
+      };
+      
+      navigate('/chat', { 
+        state: { 
+          initialRoom: {
+            ...existingRoom,
+            participants: existingRoom.participants.map(p => 
+              p.email === targetUser.email 
+                ? { ...p, name: targetUser.username, profileImage: targetUser.profileImageUrl || defaultProfileImageUrl }
+                : p
+            )
+          },
+          initialPartner: otherUser
+        }
+      });
+    } else {
+      // 새로운 채팅방 생성
+      const chatRoomRequest = {
+        participantIds: [
+          { 
+            email: user.email,
+            name: user.username,
+            profileImage: user.profileImageUrl || defaultProfileImageUrl,
+            status: "ACTIVE" 
+          },
+          { 
+            email: targetUser.email,
+            name: targetUser.username,
+            profileImage: targetUser.profileImageUrl || defaultProfileImageUrl,
+            status: "ACTIVE" 
+          }
+        ],
+        chatroomTitle: targetUser.username,
+        chatroomType: "INDIVIDUAL"
+      };
+
+      const newRoomResponse = await axios.post('/api/chat/rooms', chatRoomRequest);
+      const newRoom = newRoomResponse.data;
+      
+      navigate('/chat', { 
+        state: { 
+          initialRoom: newRoom,
+          initialPartner: {
+            email: targetUser.email,
+            name: targetUser.username,
+            profileImage: targetUser.profileImageUrl || defaultProfileImageUrl
+          }
+        }
+      });
+    }
+  } catch (error) {
+    console.error('채팅방 생성/조회 실패:', error);
+    Swal.fire({
+      title: "오류",
+      text: "채팅방을 열 수 없습니다. 다시 시도해주세요.",
+      icon: "error",
+    });
+  }
+};
+
 export default function UserProfilePage() {
   const { userId } = useParams();
   const { user, loading } = useAuth();
   const [pageUser, setPageUser] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followsMe, setFollowsMe] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get(`/api/user/${userId}`)
@@ -113,16 +192,16 @@ export default function UserProfilePage() {
 
   const handleMessageButton = (e) => {
     e.stopPropagation();
-    // 쪽지로 이동
+    goToChat(user, pageUser, navigate);
   }
 
 
   return (
-    <Container>
-      <UserInfoContainer>
-        <LeftContainer>
+    <Container className="user-profile-page">
+      <UserInfoContainer className="user-info-container">
+        <LeftContainer className="left-container">
           <div className="profileImage">
-            <img src={pageUser?.profileImageUrl ?? defaultProfileImageUrl} onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />
+            <img src={pageUser?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />
           </div>
           <div className="info">
             <div className="nameContainer">
@@ -134,7 +213,7 @@ export default function UserProfilePage() {
           </div>
 
         </LeftContainer>
-        <RightContainer>
+        <RightContainer className="right-container">
           {isFollowing && <>
             <div className="button" onClick={handleMessageButton}>
               <img src="/images/icon/message.svg" alt="message" />
@@ -149,7 +228,7 @@ export default function UserProfilePage() {
           }
         </RightContainer>
       </UserInfoContainer>
-      <UserDataContainer>
+      <UserDataContainer className="user-data-container">
         //다른 데이터
       </UserDataContainer>
     </Container>
@@ -161,6 +240,8 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
+  box-sizing: border-box;
+  padding: var(--layout-padding);
 `;
 
 const UserInfoContainer = styled.div`
@@ -168,8 +249,7 @@ const UserInfoContainer = styled.div`
   align-items: flex-end;
   justify-content: space-between;
   border-bottom: 1px solid var(--light-gray);
-  margin: 0 128px;
-  padding: 36px 0;
+  padding: 24px 48px;
 `;
 
 const LeftContainer = styled.div`
@@ -240,6 +320,6 @@ const RightContainer = styled.div`
 const UserDataContainer = styled.div`
   display: flex;
   gap: 24px;
-  padding: 24px 128px;
+  padding: 24px 48px;
 `;
 

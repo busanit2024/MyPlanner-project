@@ -32,7 +32,7 @@ const navItems = [
   }
 ];
 
-const defaultProfileImage = "images/default/defaultProfileImage.png";
+const defaultProfileImage = "/images/default/defaultProfileImage.png";
 
 
 export default function SideNavbar() {
@@ -75,7 +75,7 @@ export default function SideNavbar() {
         <NavItem className={"profile"}>
           <Link to="/profile" className={currentPath.includes("/profile") ? "active" : ""}>
             <ProfileImage>
-              <img src={user?.profileImageUrl} onError={(e) => (e.target.src=defaultProfileImage)} alt="Profile" />
+              <img src={user?.profileImageUrl || defaultProfileImage} onError={(e) => (e.target.src=defaultProfileImage)} alt="Profile" />
             </ProfileImage>
             {user?.username ?? "닉네임"}
           </Link>
@@ -173,8 +173,6 @@ const NavItem = styled.li`
 const ProfileImage = styled.div`
   width: 42px;
   height: 42px;
-  border: 1px solid;
-  border-color: var(--light-gray);
   display: flex;
   align-items: center;
   border-radius: 50%;
