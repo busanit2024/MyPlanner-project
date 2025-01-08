@@ -1,6 +1,7 @@
 package com.busanit.myplannerbackend.controller;
 
 import com.busanit.myplannerbackend.domain.ChatRoomRequest;
+import com.busanit.myplannerbackend.domain.Participant;
 import com.busanit.myplannerbackend.entity.ChatRoom;
 import com.busanit.myplannerbackend.entity.Message;
 import com.busanit.myplannerbackend.domain.MessageResponseDTO;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 
 @RestController
@@ -76,6 +78,45 @@ public class ChatController {
                             "/sub/chat/rooms/" + roomId + "/title",
                             updatedRoom
                     );
+                });
+    }
+
+    //채팅방 나가기
+    @PostMapping("/rooms/{roomId}/leave")
+    public Mono<ChatRoom> leaveChatRoom(@PathVariable String roomId, @RequestBody Map<String, String> request) {
+        String userEmail = request.get("userEmail");
+
+        return chatRoomService.findById(roomId)
+                .flatMap(chatRoom -> {
+                    // 나가는 유저 정보 찾기
+                    Participant leavingUser = chatRoom.getParticipants().stream()
+                            .filter(p -> p.getEmail().equals(userEmail))
+                            .findFirst()
+                            .orElseThrow(() -> new RuntimeException("User not found in chat room"));
+
+                    // 시스템 메시지 생성
+                    Message leaveMessage = Message.builder()
+                            .chatRoomId(roomId)
+                            .senderEmail("SYSTEM")
+                            .contents(leavingUser.getUsername() + "님이 나갔습니다.")
+                            .sendTime(LocalDateTime.now())
+                            .messageType("LEAVE")
+                            .build();
+
+                    // 메시지 저장 후 WebSocket 전송
+                    return messageService.saveMessage(leaveMessage)
+                            .doOnSuccess(savedMessage ->
+                                    messagingTemplate.convertAndSend("/sub/chat/rooms/" + roomId, savedMessage))
+                            // 채팅방 나가기 처리
+                            .then(chatRoomService.leaveChatRoom(roomId, userEmail))
+                            .doOnSuccess(result -> {
+                                if (result == null) {  // 채팅방이 삭제된 경우
+                                    messagingTemplate.convertAndSend(
+                                            "/sub/chat/rooms/" + roomId + "/delete",
+                                            roomId
+                                    );
+                                }
+                            });
                 });
     }
 }

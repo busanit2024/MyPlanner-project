@@ -128,31 +128,41 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
 
   // 채팅방 정보 가져오기
   const getChatRoomInfo = (chatRoom) => {
-    if (!Array.isArray(chatRoom.participants)) {
-      return {};
+    if (!Array.isArray(chatRoom.participants) || chatRoom.participants.length === 0) {
+        return {
+            isTeam: false,
+            name: "알 수 없는 사용자",
+            email: "",
+            profileImageUrl: "/images/default/defaultProfileImage.png"
+        };
     }
     
     const isTeamChat = chatRoom.chatRoomType === "TEAM";
     const otherParticipants = chatRoom.participants.filter(
-      participant => participant.email !== user.email
+        participant => participant.email !== user.email
     );
 
     if (isTeamChat) {
-      return {
-        isTeam: true,
-        name: chatRoom.chatroomTitle || otherParticipants.map(p => p.username).join(', '),
-        participants: chatRoom.participants
-      };
+        return {
+            isTeam: true,
+            name: chatRoom.chatroomTitle || otherParticipants.map(p => p.username).join(', '),
+            participants: chatRoom.participants
+        };
     } else {
-      // 개인 채팅의 경우 상대방 정보를 직접 반환
-      const otherUser = otherParticipants[0];
-      return {
-        isTeam: false,
-        name: otherUser?.username,  
-        email: otherUser?.email,
-        profileImageUrl: otherUser?.profileImageUrl,
-        ...otherUser  
-      };
+        // 개인 채팅의 경우 상대방이 없을 때도 처리
+        const otherUser = otherParticipants[0] || {
+            username: "알 수 없는 사용자",
+            email: "",
+            profileImageUrl: "/images/default/defaultProfileImage.png"
+        };
+        
+        return {
+            isTeam: false,
+            name: otherUser.username,
+            email: otherUser.email,
+            profileImageUrl: otherUser.profileImageUrl,
+            ...otherUser
+        };
     }
   };
 
