@@ -33,6 +33,10 @@ const GlobalStyles = createGlobalStyle`
     color: var(--accent-text-color);
   }
 
+  img {
+    image-rendering: auto;
+  }
+
 `;
 
 export default GlobalStyles;
