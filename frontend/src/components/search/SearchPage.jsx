@@ -1,4 +1,4 @@
-import { act, useEffect, useState } from "react";
+import { act, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSearch } from "../../context/SearchContext";
 import styled from "styled-components";
@@ -7,6 +7,7 @@ import axios from "axios";
 import Button from "../../ui/Button";
 import { useAuth } from "../../context/AuthContext";
 import ScheduleListItem from "../../ui/ScheduleListItem";
+import { list } from "firebase/storage";
 
 export default function SearchPage() {
   const { searchText, setOnSearch, searchType, setSearchType } = useSearch();
@@ -17,6 +18,8 @@ export default function SearchPage() {
   const [schedules, setSchedules] = useState([]);
   const [listLoading, setListLoading] = useState(false);
   const [noSearchText, setNoSearchText] = useState(true);
+  const containerRef = useRef(null);
+  const scrollPosition = useRef(0);
 
   // SearchContext의 onSearch 함수를 setOnSearch로 설정
   useEffect(() => {
@@ -67,6 +70,7 @@ export default function SearchPage() {
         })
         .finally(() => {
           setListLoading(false);
+          containerRef.current.scrollTop = scrollPosition.current;
         });
     }
     if (searchType === 'schedule') {
@@ -82,14 +86,20 @@ export default function SearchPage() {
         })
         .finally(() => {
           setListLoading(false);
+          containerRef.current.scrollTop = scrollPosition.current;
         });
     }
   };
 
+  const handleLoadMore = () => {
+    scrollPosition.current = containerRef.current.scrollTop;
+    setPage(page + 1);
+  };
+
 
   return (
-    <Container>
-      <SearchTypeWrap>
+    <Container className="search-page" ref={containerRef}>
+      <SearchTypeWrap className="search-type-wrap">
         <div className={`search-type ${searchType === 'schedule' ? 'active' : ''}`} onClick={() => setSearchType("schedule")}>
           <span >일정</span>
           <div></div>
@@ -99,24 +109,24 @@ export default function SearchPage() {
           <div></div>
         </div>
       </SearchTypeWrap>
-        <SearchResultList>
+        <SearchResultList className="search-result-list">
         {(listLoading) && <p className="no-result">로딩중...</p>}
         {(!listLoading && noSearchText ) && <p className="no-result">일정이나 사용자를 검색해보세요.</p>}
-        {(!listLoading && searchType === 'user' && !noSearchText ) &&
-        <>
-          {(users.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
+
+        {(searchType === 'user' && !noSearchText) && <>
           {users.map((user, index) => (
             <UserListItem key={index} user={user} />
           ))}
-        </> }
-        {(!listLoading && searchType === 'schedule' && !noSearchText) &&
-        <>
-          {(schedules.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
+          {(!listLoading && users.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
+        </>}
+
+        {(searchType === 'schedule' && !noSearchText) && <>
           {schedules.map((schedule, index) => (
             <ScheduleListItem key={index} data={schedule} />
           ))}
+          {(!listLoading && schedules.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
         </>}
-          {hasNext && <Button onClick={() => setPage(page + 1)}>더보기</Button>}
+          {hasNext && <Button onClick={handleLoadMore}>더보기</Button>}
         </SearchResultList>
     </Container>
   );
