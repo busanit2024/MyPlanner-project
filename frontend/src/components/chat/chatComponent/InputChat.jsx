@@ -63,6 +63,7 @@ const Dropdown = styled.div`
     padding : 10px;
     margin-bottom : 5px;
     z-index: 1000;
+    cursor: pointer;
 `;
 
 const DropdownItem = styled.div`
