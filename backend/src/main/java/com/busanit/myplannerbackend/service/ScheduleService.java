@@ -38,9 +38,19 @@ public class ScheduleService {
         return scheduleRepository.findAll();
     }
 
+    // 특정 사용자 일정 조회
+    public List<Schedule> getAllSchedules(Long id) {
+        return scheduleRepository.findByUserId(id);
+    }
+
     // 특정 일정 조회
     public Optional<Schedule> getScheduleById(Long id) {
         return scheduleRepository.findById(id);
+    }
+
+    // 특정 사용자 ID로 일정 조회
+    public List<Schedule> getSchedulesByUserId(Long userId) {
+        return scheduleRepository.findByUserId(userId);
     }
 
     // 일정 수정

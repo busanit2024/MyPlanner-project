@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -69,7 +70,8 @@ public class Schedule {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;    // 사용자 아이디
 
-    @ManyToOne
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;  // 카테고리 (Category 엔티티와의 관계)
 
