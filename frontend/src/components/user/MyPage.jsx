@@ -23,7 +23,6 @@ export default function MyPage() {
     if (!loading && !user) {
       navigate("/login");
     }
-    console.log("user", user);
   }, [user, loading]);
 
   useEffect(() => {

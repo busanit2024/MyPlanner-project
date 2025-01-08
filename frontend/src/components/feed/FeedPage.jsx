@@ -28,6 +28,7 @@ export default function FeedPage() {
   const containerRef = useRef(null);
   const scrollPositon = useRef(0);
 
+  // 초기 로딩 (유저정보 로딩되면 팔로잉 리스트와 피드 불러오기)
   useEffect(() => {
     if (!loading && user) {
       userRef.current = user;
@@ -36,6 +37,7 @@ export default function FeedPage() {
     }
   }, [user, loading]);
 
+  // 피드 타입 변경시 피드 초기화 및 불러오기
   useEffect(() => {
     setFeedState({
       loading: true,
@@ -64,9 +66,7 @@ export default function FeedPage() {
     }
   };
 
-
-
-
+  // 팔로잉 유저 리스트 불러오기
   const fetchFollowingList = () => {
     axios.get(`/api/user/following`, {
       params: {
@@ -87,6 +87,7 @@ export default function FeedPage() {
       });
   }
 
+  // 전체 피드 불러오기
   const fetchFeed = () => {
     setFeedState((prev) => ({ ...prev, loading: true }));
     const size = 10;
@@ -111,6 +112,7 @@ export default function FeedPage() {
       });
   };
 
+  // 팔로잉 피드 불러오기
   const fetchFollowFeed = () => {
     setFeedState((prev) => ({ ...prev, loading: true }));
     const size = 10;

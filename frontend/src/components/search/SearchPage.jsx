@@ -30,6 +30,7 @@ export default function SearchPage() {
     onSearch(searchText, searchType);
   }, [page]);
 
+  // 검색 타입 변경시 상태 초기화 및 다시 불러오기
   useEffect(() => {
     setPage(0);
     setHasNext(false);
@@ -46,6 +47,7 @@ export default function SearchPage() {
     console.log("user", user);
     const userId = user?.id;
     if (!userId, !searchText) {
+      // 검색어 없는 경우 함수 종료
       setNoSearchText(true);
       setListLoading(false);
       return;
