@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.domain;
 
+import com.busanit.myplannerbackend.entity.Schedule;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,5 +14,5 @@ public class CheckListDTO {
 
     private Boolean isDone; // 체크리스트 완료 여부
 
-    private Long scheduleId;    // 스케줄 아이디
+    private Schedule schedule;    // 스케줄 아이디
 }

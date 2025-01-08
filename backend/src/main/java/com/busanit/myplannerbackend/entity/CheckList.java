@@ -21,7 +21,7 @@ public class CheckList {
     @Column(name = "content")
     private String content;     // 내용
 
-    @Column(name = "done", nullable = false)
-    private Boolean done;       // 체크리스트 완료 여부
+    @Column(name = "isDone", nullable = false)
+    private Boolean isDone;       // 체크리스트 완료 여부
 
 }

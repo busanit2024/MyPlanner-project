@@ -57,7 +57,6 @@ public class Schedule {
     private java.util.Date createdAt;   // 등록 날짜
 
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "checkList")
     private List<CheckList> checkList;   // 체크리스트
 
     @Column(name = "done", nullable = false)

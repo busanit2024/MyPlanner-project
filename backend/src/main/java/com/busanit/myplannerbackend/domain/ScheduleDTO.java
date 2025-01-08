@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Slice;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -77,12 +78,23 @@ public class ScheduleDTO {
         schedule.setCheckList(schedule.getCheckList());
         schedule.setDone(scheduleDTO.getDone());
         schedule.setDetail(scheduleDTO.getDetail());
-        schedule.setUser(scheduleDTO.getUser());
+        schedule.setUser(user);
         schedule.setCategory(scheduleDTO.getCategory());
         return schedule;
     }
 
     public static ScheduleDTO toDTO(Schedule schedule) {
+        List<CheckListDTO> checkListDTOS = new ArrayList<>();
+
+        for (CheckList checkList : schedule.getCheckList()) {
+            CheckListDTO checkListDTO = new CheckListDTO();
+            checkListDTO.setId(checkList.getId());
+            checkListDTO.setContent(checkList.getContent());
+            checkListDTO.setIsDone(checkList.getIsDone());
+            checkListDTO.setSchedule(schedule);
+            checkListDTOS.add(checkListDTO);
+        }
+
         ScheduleDTOBuilder builder = ScheduleDTO.builder()
                 .id(schedule.getId())
                 .type(schedule.getType())
@@ -98,7 +110,7 @@ public class ScheduleDTO {
                 .imageUrl(schedule.getImageUrl())
                 .createdAt(schedule.getCreatedAt())
                 .detail(schedule.getDetail())
-                .checkList(schedule.getCheckList())
+                .checkList(checkListDTOS)
                 .done(schedule.getDone())
                 //보안상 User필드를 UserDTO로 변환
                 .user(UserDTO.toDTO(schedule.getUser()))

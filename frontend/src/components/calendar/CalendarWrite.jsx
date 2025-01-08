@@ -21,7 +21,7 @@ const CalendarWrite = () => {
   const [repeat, setRepeat] = useState(false);  // 반복 여부
   const [reminder, setReminder] = useState(false);  // 5분 전 알림 여부
   const [viewOnlyMe, setViewOnlyMe] = useState(false);  // 
-  const [checklist, setChecklist] = useState(['', '']);
+  const [checklist, setChecklist] = useState([]);
   const [detail, setDetail] = useState('');
   const [image, setImage] = useState(null); // 이미지 상태
   const [createdAt, setCreatedAt] = useState(''); // 등록 시간
@@ -101,7 +101,10 @@ const CalendarWrite = () => {
       isRepeat: repeat,
       isAlarm: reminder,
       isPrivate: viewOnlyMe,
-      checkList: checklist.length > 0 ? checklist.join(',') : '', // 배열을 문자열로 변환하기
+      checkList: checklist.map(item => ({
+        content: item,
+        isDone: false,  // 기본적으로 완료 여부는 false
+      })),
       detail: detail,
       imageUrl: image || '',
       done: false,

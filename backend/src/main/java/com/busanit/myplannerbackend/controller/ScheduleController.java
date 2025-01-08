@@ -41,7 +41,7 @@ public class ScheduleController {
         User user = userService.findById(scheduleDTO.getUserId());  // 사용자 존재 여부 확인
         Category category = categoryService.findById(scheduleDTO.getCategoryId());  // 사용자 존재 여부 확인
 
-        Schedule schedule = ScheduleDTO.toEntity(scheduleDTO);
+        Schedule schedule = ScheduleDTO.toEntity(scheduleDTO, user);
         schedule.setUser(user);
         schedule.setCategory(category);
 
@@ -51,7 +51,7 @@ public class ScheduleController {
             CheckList checkList = new CheckList();
             checkList.setId(checkListDTO.getId());
             checkList.setContent(checkListDTO.getContent());
-            checkList.setDone(checkListDTO.getIsDone());
+            checkList.setIsDone(checkListDTO.getIsDone());
             checkList.setSchedule(schedule);    // 현재 일정과 연결하기
             checkLists.add(checkList);
         }
