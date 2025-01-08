@@ -156,6 +156,20 @@ export default function ChatPage() {
         }
     }, [selectedRoom]);
 
+    // 채팅방 제목 설정 후 업데이트
+    const handleChatRoomUpdate = (updatedRoom) => {
+        setChatRooms(prevRooms => 
+            prevRooms.map(room => 
+                room.id === updatedRoom.id ? updatedRoom : room
+            )
+        );
+
+         // 현재 선택된 방이 업데이트된 방이라면 selectedRoom도 업데이트
+        if (selectedRoom?.id === updatedRoom.id) {
+            setSelectedRoom(updatedRoom);
+        }
+    };
+
     return (
         <ChatContainer>
             <ChatList>
@@ -178,6 +192,7 @@ export default function ChatPage() {
                     user={user}
                     isConnected={isConnected}
                     onSendMessage={handleSendMessage}
+                    onChatRoomUpdate={handleChatRoomUpdate}
                 />
             ) : (
                 <div style={{ 
