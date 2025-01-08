@@ -127,61 +127,55 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     });
 
   // 채팅방 정보 가져오기
-  const getChatRoomInfo = (room, currentUserEmail) => {
-    if (!room || !room.participants) {
-        return {
-            title: '알 수 없는 채팅방',
-            profileImage: '/images/default/defaultProfileImage.png',
-            lastMessage: '',
-            unreadCount: 0
-        };
+  const getChatRoomInfo = (chatRoom) => {
+    if (!Array.isArray(chatRoom.participants)) {
+      return {};
     }
-
-    // 팀 채팅인 경우
-    if (room.chatRoomType === "TEAM") {
-        const otherParticipants = room.participants
-            .filter(p => p?.email !== currentUserEmail && p?.username)
-            .map(p => p.username);
-        
-        return {
-            title: otherParticipants.join(', ') || '알 수 없는 사용자',
-            profileImage: '/images/default/defaultTeamProfileImage.png', // 팀 채팅용 기본 이미지
-            lastMessage: room.lastMessage || '',
-            unreadCount: room.unreadCount || 0
-        };
-    }
-
-    // 개인 채팅인 경우
-    const otherParticipant = room.participants.find(p => p?.email !== currentUserEmail);
     
-    return {
-        title: otherParticipant?.username || '알 수 없는 사용자',
-        profileImage: otherParticipant?.profileImageUrl || '/images/default/defaultProfileImage.png',
-        lastMessage: room.lastMessage || '',
-        unreadCount: room.unreadCount || 0
-    };
+    const isTeamChat = chatRoom.chatRoomType === "TEAM";
+    const otherParticipants = chatRoom.participants.filter(
+      participant => participant.email !== user.email
+    );
+
+    if (isTeamChat) {
+      return {
+        isTeam: true,
+        name: chatRoom.chatroomTitle || otherParticipants.map(p => p.username).join(', '),
+        participants: chatRoom.participants
+      };
+    } else {
+      // 개인 채팅의 경우 상대방 정보를 직접 반환
+      const otherUser = otherParticipants[0];
+      return {
+        isTeam: false,
+        name: otherUser.username,  
+        email: otherUser.email,
+        profileImageUrl: otherUser.profileImageUrl,
+        ...otherUser  
+      };
+    }
   };
 
   return (
     <>
       {allChatRooms.map(chatRoom => {
-        const chatInfo = getChatRoomInfo(chatRoom, user.email);  // user.email 추가
+        const chatInfo = getChatRoomInfo(chatRoom);
         const lastMessageDate = chatRoom.lastMessageAt ? formatDate(chatRoom.lastMessageAt) : '';
 
         return (
           <Container 
             key={chatRoom.id}
-            onClick={() => onSelectRoom(chatRoom, chatInfo)}  // chatInfo 전달
+            onClick={() => onSelectRoom(chatRoom, chatInfo)}
             style={{ cursor: 'pointer' }}
           >
-            {chatRoom.chatRoomType === "TEAM" ? (  // chatRoomType 체크
+            {chatInfo.isTeam ? (
               <TeamChatProfileImage 
                 participants={chatRoom.participants}
                 currentUserEmail={user.email}
               />
             ) : (
               <ProfileImage
-                src={chatInfo.profileImage}  // profileImage로 수정
+                src={chatInfo.profileImageUrl || "/images/default/defaultProfileImage.png"}
                 alt="프로필 이미지"
                 onError={(e) => {
                   e.target.src = "/images/default/defaultProfileImage.png";
@@ -190,11 +184,11 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
             )}
             <ChatInfo>
               <ChatHeader>
-                <Name>{chatInfo.title}</Name>
+                <Name>{chatInfo.name || "알 수 없음"}</Name>
                 <Date>{lastMessageDate}</Date>
               </ChatHeader>
               <Message>
-                {chatInfo.lastMessage || "새로운 채팅방이 생성되었습니다."}
+                {chatRoom.lastMessage || "새로운 채팅방이 생성되었습니다."}
               </Message>
             </ChatInfo>
           </Container>

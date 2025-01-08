@@ -1,14 +1,12 @@
 package com.busanit.myplannerbackend.controller;
 
 import com.busanit.myplannerbackend.domain.ChatRoomRequest;
-import com.busanit.myplannerbackend.domain.Participant;
 import com.busanit.myplannerbackend.entity.ChatRoom;
 import com.busanit.myplannerbackend.entity.Message;
 import com.busanit.myplannerbackend.domain.MessageResponseDTO;
 import com.busanit.myplannerbackend.service.ChatRoomService;
 import com.busanit.myplannerbackend.service.MessageService;
 import com.busanit.myplannerbackend.service.UserService;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -19,7 +17,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 
 @RestController
@@ -70,32 +67,15 @@ public class ChatController {
                 .then();
     }
 
-    @PostMapping("/rooms/{roomId}/leave")
-    public Mono<ChatRoom> leaveChatRoom(@PathVariable String roomId, @RequestBody Map<String, String> request) {
-        String userEmail = request.get("userEmail");
-
-        return chatRoomService.findById(roomId)
-                .flatMap(chatRoom -> {
-                    // 나가는 유저 정보 찾기
-                    Participant leavingUser = chatRoom.getParticipants().stream()
-                            .filter(p -> p.getEmail().equals(userEmail))
-                            .findFirst()
-                            .orElseThrow(() -> new RuntimeException("User not found in chat room"));
-
-                    // 시스템 메시지 생성
-                    Message leaveMessage = Message.builder()
-                            .chatRoomId(roomId)
-                            .senderEmail("SYSTEM")
-                            .contents(leavingUser.getUsername() + "님이 나갔습니다.")
-                            .sendTime(LocalDateTime.now())
-                            .messageType("LEAVE")
-                            .build();
-
-                    // WebSocket으로 메시지 전송
-                    messagingTemplate.convertAndSend("/sub/chat/rooms/" + roomId, leaveMessage);
-
-                    // 채팅방 나가기 처리
-                    return chatRoomService.leaveChatRoom(roomId, userEmail);
+    //채팅방 이름 변경
+    @PatchMapping("/rooms/{roomId}/title")
+    public Mono<ChatRoom> updateChatRoomTitle(@PathVariable String roomId, @RequestBody ChatRoomRequest request) {
+        return chatRoomService.updateChatRoomTitle(roomId, request.getChatroomTitle())
+                .doOnSuccess(updatedRoom -> {
+                    messagingTemplate.convertAndSend(
+                            "/sub/chat/rooms/" + roomId + "/title",
+                            updatedRoom
+                    );
                 });
     }
 }

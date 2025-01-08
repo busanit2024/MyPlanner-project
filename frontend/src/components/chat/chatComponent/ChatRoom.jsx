@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import ChatTitle from './ChatTitle';
 import ChatMessage from './ChatMessage';
 import InputChat from './InputChat';
-import TeamChatProfileImage from './TeamChatProfileImage';
+import EditTeamChatTitle from './EditTeamChatTitle';
 
 const ChatRoomContainer = styled.div`
     flex-grow: 1;
@@ -13,6 +13,7 @@ const ChatRoomContainer = styled.div`
 `;
 
 const ChatTitleWrapper = styled.div`
+    position: relative;
     padding: 24px;
     border-bottom: 1px solid var(--light-gray);
     display: flex;
@@ -22,13 +23,19 @@ const ChatTitleWrapper = styled.div`
 
 const ChatMessagesScroll = styled.div`
     flex: 1;
+    overflow-x: hidden;
     overflow-y: auto;
+    max-width: 100%; 
     padding: 0 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 `;
 
 const ChatMessages = styled.div`
     display: flex;
     flex-direction: column;
+    
 `;
 
 const ChatInput = styled.div`
@@ -69,14 +76,22 @@ const NewMessageAlert = styled.div`
     `;
 
 
-const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSendMessage, onLeaveChat }) => {
+const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected, onSendMessageChat, onLeaveChat }) => {
     const scrollRef = useRef(null);
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
     const [isUserNearBottom, setIsUserNearBottom] = useState(true);
     const lastMessageWasMine = useRef(false);
     const isTeamChat = selectedRoom.chatRoomType === "TEAM";
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
 
     const otherParticipant = selectedRoom.participants.find(p => p.email !== user.email);
+
+    useEffect(() => {
+        const { scrollWidth, clientWidth } = scrollRef.current || {};
+        if (scrollWidth > clientWidth) {
+            console.error('메시지 버블이 부모를 초과하고 있습니다.');
+        }
+    }, [messages]);
 
     // 스크롤 위치 확인
     const handleScroll = () => {
@@ -170,19 +185,33 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
         return groups;
     }, {});
 
-    const handleLeaveChat = async () => {
+    //단체채팅 채팅방 이름 변경
+    const handleUpdateTitle = async (newTitle) => {
         try {
-            const response = await fetch(`/api/chat/rooms/${selectedRoom.id}/leave`, {
-                method: 'POST',
+            const response = await fetch(`/api/chat/rooms/${selectedRoom.id}/title`, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ userEmail: user.email })
+                body: JSON.stringify({
+                    chatroomTitle: newTitle,
+                    chatroomType: selectedRoom.chatRoomType,
+                    participantIds: selectedRoom.participants
+                })
             });
-    
-            if (!response.ok) {
-                throw new Error('채팅방 나가기 실패');
+
+            if(!response.ok){
+                throw new Error('채팅방 이름 수정에 실패했습닌다.');
             }
+
+            const updatedRoom = await response.json();
+
+            // 현재 선택된 채팅방 정보 업데이트
+            onChatRoomUpdate(updatedRoom);
+
+            // 수정 모드 종료
+            setIsEditingTitle(false); 
+
     
             // 채팅방 나가기 성공 후 상위 컴포넌트에 알림
             if (typeof onLeave === 'function') {
@@ -191,8 +220,8 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
             }
             
         } catch (error) {
-            console.error('채팅방 나가기 실패:', error);
-            alert('채팅방 나가기에 실패했습니다.');
+            console.error('채팅방 이름 수정 중 오류:', error);
+            alert('채팅방 이름 수정에 실패했습니다.');
         }
     };
 
@@ -203,7 +232,8 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                 <ChatTitle 
                     profileImage={!isTeamChat ? otherParticipant?.profileImageUrl : null}
                     userName={isTeamChat 
-                        ? selectedRoom.participants
+                        ? selectedRoom.chatroomTitle ||
+                          selectedRoom.participants
                             .filter(p => p.email !== user.email)
                             .map(p => p.username)
                             .join(', ')
@@ -212,8 +242,14 @@ const ChatRoom = ({ selectedRoom, chatPartner, messages, user, isConnected, onSe
                     isTeam={isTeamChat}
                     participants={isTeamChat ? selectedRoom.participants : null}
                     currentUserEmail={user.email}
-                    onLeaveChat={handleLeaveChat}
+                    onEditTitle={() => setIsEditingTitle(true)}
                 />
+                {isTeamChat && isEditingTitle && (
+                    <EditTeamChatTitle
+                        onUpdateTitle={handleUpdateTitle}
+                        onClose={() => setIsEditingTitle(false)}
+                    />
+                )}
                 {!isConnected && <div style={{ color: 'gray', fontSize: '14px' }}>연결 중...</div>}
             </ChatTitleWrapper>
 
