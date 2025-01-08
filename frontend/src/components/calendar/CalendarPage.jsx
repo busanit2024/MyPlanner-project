@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
 import { collectFromHash } from '@fullcalendar/core/internal';
+import { AiOutlinePlus } from 'react-icons/ai';
 
 export default function CalendarPage() {
   const [weekendsVisible, setWeekendsVisible] = useState(true); // 주말 표시 여부 상태
@@ -17,7 +18,9 @@ export default function CalendarPage() {
   const [eventList, setEventList] = useState([]); // 서버에서 가져온 이벤트 목록 상태
   const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate
   const { user, loading } = useAuth(); // 인증된 사용자 정보 및 로딩 상태 가져오기
+  
 
+  
   const defaultProfileImage = "/images/default/defaultProfileImage.png"; // 기본 프로필 이미지 URL
 
   const ProfileImage = styled.div`
@@ -91,9 +94,29 @@ export default function CalendarPage() {
     return dayNumber;
   };
 
+  function handleEventDropOrResize(event) {
+    const updatedEvent = {
+      id: event.event.id,
+      start: event.event.start.toISOString(),
+      end: event.event.end ? event.event.end.toISOString() : null,
+    };
+
+    axios
+      .put(`/api/schedules/${updatedEvent.id}`, updatedEvent, {
+        headers: { 'Content-Type': 'application/json' },
+      })
+      .then((response) => {
+        console.log("Event updated successfully:", response.data);
+      })
+      .catch((error) => {
+        console.error("Error updating event:", error);
+        event.revert(); // 이벤트 상태를 이전으로 되돌림
+        alert("일정 업데이트에 실패했습니다.");
+      });
+  }
   return (
     <div className="demo-app-main">
-      <div>
+      <div style={{border: '2px solid #ffffff', borderRadius: '10px',padding:'10px'}}>
         <ProfileImage>
           {/* 사용자 프로필 이미지 */}
           <img 
@@ -101,9 +124,18 @@ export default function CalendarPage() {
             alt="profile" 
             onError={(e) => (e.target.src = defaultProfileImage)} // 이미지 로드 실패 시 기본 이미지로 대체
           />
-        </ProfileImage> 
+        </ProfileImage>
+        
+        <AiOutlinePlus 
+          size={30} 
+          style={{cursor: 'pointer', color: '#374983' }} 
+          onClick={() => navigate('/calendarWrite')} 
+          title="일정 추가하기"
+        />
+      
       </div>
-      <div>
+      
+      <div style={{ border: '2px solid #ccc', borderRadius: '10px', padding: '10px' }}>
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]} // 플러그인 설정
           headerToolbar={{
@@ -124,6 +156,8 @@ export default function CalendarPage() {
           eventClick={handleEventClick} // 이벤트 클릭 핸들러
           eventsSet={handleEvents} // 이벤트 상태 변경 핸들러
           events={eventList} // 이벤트 데이터
+          eventDrop={handleEventDropOrResize} // 드래그 앤 드롭 이벤트
+          eventResize={handleEventDropOrResize} // 크기 조절 이벤트
           locale="ko" // 한국어 로케일
           dayCellContent={handleDayCellContent} // 달력 셀 내용 핸들러
         />

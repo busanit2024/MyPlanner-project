@@ -45,6 +45,8 @@ public class ScheduleDTO {
 
     private String checkList;           // 체크리스트
 
+    private String detail;              // 상세내용
+
     private Boolean done;                // 완료 여부
 
     private String color;               // 색상
@@ -73,6 +75,7 @@ public class ScheduleDTO {
         schedule.setImageUrl(scheduleDTO.getImageUrl());
         schedule.setCreatedAt(scheduleDTO.getCreatedAt());
         schedule.setCheckList(scheduleDTO.getCheckList());
+        schedule.setDetail(scheduleDTO.getDetail());
         schedule.setDone(scheduleDTO.getDone());
         schedule.setColor(scheduleDTO.getColor());
         schedule.setUser(user);
@@ -96,6 +99,7 @@ public class ScheduleDTO {
                 .imageUrl(schedule.getImageUrl())
                 .createdAt(schedule.getCreatedAt())
                 .checkList(schedule.getCheckList())
+                .detail(schedule.getDetail())
                 .done(schedule.getDone())
                 .color(schedule.getColor())
                 //보안상 User필드를 UserDTO로 변환
