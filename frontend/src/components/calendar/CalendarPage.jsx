@@ -4,6 +4,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { useNavigate } from 'react-router-dom';
 
 
 // 고유 이벤트 ID 생성 함수
@@ -34,6 +35,7 @@ export default function CalendarPage() {
   const [weekendsVisible, setWeekendsVisible] = useState(true);
   const [currentEvents, setCurrentEvents] = useState([]);
   const [events, setEvents] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('/api/schedules')
@@ -72,9 +74,16 @@ export default function CalendarPage() {
     setCurrentEvents(events);
   }
 
+  const handleButtonClick = () => {
+    navigate('/calendarWrite');
+  };
+
   return (
     
       <div className="demo-app-main">
+        <button onClick={handleButtonClick}>
+          일정 작성
+        </button>
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           headerToolbar={{

@@ -104,7 +104,7 @@ const CalendarWrite = () => {
       checkList: checklist.length > 0 ? checklist.join(',') : '', // 배열을 문자열로 변환하기
       detail: detail,
       imageUrl: image || '',
-      done: true,
+      done: false,
       createdAt: createdAt || new Date().toISOString(), // 현재 시간
       userId: user.id || '',
     };

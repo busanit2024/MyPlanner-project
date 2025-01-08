@@ -1,6 +1,7 @@
 package com.busanit.myplannerbackend.domain;
 
 import com.busanit.myplannerbackend.entity.Category;
+import com.busanit.myplannerbackend.entity.CheckList;
 import com.busanit.myplannerbackend.entity.Schedule;
 import com.busanit.myplannerbackend.entity.User;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -42,9 +44,11 @@ public class ScheduleDTO {
 
     private Date createdAt;             // 등록 날짜
 
-    private String checkList;           // 체크리스트
+    private List<CheckListDTO> checkList;           // 체크리스트
 
     private Boolean done;                // 완료 여부
+
+    private String detail;              // 상세 내용
 
     private User user;                  // 유저
 
@@ -69,8 +73,9 @@ public class ScheduleDTO {
         schedule.setIsPrivate(scheduleDTO.getIsPrivate());
         schedule.setImageUrl(scheduleDTO.getImageUrl());
         schedule.setCreatedAt(scheduleDTO.getCreatedAt());
-        schedule.setCheckList(scheduleDTO.getCheckList());
+        schedule.setCheckList(schedule.getCheckList());
         schedule.setDone(scheduleDTO.getDone());
+        schedule.setDetail(scheduleDTO.getDetail());
         schedule.setUser(scheduleDTO.getUser());
         schedule.setCategory(scheduleDTO.getCategory());
         return schedule;

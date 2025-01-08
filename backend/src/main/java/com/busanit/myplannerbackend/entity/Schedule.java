@@ -3,6 +3,7 @@ package com.busanit.myplannerbackend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Check;
 
 import java.sql.Time;
 import java.util.Date;
@@ -55,12 +56,15 @@ public class Schedule {
     @Temporal(TemporalType.TIMESTAMP)
     private java.util.Date createdAt;   // 등록 날짜
 
-//    @OneToMany
-    @Column(name = "checkList")
-    private String checkList;   // 체크리스트
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "checkList")
+    private List<CheckList> checkList;   // 체크리스트
 
     @Column(name = "done", nullable = false)
-    private Boolean done;  // 완료 여부
+    private Boolean done;  // 일정 완료 여부
+
+    @Column(name = "detail")
+    private String detail;  // 상세 내용
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

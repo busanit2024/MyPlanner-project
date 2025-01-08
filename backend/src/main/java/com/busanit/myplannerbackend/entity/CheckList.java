@@ -14,13 +14,14 @@ public class CheckList {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;            // 체크리스트 아이디
 
-    @Column(name = "schedule_id", nullable = false)
-    private Long schedule_id;   // 스케줄 아이디
+    @ManyToOne
+    @JoinColumn(name = "schedule_id", nullable = false)
+    private Schedule schedule;   // 스케줄 아이디
 
     @Column(name = "content")
     private String content;     // 내용
 
     @Column(name = "done", nullable = false)
-    private Boolean done;       // 완료 여부
+    private Boolean done;       // 체크리스트 완료 여부
 
 }
