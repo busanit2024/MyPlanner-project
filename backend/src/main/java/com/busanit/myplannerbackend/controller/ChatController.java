@@ -66,4 +66,16 @@ public class ChatController {
                         messagingTemplate.convertAndSend("/sub/chat/rooms/" + chatRoomId, response))
                 .then();
     }
+
+    //채팅방 이름 변경
+    @PatchMapping("/rooms/{roomId}/title")
+    public Mono<ChatRoom> updateChatRoomTitle(@PathVariable String roomId, @RequestBody ChatRoomRequest request) {
+        return chatRoomService.updateChatRoomTitle(roomId, request.getChatroomTitle())
+                .doOnSuccess(updatedRoom -> {
+                    messagingTemplate.convertAndSend(
+                            "/sub/chat/rooms/" + roomId + "/title",
+                            updatedRoom
+                    );
+                });
+    }
 }

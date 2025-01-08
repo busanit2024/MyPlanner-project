@@ -140,7 +140,7 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     if (isTeamChat) {
       return {
         isTeam: true,
-        name: otherParticipants.map(p => p.username).join(', '),
+        name: chatRoom.chatroomTitle || otherParticipants.map(p => p.username).join(', '),
         participants: chatRoom.participants
       };
     } else {
