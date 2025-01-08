@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +15,7 @@ public class CheckList {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;            // 체크리스트 아이디
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;   // 스케줄 아이디

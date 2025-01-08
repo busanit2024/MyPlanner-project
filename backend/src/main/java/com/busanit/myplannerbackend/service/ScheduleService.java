@@ -1,10 +1,17 @@
 package com.busanit.myplannerbackend.service;
 
+import com.busanit.myplannerbackend.domain.CheckListDTO;
 import com.busanit.myplannerbackend.domain.ScheduleDTO;
+import com.busanit.myplannerbackend.entity.Category;
+import com.busanit.myplannerbackend.entity.CheckList;
 import com.busanit.myplannerbackend.entity.Schedule;
 import com.busanit.myplannerbackend.entity.User;
+import com.busanit.myplannerbackend.repository.CategoryRepository;
+import com.busanit.myplannerbackend.repository.CheckListRepository;
 import com.busanit.myplannerbackend.repository.ScheduleRepository;
 import com.busanit.myplannerbackend.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -14,14 +21,15 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ScheduleService {
 
-    @Autowired
-    private ScheduleRepository scheduleRepository;
+    private final ScheduleRepository scheduleRepository;
+    private final UserRepository userRepository;
+    private final CheckListRepository checkListRepository;
+    private final CategoryRepository categoryRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
+    @Transactional
     // 일정 등록
     public void createSchedule(ScheduleDTO scheduleDTO) {
       //userId에 해당하는 User 객체를 찾아서 엔티티로 변환시 사용
@@ -30,7 +38,19 @@ public class ScheduleService {
       if (user == null) {
         throw new RuntimeException("User not found");
       }
-        scheduleRepository.save(ScheduleDTO.toEntity(scheduleDTO, user));
+
+      Schedule schedule = ScheduleDTO.toEntity(scheduleDTO, user);
+      Category category = categoryRepository.findById(scheduleDTO.getCategoryId()).orElse(null);
+      schedule.setCategory(category);
+      scheduleRepository.save(schedule);
+
+      for (CheckListDTO checkListDTO : scheduleDTO.getCheckListItem()) {
+        CheckList checkList_entity = new CheckList();
+        checkList_entity.setContent(checkListDTO.getContent());
+        checkList_entity.setIsDone(checkListDTO.getIsDone());
+        checkList_entity.setSchedule(schedule);
+        checkListRepository.save(checkList_entity);
+      }
     }
 
     // 모든 일정 조회

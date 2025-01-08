@@ -105,7 +105,7 @@ const CalendarWrite = () => {
       isRepeat: repeat,
       isAlarm: reminder,
       isPrivate: viewOnlyMe,
-      checkList: checklist.map(item => ({
+      checkListItem: checklist.map(item => ({
         content: item,
         isDone: false  // 기본적으로 완료 여부는 false
       })),
@@ -114,6 +114,7 @@ const CalendarWrite = () => {
       done: false,
       createdAt: createdAt || new Date().toISOString(), // 현재 시간
       userId: user.id || '',
+      color: "#FF0000",
     };
 
     console.log("전송할 데이터: ", scheduleData);

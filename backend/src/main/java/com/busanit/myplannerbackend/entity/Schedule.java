@@ -66,6 +66,9 @@ public class Schedule {
     @Column(name = "detail")
     private String detail;  // 상세 내용
 
+    @Column(name = "color")
+    private String color;   // 일정 색깔
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;    // 사용자 아이디

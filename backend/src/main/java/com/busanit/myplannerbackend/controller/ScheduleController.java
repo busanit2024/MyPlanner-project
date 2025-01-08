@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
@@ -37,22 +38,23 @@ public class ScheduleController {
 
     // 일정 등록
     @PostMapping
-    public ResponseEntity<Void> createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
+    public ResponseEntity createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
         // Schedule 엔티티에서 userId를 통해 User 엔티티 조회
 //        if (scheduleDTO.getUser() == null || scheduleDTO.getUser().getId() == null) {
 //            return ResponseEntity.badRequest().body(null);
 //        }
-        User user = userService.findById(scheduleDTO.getUserId());  // 사용자 존재 여부 확인
-        Category category = categoryService.findById(scheduleDTO.getCategoryId());  // 사용자 존재 여부 확인
+//        User user = userService.findById(scheduleDTO.getUserId());  // 사용자 존재 여부 확인
+//        Category category = categoryService.findById(scheduleDTO.getCategoryId());  // 사용자 존재 여부 확인
 
-        Schedule schedule = ScheduleDTO.toEntity(scheduleDTO, user);
-        schedule.setUser(user);
-        schedule.setCategory(category);
+//        Schedule schedule = ScheduleDTO.toEntity(scheduleDTO, user);
+//        schedule.setUser(user);
+//        schedule.setCategory(category);
 
         scheduleService.createSchedule(scheduleDTO);
-        checkListService.saveCheckList(scheduleDTO.getCheckList());
+//        checkListService.saveCheckList(scheduleDTO.getCheckListItem(), schedule);
 
-        return ResponseEntity.noContent().build();
+        //return ResponseEntity.noContent().build();
+        return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
     // 모든 일정 조회

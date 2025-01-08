@@ -48,9 +48,13 @@ public class ScheduleDTO {
 
     private List<CheckList> checkList;           // 체크리스트
 
+    private List<CheckListDTO> checkListItem;   // dto로 체크리스트 받아오기 위해 따로 설정
+
     private Boolean done;                // 완료 여부
 
     private String detail;              // 상세 내용
+
+    private String color;               // 일정 색깔
 
     private UserDTO user;                  // 유저
 
@@ -75,9 +79,10 @@ public class ScheduleDTO {
         schedule.setIsPrivate(scheduleDTO.getIsPrivate());
         schedule.setImageUrl(scheduleDTO.getImageUrl());
         schedule.setCreatedAt(scheduleDTO.getCreatedAt());
-//        schedule.setCheckList(schedule.getCheckList());
+//        schedule.setCheckList(scheduleDTO.getCheckList());
         schedule.setDone(scheduleDTO.getDone());
         schedule.setDetail(scheduleDTO.getDetail());
+        schedule.setColor(scheduleDTO.getColor());
         schedule.setUser(user);
         schedule.setCategory(scheduleDTO.getCategory());
         return schedule;
@@ -112,6 +117,7 @@ public class ScheduleDTO {
                 .detail(schedule.getDetail())
                 .checkList(schedule.getCheckList())
                 .done(schedule.getDone())
+                .color(schedule.getColor())
                 //보안상 User필드를 UserDTO로 변환
                 .user(UserDTO.toDTO(schedule.getUser()))
                 .category(schedule.getCategory());
