@@ -148,9 +148,9 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
       const otherUser = otherParticipants[0];
       return {
         isTeam: false,
-        name: otherUser.username,  
-        email: otherUser.email,
-        profileImageUrl: otherUser.profileImageUrl,
+        name: otherUser?.username,  
+        email: otherUser?.email,
+        profileImageUrl: otherUser?.profileImageUrl,
         ...otherUser  
       };
     }

@@ -197,9 +197,9 @@ export default function UserProfilePage() {
 
 
   return (
-    <Container>
-      <UserInfoContainer>
-        <LeftContainer>
+    <Container className="user-profile-page">
+      <UserInfoContainer className="user-info-container">
+        <LeftContainer className="left-container">
           <div className="profileImage">
             <img src={pageUser?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />
           </div>
@@ -213,7 +213,7 @@ export default function UserProfilePage() {
           </div>
 
         </LeftContainer>
-        <RightContainer>
+        <RightContainer className="right-container">
           {isFollowing && <>
             <div className="button" onClick={handleMessageButton}>
               <img src="/images/icon/message.svg" alt="message" />
@@ -228,7 +228,7 @@ export default function UserProfilePage() {
           }
         </RightContainer>
       </UserInfoContainer>
-      <UserDataContainer>
+      <UserDataContainer className="user-data-container">
         //다른 데이터
       </UserDataContainer>
     </Container>
@@ -240,6 +240,7 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
+  box-sizing: border-box;
   padding: var(--layout-padding);
 `;
 

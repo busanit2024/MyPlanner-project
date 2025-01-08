@@ -1,10 +1,12 @@
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 const defaultScheduleImageUrl = "/images/default/defaultScheduleImage.png";
 
 export default function ScheduleListItem(props) {
-  const { data, onClick } = props;
+  const { data } = props;
+  const navigate = useNavigate();
 
   const generateDateFormat = (startDate, startTime, endDate, endTime) => {
     // 날짜 인풋 포맷: 2025-01-08T00:00:00.000+00:00
@@ -28,8 +30,8 @@ export default function ScheduleListItem(props) {
 
 
   return (
-    <Container className="schedule-list-item" onClick={onClick}>
-      <UserInfo className="user-info">
+    <Container className="schedule-list-item">
+      <UserInfo className="user-info" onClick={() => navigate(`/user/${data?.user.id}`)}>
         <div className="profileImage">
           <img src={data?.user.profileImageUrl || defaultProfileImageUrl}  onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />
         </div>
@@ -74,7 +76,6 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  cursor: pointer;
   padding-bottom: 24px;
   padding-top: 12px;
   border-bottom: 1px solid var(--light-gray);
@@ -93,6 +94,7 @@ const UserInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
 
   & .profileImage {
     width: 40px;
@@ -118,6 +120,12 @@ const InnerContainer = styled.div`
   justify-content: space-between;
   align-items: flex-end;
   gap: 8px;
+  cursor: pointer;
+
+  &:hover img {
+      transform: scale(1.1);
+      filter: brightness(0.9);
+    }
 
   & .left {
     display: flex;
@@ -136,11 +144,6 @@ const InnerContainer = styled.div`
         height: 100%;
         object-fit: cover;
         transition: all 0.3s;
-      }
-
-      &:hover img {
-        transform: scale(1.1);
-        filter: brightness(0.9);
       }
     }
 
@@ -192,6 +195,7 @@ const Comment = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
 
   & .commentIcon {
     width: 28px;
