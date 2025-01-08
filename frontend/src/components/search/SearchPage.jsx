@@ -16,6 +16,7 @@ export default function SearchPage() {
   const [users, setUsers] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [listLoading, setListLoading] = useState(false);
+  const [noSearchText, setNoSearchText] = useState(true);
 
   // SearchContext의 onSearch 함수를 setOnSearch로 설정
   useEffect(() => {
@@ -30,6 +31,8 @@ export default function SearchPage() {
     setPage(0);
     setHasNext(false);
     setUsers([]);
+    setSchedules([]);
+    setNoSearchText(!searchText);
     onSearch(searchText, searchType);
   }, [searchType]);
 
@@ -40,8 +43,11 @@ export default function SearchPage() {
     console.log("user", user);
     const userId = user?.id;
     if (!userId, !searchText) {
+      setNoSearchText(true);
+      setListLoading(false);
       return;
     }
+    setNoSearchText(false);
 
     if (searchType === 'user') {
       axios.get(`/api/user/search`, { params: { searchText, userId, page, size } })
@@ -49,7 +55,7 @@ export default function SearchPage() {
           console.log("user search", res.data);
           const data = res.data.content;
           setUsers(data);
-          setHasNext(res.data.hasNext);
+          setHasNext(!res.data.last);
         })
         .catch(err => {
           console.error(err);
@@ -59,8 +65,19 @@ export default function SearchPage() {
         });
     }
     if (searchType === 'schedule') {
-      setListLoading(false);
-      /// 추후구현
+      axios.get(`/api/schedules/search`, { params: { searchText, userId, page, size } })
+        .then(res => {
+          console.log("schedule search", res.data);
+          const data = res.data.content;
+          setSchedules(data);
+          setHasNext(!res.data.last);
+        })
+        .catch(err => {
+          console.error(err);
+        })
+        .finally(() => {
+          setListLoading(false);
+        });
     }
   };
 
@@ -79,20 +96,20 @@ export default function SearchPage() {
       </SearchTypeWrap>
         <SearchResultList>
         {(listLoading) && <p className="no-result">로딩중...</p>}
-        {(!listLoading && searchType === 'user') &&
+        {(!listLoading && noSearchText ) && <p className="no-result">일정이나 사용자를 검색해보세요.</p>}
+        {(!listLoading && searchType === 'user' && !noSearchText ) &&
         <>
           {(users.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
           {users.map((user, index) => (
             <UserListItem key={index} user={user} />
           ))}
         </> }
-        {(!listLoading && searchType === 'schedule') &&
+        {(!listLoading && searchType === 'schedule' && !noSearchText) &&
         <>
           {(schedules.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
           {schedules.map((schedule, index) => (
-            <div key={index}>{schedule.title}</div>
+            <ScheduleListItem key={index} data={schedule} />
           ))}
-          <ScheduleListItem />
         </>}
           {hasNext && <Button onClick={() => setPage(page + 1)}>더보기</Button>}
         </SearchResultList>

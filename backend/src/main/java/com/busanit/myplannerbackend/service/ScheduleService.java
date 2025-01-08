@@ -84,4 +84,9 @@ public class ScheduleService {
         List<Long> follows = user.getFollows().stream().map(follow -> follow.getFollowTo().getId()).toList();
         return scheduleRepository.findAllByUserIdInOrderByCreatedAtDesc(follows, pageable);
     }
+
+    //일정 제목으로 검색(임시)
+    public Slice<Schedule> searchByTitle(String title, Pageable pageable) {
+      return scheduleRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(title, pageable);
+    }
 }

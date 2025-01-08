@@ -49,7 +49,7 @@ export default function MyPage() {
         } else {
           setFollowList([...followList, ...res.data.content]);
         }
-        setHasNext(res.data.hasNext);
+        setHasNext(!res.data.last);
       })
       .catch(err => {
         console.error(err);

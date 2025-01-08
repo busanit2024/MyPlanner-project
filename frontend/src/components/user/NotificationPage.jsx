@@ -98,7 +98,7 @@ export default function NotificationPage() {
         ...prev,
         noti: [...prev.noti, ...res.data.content],
       }));
-      setHasNext((prev) => ({ ...prev, noti: res.data.hasNext }));
+      setHasNext((prev) => ({ ...prev, noti: !res.data.last }));
     } catch (error) {
       console.error(error);
     } finally {
@@ -121,7 +121,7 @@ export default function NotificationPage() {
         ...prev,
         invite: [...prev.invite, ...res.data.content],
       }));
-      setHasNext((prev) => ({ ...prev, invite: res.data.hasNext }));
+      setHasNext((prev) => ({ ...prev, invite: !res.data.last }));
     } catch (error) {
       console.error(error);
     } finally {

@@ -69,6 +69,7 @@ public class ScheduleController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    //모든 일정 최신순 슬라이스
     @GetMapping("/feed")
     public Slice<ScheduleDTO> getScheduleFeed(@RequestParam int size, @RequestParam int page) {
         Pageable pageable = PageRequest.of(page, size);
@@ -76,11 +77,20 @@ public class ScheduleController {
       return ScheduleDTO.toDTO(slice);
     }
 
+    //내가 팔로우하는 사람 일정 최신순 슬라이스
     @GetMapping("/feed/follow")
     public Slice<ScheduleDTO> getScheduleFollows(@RequestParam Long userId, @RequestParam int size, @RequestParam int page) {
         Pageable pageable = PageRequest.of(page, size);
         Slice<Schedule> slice = scheduleService.getFollwingScheduleSlice(userId, pageable);
       return ScheduleDTO.toDTO(slice);
+    }
+
+    //일정 제목으로 검색(임시)
+    @GetMapping("/search")
+    public Slice<ScheduleDTO> searchSchedule(@RequestParam String searchText, @RequestParam int size, @RequestParam int page) {
+        Pageable pageable = PageRequest.of(page, size);
+        Slice<Schedule> slice = scheduleService.searchByTitle(searchText, pageable);
+        return ScheduleDTO.toDTO(slice);
     }
 
     // 일정 수정
