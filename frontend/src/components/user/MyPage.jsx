@@ -65,7 +65,7 @@ export default function MyPage() {
         <div className="left">
           <div className="inner-container">
             <ProfileImage>
-              <img src={user?.profileImageUrl ?? defaultProfileImage} alt="profile" onError={(e) => (e.target.src =defaultProfileImage)} />
+              <img src={user?.profileImageUrl || defaultProfileImage} alt="profile" onError={(e) => (e.target.src =defaultProfileImage)} />
             </ProfileImage>
             <div className="info">
               <span className="name">{user?.username}</span>

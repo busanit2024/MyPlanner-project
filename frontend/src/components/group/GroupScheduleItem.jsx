@@ -7,7 +7,7 @@ export default function GroupScheduleItem({ schedule }) {
     <Container>
       <Left>
         <div className="schedule-image">
-          <img src={schedule?.imageUrl ?? defaultScheduleImageUrl} onError={(e) => e.target.src = defaultScheduleImageUrl} alt="일정 이미지" />
+          <img src={schedule?.imageUrl || defaultScheduleImageUrl} onError={(e) => e.target.src = defaultScheduleImageUrl} alt="일정 이미지" />
         </div>
         <div className="schedule-info">
           <span className="title">일정 제목</span>

@@ -6,6 +6,8 @@ import { FaPlus } from "react-icons/fa6";
 import GroupScheduleItem from "./GroupScheduleItem";
 import GroupBoardItem from "./GroupBoardItem";
 
+const defaultGroupImageUrl = "/images/default/defaultGroupImage.png";
+
 export default function GroupDetail() {
   const { groupId } = useParams();
   const [settingBoxOpen, setSettingBoxOpen] = useState(false);
@@ -13,12 +15,12 @@ export default function GroupDetail() {
 
   return (
     <Container>
-      <GroupHeader src="/images/group/group1.jpg">
+      <GroupHeader src={null}>
         <div className="background-image" />
         <GroupHeaderInner>
           <div className="left">
             <div className="group-image">
-              <img src="/images/group/group1.jpg" alt="그룹 이미지" />
+              <img src={defaultGroupImageUrl} alt="그룹 이미지" onError={(e) => e.target.src=defaultGroupImageUrl} />
             </div>
             <div className="group-info">
               <div className="name">그룹 이름</div>

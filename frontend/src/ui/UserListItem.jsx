@@ -130,7 +130,7 @@ export default function UserListItem({ user: item }) {
     <Container className="user-list-item" onClick={handleClick}>
       <div className="left">
         <Avatar>
-          <img src={item?.profileImageUrl ?? defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl)} />
+          <img src={item?.profileImageUrl || defaultProfileImageUrl} alt="profile" onError={(e) => (e.target.src = defaultProfileImageUrl)} />
         </Avatar>
         <Info>
           <span className="name">{item?.username}

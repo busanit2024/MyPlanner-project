@@ -201,7 +201,7 @@ export default function UserProfilePage() {
       <UserInfoContainer>
         <LeftContainer>
           <div className="profileImage">
-            <img src={pageUser?.profileImageUrl ?? defaultProfileImageUrl} onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />
+            <img src={pageUser?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />
           </div>
           <div className="info">
             <div className="nameContainer">

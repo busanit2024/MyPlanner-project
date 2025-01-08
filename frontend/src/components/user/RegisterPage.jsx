@@ -10,6 +10,8 @@ import { auth, imageFileUpload, deleteFile } from "../../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+const defaultProfileImage = "/images/default/defaultProfileImage.png";
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -378,7 +380,7 @@ export default function RegisterPage() {
           <div className="input">
             <label>프로필 사진</label>
             <ProfileImage className="profile-image">
-              <img src={selectedImage ? URL.createObjectURL(selectedImage) : "images/default/defaultProfileImage.png"} alt="프로필 사진" />
+              <img src={selectedImage ? URL.createObjectURL(selectedImage) : defaultProfileImage} alt="프로필 사진" />
             </ProfileImage>
 
             <label className="custom-file-input">

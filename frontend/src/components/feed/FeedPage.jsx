@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import ScheduleListItem from "../../ui/ScheduleListItem";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Button from "../../ui/Button";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
@@ -13,18 +14,54 @@ export default function FeedPage() {
   const [feedType, setFeedType] = useState("follow");
   const [followFeed, setFollowFeed] = useState([]);
   const [exploreFeed, setExploreFeed] = useState([]);
-  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedState, setFeedState] = useState({
+    loading: false,
+    page: 0,
+    hasNext: false
+  });
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
     page: 0,
     hasNext: false
   });
+  const userRef = useRef(user);
 
   useEffect(() => {
     if (!loading && user) {
+      userRef.current = user;
       fetchFollowingList();
+      fetchFeedByType();
     }
   }, [user, loading]);
+
+  useEffect(() => {
+    setFeedState({
+      loading: false,
+      page: 0,
+      hasNext: false
+    });
+
+    fetchFeedByType();
+
+  }, [feedType]);
+
+  useEffect(() => {
+    if (feedState.page > 0) {
+      fetchFeedByType();
+    }
+  }, [feedState.page]);
+
+  const fetchFeedByType = () => {
+    if (feedType === "follow") {
+      if (userRef.current) {
+      fetchFollowFeed();
+      }
+    } else {
+      fetchFeed();
+    }
+  };
+
+
 
 
   const fetchFollowingList = () => {
@@ -47,6 +84,54 @@ export default function FeedPage() {
       });
   }
 
+  const fetchFeed = () => {
+    setFeedState((prev) => ({ ...prev, loading: true }));
+    const size = 10;
+
+    axios.get(`/api/schedules/feed`, {
+      params: {
+        page: feedState.page,
+        size: size,
+      }
+    })
+      .then(res => {
+        console.log(res.data);
+        setExploreFeed(res.data.content ?? []);
+        setFeedState((prev) => ({ ...prev, hasNext: !res.data.last }));
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {
+        setFeedState((prev) => ({ ...prev, loading: false }));
+      });
+  };
+
+  const fetchFollowFeed = () => {
+    setFeedState((prev) => ({ ...prev, loading: true }));
+    const size = 10;
+
+    axios.get(`/api/schedules/feed/follow`, {
+      params: {
+        userId: user?.id,
+        page: feedState.page,
+        size: size,
+      }
+    })
+      .then(res => {
+        console.log(res.data);
+        setFollowFeed(res.data.content ?? []);
+        setFeedState((prev) => ({ ...prev, hasNext: !res.data.last }));
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {
+        setFeedState((prev) => ({ ...prev, loading: false }));
+      });
+  };
+
+
 
 
   return (
@@ -62,30 +147,41 @@ export default function FeedPage() {
         </div>
       </FeedTypeWrap>
       <FeedResultList>
-        {feedLoading && <div>로딩중...</div>}
         {feedType === "follow" && <>
-        <FollowingListContainer>
-          {followingList.map((item) => (
-            <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
-            <div className="avatar" key={item.id}>
-              <img src={item.profileImageUrl || defaultProfileImageUrl} alt="profile" />
-            </div>
-            <span className="username">{item.username}</span>
-          </div>
-          ))}
-        </FollowingListContainer>
+          <FollowingListContainer>
+            {followingList.map((item) => (
+              <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
+                <div className="avatar" key={item.id}>
+                  <img src={item.profileImageUrl || defaultProfileImageUrl} alt="profile" onError={(e) => e.target.src=defaultProfileImageUrl} />
+                </div>
+                <span className="username">{item.username}</span>
+              </div>
+            ))}
+          </FollowingListContainer>
 
-          {!feedLoading && <>
+          {feedState.loading && <div className="no-result">로딩중...</div>}
+
+          {!feedState.loading && <>
             {followFeed.length === 0 && <div className="no-result">팔로우한 사용자의 새 글이 없어요.</div>}
-            <ScheduleListItem />
+            {followFeed.map((item) => (
+              <ScheduleListItem key={item.id} data={item} />
+            ))}
           </>}
         </>}
 
 
-        {(!feedLoading && feedType === "explore") && <>
-          {exploreFeed.length === 0 && <div className="no-result">새 글이 없어요.</div>}
-          <ScheduleListItem />
+        {feedType === "explore" && <>
+
+          {feedState.loading && <div className="no-result">로딩중...</div>}
+          {!feedState.loading && <>
+            {exploreFeed.length === 0 && <div className="no-result">새 글이 없어요.</div>}
+            {exploreFeed.map((item) => (
+              <ScheduleListItem key={item.id} data={item} />
+            ))}
+          </>}
         </>}
+
+        {feedState.hasNext && <Button onClick={() => setFeedState((prev) => ({ ...prev, page: prev.page + 1 }))}>더 불러오기</Button>}
       </FeedResultList>
     </Container>
   );
@@ -177,6 +273,7 @@ const FollowingListContainer = styled.div`
 const FeedResultList = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
   padding: 24px 96px;
   box-sizing: border-box;

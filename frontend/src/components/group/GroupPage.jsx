@@ -3,9 +3,11 @@ import styled from "styled-components";
 import { useAuth } from "../../context/AuthContext";
 import GroupListItem from "./GroupListItem";
 import Radio from "../../ui/Radio";
+import { useNavigate } from "react-router-dom";
 
 export default function GroupPage() {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [searchType, setSearchType] = useState('my');
   const [myGroups, setMyGroups] = useState([]);
   const [exploreGroups, setExploreGroups] = useState([]);
@@ -60,7 +62,7 @@ export default function GroupPage() {
         </div>
       </SearchBarWrap>}
       <SearchResultList>
-        <GroupListItem />
+        <GroupListItem onClick={() => navigate('1')} />
 
       </SearchResultList>
     </Container>

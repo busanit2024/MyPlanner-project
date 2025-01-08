@@ -17,6 +17,7 @@ export default function SearchPage() {
   const [schedules, setSchedules] = useState([]);
   const [listLoading, setListLoading] = useState(false);
 
+  // SearchContext의 onSearch 함수를 setOnSearch로 설정
   useEffect(() => {
     setOnSearch(() => onSearch);
   }, [setOnSearch, searchType]);

@@ -32,7 +32,7 @@ export default function NotiListItem(props) {
     <Container className="noti-list-item" onClick={onClick}>
       <div className="content">
         <Avatar>
-          <img src={data?.fromUser.profileImageUrl ?? defaultProfileImage} onError={(e) => e.target.src = defaultProfileImage} alt="profile" />
+          <img src={data?.fromUser.profileImageUrl || defaultProfileImage} onError={(e) => e.target.src = defaultProfileImage} alt="profile" />
         </Avatar>
 
         <NotiText className={data?.read ? "read" : ""}>

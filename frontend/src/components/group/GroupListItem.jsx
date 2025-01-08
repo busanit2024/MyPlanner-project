@@ -1,11 +1,12 @@
 import styled from "styled-components";
 
-export default function GroupListItem({ group }) {
+const defaultGroupImageUrl = "/images/default/defaultGroupImage.png";
+export default function GroupListItem({ group, onClick }) {
   return(
-    <Container src={group?.profileImageUrl}>
+    <Container src={group?.ImageUrl} onClick={onClick}>
       <GroupHeader>
         <div className="group-image">
-          <img src={group?.profileImageUrl} alt="그룹 이미지" />
+          <img src={group?.profileImageUrl || defaultGroupImageUrl} alt="그룹 이미지" onError={(e) => e.target.src=defaultGroupImageUrl} />
         </div>
         <div className="group-name">{group?.name ?? "그룹명"}</div>
       </GroupHeader>
