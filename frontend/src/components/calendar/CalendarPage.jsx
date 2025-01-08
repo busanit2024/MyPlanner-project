@@ -7,36 +7,51 @@ import interactionPlugin from '@fullcalendar/interaction';
 import "../../css/CalendarPage.css";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-let eventGuid = 0;
-function createEventId() {
-  return String(eventGuid++);
-}
 
 export default function CalendarPage() {
   const [weekendsVisible, setWeekendsVisible] = useState(true);
   const [currentEvents, setCurrentEvents] = useState([]);  
   const [eventList, setEventList] = useState([]);
   const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate
+  const { user,loading } = useAuth(); // useAuth 훅 호출
 
   useEffect(() => {
-    axios.get('/api/schedules')
+    if (!loading && !user) {
+      navigate("/login");
+    }
+    console.log("user", user);
+  }, [user, loading]);
+
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login");
+    }
+    console.log("user:", user);
+    console.log("loading:", loading);
+    axios.get('/api/schedules?id=' + user.id)
       .then((response) => {
-        if (response.data) {     
+        if (response.data) {
+          console.log("response.data", response.data);
           const newEvents = response.data.map((item) => ({
+            
             id: item.id,
             title: item.title,
             start: item.startDate,
             end: item.endDate,
+            
+           
           }));
-          setEventList((prevEvents) => [...prevEvents, ...newEvents]);
+          
+          setEventList(newEvents);
         }
       })
       .catch((error) => {
-        console.error('Error fetching schedules:', error);
+        console.error('Error fetching user schedules:', error);
       });
   }, []);
-
 
 
   function handleWeekendsToggle() {
@@ -76,11 +91,13 @@ export default function CalendarPage() {
         }}
         initialView="dayGridMonth"
         editable={true}
-        selectable={true}
+        selectable={true}       //달력 셀 선택 활성화
         selectMirror={true}
         dayMaxEvents={true}
+        displayEventTime={false} // 시간 표시 제거
+        eventColor='#374983'             // 색 설정
         weekends={weekendsVisible}
-        select={handleDateSelect}
+        select={handleDateSelect} // 달력 셀을 클릭할 때 모달 열기
         eventContent={renderEventContent}
         eventClick={handleEventClick}
         eventsSet={handleEvents}

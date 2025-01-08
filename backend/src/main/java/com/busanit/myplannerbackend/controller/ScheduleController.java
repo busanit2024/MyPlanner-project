@@ -11,7 +11,9 @@ import com.busanit.myplannerbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -53,8 +55,8 @@ public class ScheduleController {
 
     // 모든 일정 조회
     @GetMapping
-    public List<Schedule> getAllSchedules() {
-        return scheduleService.getAllSchedules();
+    public List<Schedule> getAllSchedules(Long id) {
+        return scheduleService.getAllSchedules(id);
     }
 
     // 특정 일정 조회
