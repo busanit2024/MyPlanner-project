@@ -8,7 +8,7 @@ import "../../css/CalendarPage.css";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-
+import styled from 'styled-components';
 
 export default function CalendarPage() {
   const [weekendsVisible, setWeekendsVisible] = useState(true);
@@ -17,20 +17,28 @@ export default function CalendarPage() {
   const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate
   const { user,loading } = useAuth(); // useAuth 훅 호출
 
+  const defaultProfileImage = "/images/default/defaultProfileImage.png";
+
+  const ProfileImage = styled.div`
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: var(--light-gray);
+
+  & img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
+`;
+
+
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
     }
     console.log("user", user);
-  }, [user, loading]);
-
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/login");
-    }
-    console.log("user:", user);
-    console.log("loading:", loading);
+    if(!loading && user){
     axios.get('/api/schedules?id=' + user.id)
       .then((response) => {
         if (response.data) {
@@ -51,8 +59,11 @@ export default function CalendarPage() {
       .catch((error) => {
         console.error('Error fetching user schedules:', error);
       });
-  }, []);
+    }
+  }, [user, loading]);
 
+
+ 
 
   function handleWeekendsToggle() {
     setWeekendsVisible(!weekendsVisible);
@@ -80,7 +91,11 @@ export default function CalendarPage() {
 
   return (
     <div className="demo-app-main">
-      <div>프로필1 프로필2 프로필3 카테고리 일정작성</div>
+      <div>
+        <ProfileImage>
+              <img src={user?.profileImageUrl ?? defaultProfileImage} alt="profile" onError={(e) => (e.target.src =defaultProfileImage)} />
+            </ProfileImage> 
+            </div>
       <div>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
