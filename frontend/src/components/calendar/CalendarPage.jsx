@@ -9,6 +9,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
+import { collectFromHash } from '@fullcalendar/core/internal';
 
 export default function CalendarPage() {
   const [weekendsVisible, setWeekendsVisible] = useState(true); // 주말 표시 여부 상태
@@ -46,15 +47,15 @@ export default function CalendarPage() {
         .then((response) => {
           if (response.data) {
             console.log("response.data", response.data);
-
+            
             // 서버에서 받은 데이터를 FullCalendar 이벤트 형식으로 변환
             const newEvents = response.data.map((item) => ({
               id: item.id,
               title: item.title,
               start: item.startDate,
               end: item.endDate,
+              backgroundColor: item.color || "#6c757e", // 데이터베이스의 color 컬럼 값 사용
             }));
-
             setEventList(newEvents); // 이벤트 목록 상태 업데이트
           }
         })
@@ -185,6 +186,7 @@ function Sidebar({ weekendsVisible, handleWeekendsToggle, currentEvents }) {
           ))}
         </ul>
       </div>
+      
     </div>
   );
 }

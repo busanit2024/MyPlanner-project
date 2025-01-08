@@ -25,6 +25,7 @@ const CalendarWrite = () => {
   const [detail, setDetail] = useState('');
   const [image, setImage] = useState(null); // 이미지 상태
   const [createdAt, setCreatedAt] = useState(''); // 등록 시간
+  const [color, setColor] = useState('#6c757d'); // 기본 색상
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -111,6 +112,8 @@ const CalendarWrite = () => {
       done: true,
       createdAt: createdAt || new Date().toISOString(), // 현재 시간
       userId: user.id || '',
+      color, // 추가된 색상 데이터
+
     };
 
     console.log("전송할 데이터: ", scheduleData);
@@ -156,6 +159,13 @@ const CalendarWrite = () => {
           placeholder="제목" 
           value={title} 
           onChange={(e) => setTitle(e.target.value)} 
+        />
+        <input 
+          type="text" 
+          className="input-field" 
+          placeholder="#f6f6f6" 
+          value={color} 
+          onChange={(e) => setColor(e.target.value)} 
         />
         <div className="date-category-container">
           <p className="date-display">
@@ -285,6 +295,7 @@ const CalendarWrite = () => {
                 type="checkbox" 
                 style={{ marginRight: '10px' }} 
               />
+
               <input 
                 type="text" 
                 value={item} 

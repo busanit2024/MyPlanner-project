@@ -47,6 +47,8 @@ public class ScheduleDTO {
 
     private Boolean done;                // 완료 여부
 
+    private String color;               // 색상
+
     private UserDTO user;                  // 유저
 
     private Long userId;                // 사용자 아이디
@@ -72,6 +74,7 @@ public class ScheduleDTO {
         schedule.setCreatedAt(scheduleDTO.getCreatedAt());
         schedule.setCheckList(scheduleDTO.getCheckList());
         schedule.setDone(scheduleDTO.getDone());
+        schedule.setColor(scheduleDTO.getColor());
         schedule.setUser(user);
         schedule.setCategory(scheduleDTO.getCategory());
         return schedule;
@@ -94,6 +97,7 @@ public class ScheduleDTO {
                 .createdAt(schedule.getCreatedAt())
                 .checkList(schedule.getCheckList())
                 .done(schedule.getDone())
+                .color(schedule.getColor())
                 //보안상 User필드를 UserDTO로 변환
                 .user(UserDTO.toDTO(schedule.getUser()))
                 .category(schedule.getCategory());

@@ -62,6 +62,9 @@ public class Schedule {
     @Column(name = "done", nullable = false)
     private Boolean done;  // 완료 여부
 
+    @Column(name = "color", nullable = false)
+    private String color;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;    // 사용자 아이디
