@@ -42,7 +42,13 @@ export default function MyPage() {
     const size = 10;
     const userId = user?.id;
     const url = type === "follower" ? "/api/user/follower" : "/api/user/following";
-    axios.get(url, { params: { userId, page, size } })
+    axios.get(url, {
+      params: {
+        userId,
+        page: 0,
+        size: page * size + size
+      }
+    })
       .then(res => {
         if (type === "follower") {
           setFollowerList([...followerList, ...res.data.content]);
@@ -65,7 +71,7 @@ export default function MyPage() {
         <div className="left">
           <div className="inner-container">
             <ProfileImage>
-              <img src={user?.profileImageUrl || defaultProfileImage} alt="profile" onError={(e) => (e.target.src =defaultProfileImage)} />
+              <img src={user?.profileImageUrl || defaultProfileImage} alt="profile" onError={(e) => (e.target.src = defaultProfileImage)} />
             </ProfileImage>
             <div className="info">
               <span className="name">{user?.username}</span>
@@ -75,13 +81,10 @@ export default function MyPage() {
           <div className="bio">
             {user?.bio}
           </div>
-
         </div>
-
         <div className="right">
           <Button onClick={() => navigate("edit")} >프로필 수정</Button>
         </div>
-
       </ProfileContainer>
 
       <FollowTypeWrap>
@@ -186,6 +189,10 @@ const ProfileImage = styled.div`
 `;
 
 const FollowTypeWrap = styled.div`
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1;
   width: 100%;
   display: flex;
   justify-content: center;

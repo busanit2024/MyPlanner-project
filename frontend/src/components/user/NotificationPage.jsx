@@ -90,8 +90,8 @@ export default function NotificationPage() {
         params: {
           userId: user.id,
           type: "noti",
-          page: page.noti,
-          size: size,
+          page: 0,
+          size: page.noti * size + size,
         },
       });
       setNotiList((prev) => ({
@@ -113,8 +113,8 @@ export default function NotificationPage() {
         params: {
           userId: user.id,
           type: "invite",
-          page: page.invite,
-          size: size,
+          page: 0,
+          size: page.invite * size + size,
         },
       });
       setNotiList((prev) => ({

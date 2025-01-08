@@ -50,7 +50,12 @@ export default function SearchPage() {
     setNoSearchText(false);
 
     if (searchType === 'user') {
-      axios.get(`/api/user/search`, { params: { searchText, userId, page, size } })
+      axios.get(`/api/user/search`, { params: { 
+        searchText,
+        userId, 
+        page: 0, 
+        size: page * size + size
+        } })
         .then(res => {
           console.log("user search", res.data);
           const data = res.data.content;
@@ -123,9 +128,14 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
+  overflow-y: auto;
 `;
 
 const SearchTypeWrap = styled.div`
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 50;
   display: flex;
   justify-content: center;
   align-items: center;

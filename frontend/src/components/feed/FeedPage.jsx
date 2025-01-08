@@ -25,6 +25,8 @@ export default function FeedPage() {
     hasNext: false
   });
   const userRef = useRef(user);
+  const containerRef = useRef(null);
+  const scrollPositon = useRef(0);
 
   useEffect(() => {
     if (!loading && user) {
@@ -36,11 +38,12 @@ export default function FeedPage() {
 
   useEffect(() => {
     setFeedState({
-      loading: false,
+      loading: true,
       page: 0,
       hasNext: false
     });
-
+    setFollowFeed([]);
+    setExploreFeed([]);
     fetchFeedByType();
 
   }, [feedType]);
@@ -54,7 +57,7 @@ export default function FeedPage() {
   const fetchFeedByType = () => {
     if (feedType === "follow") {
       if (userRef.current) {
-      fetchFollowFeed();
+        fetchFollowFeed();
       }
     } else {
       fetchFeed();
@@ -90,8 +93,8 @@ export default function FeedPage() {
 
     axios.get(`/api/schedules/feed`, {
       params: {
-        page: feedState.page,
-        size: size,
+        page: 0,
+        size: feedState.page * size + size
       }
     })
       .then(res => {
@@ -104,6 +107,7 @@ export default function FeedPage() {
       })
       .finally(() => {
         setFeedState((prev) => ({ ...prev, loading: false }));
+        containerRef.current.scrollTop = scrollPositon.current;
       });
   };
 
@@ -114,8 +118,8 @@ export default function FeedPage() {
     axios.get(`/api/schedules/feed/follow`, {
       params: {
         userId: user?.id,
-        page: feedState.page,
-        size: size,
+        page: 0,
+        size: feedState.page * size + size
       }
     })
       .then(res => {
@@ -128,14 +132,20 @@ export default function FeedPage() {
       })
       .finally(() => {
         setFeedState((prev) => ({ ...prev, loading: false }));
+        containerRef.current.scrollTop = scrollPositon.current;
       });
   };
+
+  const handleLoadMore = () => {
+    scrollPositon.current = containerRef.current.scrollTop;
+    setFeedState((prev) => ({ ...prev, page: prev.page + 1 }));
+  }
 
 
 
 
   return (
-    <Container>
+    <Container className="feed-page" ref={containerRef}>
       <FeedTypeWrap>
         <div className={`feed-type ${feedType === "follow" ? "active" : ""}`} onClick={() => setFeedType("follow")}>
           <span>팔로우</span>
@@ -152,36 +162,32 @@ export default function FeedPage() {
             {followingList.map((item) => (
               <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
                 <div className="avatar" key={item.id}>
-                  <img src={item.profileImageUrl || defaultProfileImageUrl} alt="profile" onError={(e) => e.target.src=defaultProfileImageUrl} />
+                  <img src={item.profileImageUrl || defaultProfileImageUrl} alt="profile" onError={(e) => e.target.src = defaultProfileImageUrl} />
                 </div>
                 <span className="username">{item.username}</span>
               </div>
             ))}
           </FollowingListContainer>
-
+          {followFeed.map((item) => (
+            <ScheduleListItem key={item.id} data={item} />
+          ))}
           {feedState.loading && <div className="no-result">로딩중...</div>}
 
-          {!feedState.loading && <>
-            {followFeed.length === 0 && <div className="no-result">팔로우한 사용자의 새 글이 없어요.</div>}
-            {followFeed.map((item) => (
-              <ScheduleListItem key={item.id} data={item} />
-            ))}
-          </>}
+          {(!feedState.loading && followFeed.length === 0) && <div className="no-result">팔로우한 사용자의 새 글이 없어요.</div>}
         </>}
 
 
         {feedType === "explore" && <>
-
+          {exploreFeed.map((item) => (
+            <ScheduleListItem key={item.id} data={item} />
+          ))}
           {feedState.loading && <div className="no-result">로딩중...</div>}
-          {!feedState.loading && <>
-            {exploreFeed.length === 0 && <div className="no-result">새 글이 없어요.</div>}
-            {exploreFeed.map((item) => (
-              <ScheduleListItem key={item.id} data={item} />
-            ))}
-          </>}
+          {(!feedState.loading && exploreFeed.length === 0) && <div className="no-result">새 글이 없어요.</div>}
         </>}
-
-        {feedState.hasNext && <Button onClick={() => setFeedState((prev) => ({ ...prev, page: prev.page + 1 }))}>더 불러오기</Button>}
+        {feedState.hasNext &&
+          <div style={{ padding: "24px" }}>
+            <Button onClick={handleLoadMore}>더 불러오기</Button>
+          </div>}
       </FeedResultList>
     </Container>
   );
@@ -192,9 +198,14 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
+  overflow-y: auto;
 `;
 
 const FeedTypeWrap = styled.div`
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1;
   display: flex;
   justify-content: center;
   align-items: center;

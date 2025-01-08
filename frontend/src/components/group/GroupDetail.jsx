@@ -101,6 +101,7 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
+  overflow-y: auto;
 `;
 
 const GroupHeader = styled.div`
@@ -237,6 +238,10 @@ const SettingBox = styled.div`
 
 
 const BoardTypeWrap = styled.div`
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 50;
   display: flex;
   justify-content: center;
   align-items: center;
