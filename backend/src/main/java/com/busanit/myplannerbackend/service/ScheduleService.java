@@ -68,6 +68,14 @@ public class ScheduleService {
         return scheduleRepository.findById(id);
     }
 
+    // 특정 일정 조회(return DTO)
+    public ScheduleDTO getScheduleDTOById(Long id) {
+        Schedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("일정을 찾을 수 없습니다."));
+
+        return ScheduleDTO.toDTO(schedule);
+    }
+
     // 특정 사용자 ID로 일정 조회
     public List<Schedule> getSchedulesByUserId(Long userId) {
         return scheduleRepository.findByUserId(userId);
@@ -89,7 +97,7 @@ public class ScheduleService {
         schedule.setIsAlarm(scheduleDetails.getIsAlarm());
         schedule.setIsPrivate(scheduleDetails.getIsPrivate());
         schedule.setImageUrl(scheduleDetails.getImageUrl());
-        schedule.setCheckList(scheduleDetails.getCheckList());
+//        schedule.setCheckList(scheduleDetails.getCheckList());
         schedule.setDone(scheduleDetails.getDone());
         schedule.setDetail(scheduleDetails.getDetail());
         schedule.setCreatedAt(scheduleDetails.getCreatedAt());

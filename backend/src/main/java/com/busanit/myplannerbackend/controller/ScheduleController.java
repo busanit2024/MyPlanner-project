@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/schedules")
@@ -65,11 +66,17 @@ public class ScheduleController {
 
     // 특정 일정 조회
     @GetMapping("/{id}")
-    public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
-        return scheduleService.getScheduleById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ScheduleDTO> getScheduleDTOById(@PathVariable Long id) {
+        ScheduleDTO scheduleDTO = scheduleService.getScheduleDTOById(id);
+
+        return new ResponseEntity<>(scheduleDTO, HttpStatus.OK);
     }
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
+//        return scheduleService.getScheduleById(id)
+//                .map(ResponseEntity::ok)
+//                .orElse(ResponseEntity.notFound().build());
+//    }
 
     //모든 일정 최신순 슬라이스
     @GetMapping("/feed")

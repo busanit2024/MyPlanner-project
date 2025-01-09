@@ -18,7 +18,7 @@ const CalendarUpdate = () => {
   const [isPickerVisible, setIsPickerVisible] = useState(false);
 
   const [title, setTitle] = useState(eventData?.title || '');
-  const [category, setCategory] = useState('카테고리');
+  const [category, setCategory] = useState(eventData?.category || {});
   const [categoryId, setCategoryId] = useState(eventData?.categoryId || 0); // 카테고리 ID
   const [participants, setParticipants] = useState(eventData?.participants || []); // 참가자
   const [date, setDate] = useState(''); // 날짜
@@ -42,21 +42,24 @@ const CalendarUpdate = () => {
       try {
         const response = await axios.get(`/api/schedules/${id}`);
         console.log("API Response: ", response.data);
+        console.log("유저 아이디: ", user.id);
+        console.log("eventData: ", eventData);
         const scheduleData = response.data;
 
         if (scheduleData) {
             setTitle(scheduleData.title);
+            setCategory(scheduleData.category);
             setCategoryId(scheduleData.categoryId);
             setParticipants(scheduleData.user?.follows.map(follow => follow.id) || []);
-            setStartDate(scheduleData.startDate);
-            setEndDate(scheduleData.endDate);
+            setStartDate(scheduleData.startDate.split('T')[0]);
+            setEndDate(scheduleData.endDate.split('T')[0]);
             setStartTime(scheduleData.startTime);
             setEndTime(scheduleData.endTime);
             setAllDay(scheduleData.allDay);
             setRepeat(scheduleData.isRepeat);
             setReminder(scheduleData.isAlarm);
             setViewOnlyMe(scheduleData.isPrivate);
-            setChecklist((scheduleData.checkListItem || []).map(item => item.content));
+            setChecklist((scheduleData.checkList || []).map(item => item.content));
             setDetail(scheduleData.detail);
             setImage(scheduleData.imageUrl);
             setCreatedAt(scheduleData.createdAt);
@@ -225,13 +228,13 @@ const CalendarUpdate = () => {
             {date}
           </p>
           <select 
-            value={categoryId} 
+            value={category.id} 
             onChange={(e) => setCategoryId(e.target.value)}
           >
-            <option value="0">카테고리</option>
-            <option value="1">미팅</option>
-            <option value="2">약속</option>
-            <option value="3">기타</option>
+            <option value="4">약속</option>
+            <option value="5">과제</option>
+            <option value="6">스터디</option>
+            <option value="7">여행</option>
           </select>
         </div>
         <hr />

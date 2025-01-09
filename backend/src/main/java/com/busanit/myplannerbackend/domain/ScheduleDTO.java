@@ -120,6 +120,7 @@ public class ScheduleDTO {
                 .color(schedule.getColor())
                 //보안상 User필드를 UserDTO로 변환
                 .user(UserDTO.toDTO(schedule.getUser()))
+                .checkList(schedule.getCheckList())
                 .category(schedule.getCategory());
 
         return builder.build();
