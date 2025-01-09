@@ -42,6 +42,7 @@ public class User {
   private Role role;
   private String profileImageUrl;
 
+
   public enum Role {
     ADMIN, USER
   }
@@ -51,6 +52,9 @@ public class User {
 
   @OneToMany(mappedBy = "followTo")
   private List<Follow> followers;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+  private List<Category> categories;
 
   public static User toEntity(UserJoinDTO dto) {
     UserBuilder builder = User.builder()

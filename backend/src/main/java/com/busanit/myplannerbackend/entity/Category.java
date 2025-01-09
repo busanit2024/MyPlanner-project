@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,10 +16,22 @@ public class Category {
     @Column(name = "category_id")
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "category_name", nullable = false)
     private String categoryName;
+
+    private String color;
+
+    public static Category of(User user, String categoryName, String color) {
+        Category category = new Category();
+        category.setUser(user);
+        category.setCategoryName(categoryName);
+        category.setColor(color);
+        return category;
+    }
 
 }

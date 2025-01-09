@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.domain;
 
+import com.busanit.myplannerbackend.entity.Category;
 import com.busanit.myplannerbackend.entity.User;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -28,6 +29,7 @@ public class UserJoinDTO {
 
   private User.Role role;
   private String profileImageUrl;
+  private List<Category> categories;
 
   public static UserJoinDTO toDTO(User user) {
     UserJoinDTOBuilder builder = UserJoinDTO.builder()
@@ -38,7 +40,6 @@ public class UserJoinDTO {
             .phone(user.getPhone())
             .role(user.getRole())
             .profileImageUrl(user.getProfileImageUrl());
-
     return builder.build();
   }
 

@@ -13,7 +13,7 @@ const CalendarWrite = () => {
   const [isPickerVisible, setIsPickerVisible] = useState(false);  // 색상 선택기 보이기 여부
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('카테고리');
+  const [categoryList, setCategoryList] = useState([]); // 카테고리 목록
   const [categoryId, setCategoryId] = useState(0); // 카테고리 ID
   const [participants, setParticipants] = useState([]);
   const [date, setDate] = useState(''); // 오늘 날짜 상태
@@ -52,6 +52,14 @@ const CalendarWrite = () => {
     }
     setColor(label.color);  // 데이터 있을 시 컬러 세팅
   }, [label]);
+
+  useEffect(() => {
+    // 유저 정보 있을 때 유저 카테고리 받아오기
+    if(!loading && user) {
+      setCategoryList(user.categories);
+      setCategoryId(user.categories[0].id); // 첫 번째 카테고리 ID로 초기화
+    }
+  }, [loading, user]);
 
   const handleColorChange = useCallback(
     (color) => {
@@ -194,13 +202,12 @@ const CalendarWrite = () => {
             {date} {/* 오늘 날짜 표시 */}
           </p>
           <select 
-            value={categoryId} 
             onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="0">카테고리</option>
-            <option value="1">미팅</option>
-            <option value="2">약속</option>
-            <option value="3">기타</option>
+            value={categoryId}
+          > {/* 유저 카테고리 불러오기 */}
+            {categoryList.map((category) => (
+              <option key={category.id} value={category.id}>{category.categoryName}</option>
+            ))}
           </select>
         </div>
         <hr />
