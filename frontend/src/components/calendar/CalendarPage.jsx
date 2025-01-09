@@ -6,7 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import "../../css/CalendarPage.css";
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
 
@@ -16,6 +16,9 @@ export default function CalendarPage() {
   const [eventList, setEventList] = useState([]); // 서버에서 가져온 이벤트 목록 상태
   const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate
   const { user, loading } = useAuth(); // 인증된 사용자 정보 및 로딩 상태 가져오기
+  const { id } = useParams();
+  const { state } = useLocation();
+  const eventData = state?.eventData;
 
   const defaultProfileImage = "/images/default/defaultProfileImage.png"; // 기본 프로필 이미지 URL
 
@@ -74,10 +77,17 @@ export default function CalendarPage() {
   }
 
   function handleEventClick(clickInfo) {
-    // 일정 클릭 시 삭제 확인
-    if (window.confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'?`)) {
-      clickInfo.event.remove(); // FullCalendar에서 이벤트 삭제
-    }
+    // 이벤트 ID를 이용해 CalendarUpdate로 이동
+    const eventId = clickInfo.event.id;
+    const eventData = {
+      id: eventId,
+      title: clickInfo.event.title,
+      start: clickInfo.event.start,
+      end: clickInfo.event.end,
+    };
+    navigate(`/calendarUpdate/${eventId}`, {
+      state: { eventData }
+    });
   }
 
   function handleEvents(events) {

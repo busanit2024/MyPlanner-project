@@ -64,7 +64,7 @@ const CalendarWrite = () => {
   };
 
   const handleAddParticipant = () => {
-    setParticipants([...participants, `참가자${participants.length + 1}`]);
+    setParticipants(user?.follows.map(follow => follow.id) || []);
   };
 
   const handleAddChecklist = () => {
