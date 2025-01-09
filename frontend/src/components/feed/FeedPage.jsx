@@ -134,12 +134,17 @@ export default function FeedPage() {
       })
       .finally(() => {
         setFeedState((prev) => ({ ...prev, loading: false }));
+        if(containerRef.current) {
         containerRef.current.scrollTop = scrollPositon.current;
+        }
       });
   };
 
+  //더 불러올때 스크롤 위치 저장
   const handleLoadMore = () => {
+    if (containerRef.current) {
     scrollPositon.current = containerRef.current.scrollTop;
+    }
     setFeedState((prev) => ({ ...prev, page: prev.page + 1 }));
   }
 

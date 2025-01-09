@@ -30,17 +30,23 @@ const Container = styled.div`
   justify-content: space-between;
   gap: 24px;
   padding: 12px;
-  cursor: pointer;
+  border-bottom: 1px solid var(--light-gray);
 
-  &:hover .title {
-    color: var(--mid-gray);
+  &:last-of-type {
+    border-bottom: none;
   }
+
 `;
 
 const BoardInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
+  cursor: pointer;
+
+  &:hover .title {
+    color: var(--mid-gray);
+  }
 
   & .title {
     font-size: 18px;
@@ -69,12 +75,12 @@ const BoardInfo = styled.div`
 
 const ButtonGroup = styled.div` 
   display: flex;
-  gap: 36px;
+  gap: 48px;
   flex-shrink: 0;
 
   & .button {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     cursor: pointer;
 
     & img {
