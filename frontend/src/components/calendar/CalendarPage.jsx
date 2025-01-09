@@ -135,6 +135,7 @@ export default function CalendarPage() {
         <CategoryWrap>
           {/* 카테고리 필터 */}
           <div className="filter-icon" onClick={() => setCategoryBoxOpen(!categoryBoxOpen)}>
+            카테고리 필터 버튼 (임시로 배치함, 나중에 위치 변경해 주세요)
             <img src="/images/icon/filter.svg" alt="filter" />
           </div>
           {categoryBoxOpen && <div className="category-box">
@@ -257,11 +258,14 @@ const CategoryWrap = styled.div`
 position: relative;
 flex-shrink: 0;
 & .filter-icon {
-  width: 24px;
+  font-size: 12px;
+  white-space: nowrap;
   height: 24px;
+  display: flex;
+  align-items: center;
 
   & img {
-    width: 100%;
+    width: auto;
     height: 100%;
   }
 }
