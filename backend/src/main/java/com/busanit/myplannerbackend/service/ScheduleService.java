@@ -12,7 +12,6 @@ import com.busanit.myplannerbackend.repository.ScheduleRepository;
 import com.busanit.myplannerbackend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -104,7 +103,7 @@ public class ScheduleService {
 
     // 모든 일정 최신순 슬라이스
     public Slice<Schedule> getAllScheduleSlice(Pageable pageable) {
-        return scheduleRepository.findAllByOrderByCreatedAtDesc(pageable);
+        return scheduleRepository.findAllByIsPrivateFalseOrderByCreatedAtDesc(pageable);
     }
 
     //내가 팔로우하는 사람의 일정 최신순 슬라이스
@@ -114,11 +113,11 @@ public class ScheduleService {
             return null;
         }
         List<Long> follows = user.getFollows().stream().map(follow -> follow.getFollowTo().getId()).toList();
-        return scheduleRepository.findAllByUserIdInOrderByCreatedAtDesc(follows, pageable);
+        return scheduleRepository.findAllByUserIdInAndIsPrivateFalseOrderByCreatedAtDesc(follows, pageable);
     }
 
     //일정 제목으로 검색(임시)
     public Slice<Schedule> searchByTitle(String title, Pageable pageable) {
-      return scheduleRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(title, pageable);
+      return scheduleRepository.findByTitleContainingIgnoreCaseAndIsPrivateFalseOrderByCreatedAtDesc(title, pageable);
     }
 }
