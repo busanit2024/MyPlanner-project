@@ -3,7 +3,7 @@ import ChatListItem from "./chatComponent/ChatListItem";
 import ChatRoom from "./chatComponent/ChatRoom";
 import NewChatButton from "./chatComponent/NewChatButton";
 import { useChat } from '../../hooks/useChat';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
 
@@ -64,6 +64,7 @@ export default function ChatPage() {
         name: '',
         profileImage: null
     });
+    const [stompClient, setStompClient] = useState(null);
 
     const { messages, sendMessage, isConnected, loadChatHistory, disconnect } = useChat(
         selectedRoom?.id || roomId,
@@ -228,6 +229,7 @@ export default function ChatPage() {
                     onSendMessage={handleSendMessage}
                     onChatRoomUpdate={handleChatRoomUpdate}
                     onLeaveChat={handleLeaveChat}
+                    stompClient={stompClient}
                 />
             ) : (
                 <div style={{ 

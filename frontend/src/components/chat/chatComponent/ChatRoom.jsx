@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import ChatTitle from './ChatTitle';
 import ChatMessage from './ChatMessage';
@@ -35,7 +35,6 @@ const ChatMessagesScroll = styled.div`
 const ChatMessages = styled.div`
     display: flex;
     flex-direction: column;
-    
 `;
 
 const ChatInput = styled.div`
@@ -45,8 +44,8 @@ const ChatInput = styled.div`
 
 const ChatDate = styled.div`
     text-align: center;
-    font-weight:600;
-    font-size:14px;
+    font-weight: 600;
+    font-size: 14px;
     color: var(--black);
     width: 100%;
     margin: 20px 0;
@@ -73,28 +72,21 @@ const NewMessageAlert = styled.div`
     &:hover {
         opacity: 0.9;
     }
-    `;
+`;
 
-
-const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected, onSendMessage, onLeaveChat }) => {
+const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected, onSendMessage, onLeaveChat, stompClient }) => {
     const scrollRef = useRef(null);
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
     const [isUserNearBottom, setIsUserNearBottom] = useState(true);
     const lastMessageWasMine = useRef(false);
     const isTeamChat = selectedRoom.chatRoomType === "TEAM";
     const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [readStatuses, setReadStatuses] = useState({});
 
     const otherParticipant = selectedRoom.participants.find(p => p.email !== user.email);
 
-    useEffect(() => {
-        const { scrollWidth, clientWidth } = scrollRef.current || {};
-        if (scrollWidth > clientWidth) {
-            console.error('메시지 버블이 부모를 초과하고 있습니다.');
-        }
-    }, [messages]);
-
     // 스크롤 위치 확인
-    const handleScroll = () => {
+    const handleScroll = useCallback(() => {
         if (scrollRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
             const isNear = scrollHeight - scrollTop - clientHeight < 100;
@@ -103,7 +95,56 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                 setShowNewMessageAlert(false);
             }
         }
-    };
+    }, []);
+
+    // 스크롤 하단으로 이동
+    const scrollToBottom = useCallback(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            setShowNewMessageAlert(false);
+            setIsUserNearBottom(true);
+        }
+    }, []);
+
+    // 읽음 상태 업데이트
+    const updateMyReadStatus = useCallback(async () => {
+        if (!messages?.length || !selectedRoom?.id) return;
+
+        const lastMessageId = messages[messages.length - 1].id;
+        try {
+            const response = await fetch(`/api/chat/rooms/${selectedRoom.id}/read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userEmail: user.email,
+                    lastChatLogId: lastMessageId
+                })
+            });
+            
+            if (!response.ok) throw new Error('Failed to update read status');
+            const updatedStatuses = await response.json();
+            console.log('읽음 상태 업데이트 응답:', updatedStatuses);
+            setReadStatuses(updatedStatuses);
+            
+        } catch (error) {
+            console.error('읽음 상태 업데이트 실패:', error);
+        }
+    }, [messages, selectedRoom?.id, user?.email]);
+
+    // 읽음 상태 가져오기
+    const fetchReadStatuses = useCallback(async () => {
+        try {
+            const response = await fetch(`/api/chat/rooms/${selectedRoom.id}/unread`);
+            if (!response.ok) throw new Error('Failed to fetch read statuses');
+            const data = await response.json();
+            console.log('서버 응답 데이터:', data);
+            setReadStatuses(data);
+        } catch (error) {
+            console.error('읽음 상태 조회 실패:', error);
+        }
+    }, [selectedRoom?.id]);
 
     // 스크롤 이벤트 리스너
     useEffect(() => {
@@ -116,18 +157,7 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                 scrollContainer.removeEventListener('scroll', handleScroll);
             }
         };
-    }, []);
-
-    // 메시지 전송 핸들러
-    const handleSendMessage = async (content) => {
-        try {
-            await onSendMessage(content);
-            lastMessageWasMine.current = true;
-            scrollToBottom();
-        } catch (error) {
-            console.error('메시지 전송 실패:', error);
-        }
-    };
+    }, [handleScroll]);
 
     // 메시지 업데이트 시 스크롤 처리
     useEffect(() => {
@@ -138,18 +168,15 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
 
         if (scrollRef.current) {
             if (lastMessageWasMine.current) {
-                // 내가 방금 메시지를 보냈을 때만 스크롤
                 scrollToBottom();
                 lastMessageWasMine.current = false;
             } else if (!isMyMessage && !isUserNearBottom) {
-                // 상대방 메시지이고 스크롤이 위에 있을 때
                 setShowNewMessageAlert(true);
             } else if (isUserNearBottom) {
-                // 사용자가 하단에 있을 때는 스크롤
                 scrollToBottom();
             }
         }
-    }, [messages, user?.email]);
+    }, [messages, user?.email, isUserNearBottom, scrollToBottom]);
 
     // 채팅방 변경 시 초기화
     useEffect(() => {
@@ -158,15 +185,41 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
             setIsUserNearBottom(true);
             lastMessageWasMine.current = false;
             setTimeout(scrollToBottom, 100);
+            fetchReadStatuses();
         }
-    }, [selectedRoom?.id]);
+    }, [selectedRoom?.id, scrollToBottom, fetchReadStatuses]);
 
-    // 스크롤 하단으로 이동
-    const scrollToBottom = () => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-            setShowNewMessageAlert(false);
-            setIsUserNearBottom(true);
+    // 읽음상태 실시간 업데이트
+    useEffect(() => {
+        if (!stompClient || !selectedRoom?.id) return;
+    
+        const subscription = stompClient.subscribe(
+            `/sub/chat/rooms/${selectedRoom.id}/read-status`,
+            (message) => {
+                const updatedStatuses = JSON.parse(message.body);
+                console.log('Received read status update:', updatedStatuses);
+                setReadStatuses(updatedStatuses); // 새로운 상태로 완전히 교체
+            }
+        );
+    
+        return () => subscription.unsubscribe();
+    }, [selectedRoom?.id, stompClient]);
+
+    // 스크롤이 하단에 있을 때 읽음 상태 업데이트
+    useEffect(() => {
+        if (isUserNearBottom && messages?.length > 0) {
+            updateMyReadStatus();
+        }
+    }, [messages, isUserNearBottom, updateMyReadStatus]);
+
+    // 메시지 전송 핸들러
+    const handleSendMessage = async (content) => {
+        try {
+            await onSendMessage(content);
+            lastMessageWasMine.current = true;
+            scrollToBottom();
+        } catch (error) {
+            console.error('메시지 전송 실패:', error);
         }
     };
 
@@ -185,7 +238,7 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
         return groups;
     }, {});
 
-    //단체채팅 채팅방 이름 변경
+    // 단체채팅 채팅방 이름 변경
     const handleUpdateTitle = async (newTitle) => {
         try {
             const response = await fetch(`/api/chat/rooms/${selectedRoom.id}/title`, {
@@ -200,17 +253,13 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                 })
             });
 
-            if(!response.ok){
-                throw new Error('채팅방 이름 수정에 실패했습닌다.');
+            if(!response.ok) {
+                throw new Error('채팅방 이름 수정에 실패했습니다.');
             }
 
             const updatedRoom = await response.json();
-
-            // 현재 선택된 채팅방 정보 업데이트
             onChatRoomUpdate(updatedRoom);
-
-            // 수정 모드 종료
-            setIsEditingTitle(false); 
+            setIsEditingTitle(false);
 
         } catch (error) {
             console.error('채팅방 이름 수정 중 오류:', error);
@@ -252,13 +301,15 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                     {groupedMessages && Object.entries(groupedMessages).map(([date, msgs]) => (
                         <React.Fragment key={date}>
                             <ChatDate>{date}</ChatDate>
-                            {msgs.map(msg => {
+                            {msgs.map((msg, index) => {
                                 const isMyMessage = msg.senderEmail === user?.email;
                                 const sender = selectedRoom.participants.find(p => p.email === msg.senderEmail);
+                                const isLastMessage = index === msgs.length - 1;
 
                                 return (
                                     <ChatMessage
                                         key={msg.id}
+                                        messageId={msg.id}
                                         message={msg.contents}
                                         time={msg.sendTime}
                                         isMine={isMyMessage}
@@ -267,6 +318,8 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                                             ? user.profileImageUrl 
                                             : sender?.profileImageUrl || '/images/default/defaultProfileImage.png'}
                                         showSenderInfo={isTeamChat && !isMyMessage} 
+                                        readStatuses={readStatuses}
+                                        selectedRoom={selectedRoom}
                                     />
                                 );
                             })}

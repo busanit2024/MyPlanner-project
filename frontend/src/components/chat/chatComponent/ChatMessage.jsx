@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import React, { useCallback } from 'react';
 
 const MessageContainer = styled.div`
   display: flex;
@@ -47,14 +48,63 @@ const MessageBubble = styled.div`
   text-align: left;
 `;
 
+const MessageInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: ${props => props.isMine ? 'flex-end' : 'flex-start'};
+`;
+
+const MessageRow = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  flex-direction: ${props => props.isMine ? 'row-reverse' : 'row'}; // row로 변경
+`;
+
+const UnreadCount = styled.span`
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 2px;
+  min-width: 13px; // 숫자 너비 고정
+  text-align: center;
+`;
 
 const TimeStamp = styled.span`
-  font-size: 10px;
-  color: #999;
+  font-size: 12px;
+  color: var(--gray);
   margin-top: 4px;
 `;
 
-const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
+const ChatMessage = ({ message, time, isMine, senderName, senderProfile,  messageId, readStatuses, selectedRoom }) => {
+  const getUnreadCount = useCallback((currentMessageId) => {
+    if (!readStatuses || Object.keys(readStatuses).length === 0) {
+        return selectedRoom.participants.length - 1 || 0 ;
+    }
+
+    // readStatuses를 [count, logId] 형태의 배열로 변환하고 정렬
+    const sortedEntries = Object.entries(readStatuses)
+        .sort(([count1], [count2]) => Number(count1) - Number(count2));
+
+    // 현재 메시지의 logId와 비교하여 읽지 않은 수 계산
+    for (let i = 0; i < sortedEntries.length; i++) {
+        const [count, logId] = sortedEntries[i];
+        if (currentMessageId <= logId) {
+            // 첫 번째 항목이면 모두가 읽은 것
+            return i === 0 ? 0 : Number(sortedEntries[i - 1][0]);
+        }
+    }
+
+    // 현재 메시지가 가장 최신이면 마지막 카운트 반환
+    if (sortedEntries.length > 0) {
+        return Number(sortedEntries[sortedEntries.length - 1][0]);
+    }
+
+    return 0;
+  }, [readStatuses, selectedRoom]);
+
+  // 현재 메시지의 읽지 않은 수 계산
+  const unreadCount = getUnreadCount(messageId);
+
   return (
     <MessageContainer isMine={isMine}>
       <ProfileImage 
@@ -67,16 +117,23 @@ const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
       />
       <MessageContent isMine={isMine}>
         <SenderName isMine={isMine}>{senderName}</SenderName>
-        <MessageBubble isMine={isMine} message={message}>
-          {message}
-        </MessageBubble>
-        <TimeStamp>
-          {new Date(time).toLocaleTimeString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          })}
-        </TimeStamp>
+        <MessageInfo isMine={isMine}>
+          <MessageRow isMine={isMine}>
+            <MessageBubble isMine={isMine} message={message}>
+              {message}
+            </MessageBubble>
+            {isMine && unreadCount > 0 && (
+              <UnreadCount>{unreadCount}</UnreadCount>
+            )}
+          </MessageRow>
+          <TimeStamp>
+            {new Date(time).toLocaleTimeString('ko-KR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            })}
+          </TimeStamp>
+        </MessageInfo>
       </MessageContent>
     </MessageContainer>
   );
