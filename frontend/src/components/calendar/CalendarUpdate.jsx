@@ -44,6 +44,7 @@ const CalendarUpdate = () => {
         console.log("API Response: ", response.data);
         console.log("유저 아이디: ", user.id);
         console.log("eventData: ", eventData);
+        console.log("repeat의 상태: ", eventData?.isRepeat);
         const scheduleData = response.data;
 
         if (scheduleData) {
@@ -56,7 +57,7 @@ const CalendarUpdate = () => {
             setStartTime(scheduleData.startTime);
             setEndTime(scheduleData.endTime);
             setAllDay(scheduleData.allDay);
-            setRepeat(scheduleData.isRepeat);
+            setRepeat(scheduleData.isRepeat === "true");
             setReminder(scheduleData.isAlarm);
             setViewOnlyMe(scheduleData.isPrivate);
             setChecklist((scheduleData.checkList || []).map(item => item.content));
