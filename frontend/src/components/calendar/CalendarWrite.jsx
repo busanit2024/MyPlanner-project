@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '../../css/CalendarWrite.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { imageFileUpload } from '../../firebase';
+import { ChromePicker } from 'react-color';
 
 const CalendarWrite = () => {
   const { user, loading } = useAuth();
+
+  const [label, setLabel] = useState({ color: '' });
+  const [isPickerVisible, setIsPickerVisible] = useState(false);  // 색상 선택기 보이기 여부
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('카테고리');
@@ -25,6 +29,7 @@ const CalendarWrite = () => {
   const [detail, setDetail] = useState('');
   const [image, setImage] = useState(null); // 이미지 상태
   const [createdAt, setCreatedAt] = useState(''); // 등록 시간
+  const [color, setColor] = useState(''); // 색깔
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,19 +46,22 @@ const CalendarWrite = () => {
     setEndDate(''); // 끝 날짜 초기화
   }, []);
 
-  // // 사용자 ID 가져오는 로직 추가
-  // useEffect(() => {
-  //   const fetchUserData = async () => {
-  //     try {
-  //       const response = await axios.get('/api/user'); // 사용자 정보 API 호출
-  //       setUserId(response.data.id); // 사용자 ID 설정
-  //     } catch (error) {
-  //       console.error('사용자 정보를 가져오는 데 실패했습니다:', error);
-  //     }
-  //   };
+  useEffect(() => {
+    if (!label.color) {
+      setColor(''); // 받아온 레이블 컬러가 없을 시 빈칸
+    }
+    setColor(label.color);  // 데이터 있을 시 컬러 세팅
+  }, [label]);
 
-  //   fetchUserData();
-  // }, []);
+  const handleColorChange = useCallback(
+    (color) => {
+      setColor(color);
+    }, [color]
+  );
+
+  const togglePicker = () => {
+    setIsPickerVisible(!isPickerVisible); // 색상 선택기 토글
+  };
 
   const handleAddParticipant = () => {
     setParticipants([...participants, `참가자${participants.length + 1}`]);
@@ -114,7 +122,7 @@ const CalendarWrite = () => {
       done: false,
       createdAt: createdAt || new Date().toISOString(), // 현재 시간
       userId: user.id || '',
-      color: "#FF0000",
+      color: color,
     };
 
     console.log("전송할 데이터: ", scheduleData);
@@ -136,8 +144,28 @@ const CalendarWrite = () => {
 
   return (
     <div className="calendar-write">
-      <div className='header'>
+      <div className='header' style={{ position: 'relative' }}>
         <h2>일정 입력</h2>
+        <input
+          value={color}
+          onClick={togglePicker}  // 클릭 시 색상 선택기 열기
+          style={{ marginLeft: "10px" }}
+        />
+        {isPickerVisible && (
+          <div className='color-picker-container' 
+            style={{ 
+              position: 'absolute', 
+              zIndex: 2, 
+              top: 'calc(100% - 5px)', 
+              left: '50%',
+              transform: 'translateX(-50%)'
+            }}>
+            <ChromePicker
+              color={color}
+              onChange={color => handleColorChange(color.hex)}
+            />
+          </div>
+        )}
         <button className="submit-button"
           onClick={handleSubmit}>
           완료
