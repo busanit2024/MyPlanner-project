@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.OnDelete;
 
 import java.sql.Time;
 import java.util.Date;
@@ -74,7 +75,7 @@ public class Schedule {
     private User user;    // 사용자 아이디
 
     @JsonIgnore
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category;  // 카테고리 (Category 엔티티와의 관계)
 

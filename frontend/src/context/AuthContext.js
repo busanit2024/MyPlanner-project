@@ -39,12 +39,12 @@ export const AuthProvider = ({ children }) => {
     }
     
     if (token) {
-      setLoading(true);
       login(token);
     }
   }
 
   const login = (token) => {
+    setLoading(true);
     let loginResult = false;
     if (token) {
       loginResult = axios.get("/api/user/find", {

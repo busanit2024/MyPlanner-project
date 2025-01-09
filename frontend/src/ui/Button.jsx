@@ -49,6 +49,14 @@ const StyledButton = styled.button`
           color: white;
           border: none;
         `;
+      
+      case 'gray': 
+        return `
+          background-color: var(--mid-gray);
+          color: white;
+          border: none;
+        `;
+
       case 'danger':
         return `
           background-color: var(--danger-color);

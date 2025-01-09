@@ -42,11 +42,12 @@ export default function SearchPage() {
 
 
   const onSearch = (searchText, searchType) => {
+    const trimedText = searchText.trim();
     setListLoading(true);
     const size = 10;
     console.log("user", user);
     const userId = user?.id;
-    if (!userId, !searchText) {
+    if (!userId, !trimedText) {
       // 검색어 없는 경우 함수 종료
       setNoSearchText(true);
       setListLoading(false);
@@ -55,12 +56,14 @@ export default function SearchPage() {
     setNoSearchText(false);
 
     if (searchType === 'user') {
-      axios.get(`/api/user/search`, { params: { 
-        searchText,
-        userId, 
-        page: 0, 
-        size: page * size + size
-        } })
+      axios.get(`/api/user/search`, {
+        params: {
+          searchText: trimedText,
+          userId,
+          page: 0,
+          size: page * size + size
+        }
+      })
         .then(res => {
           console.log("user search", res.data);
           const data = res.data.content;
@@ -76,7 +79,14 @@ export default function SearchPage() {
         });
     }
     if (searchType === 'schedule') {
-      axios.get(`/api/schedules/search`, { params: { searchText, userId, page, size } })
+      axios.get(`/api/schedules/search`, {
+        params: {
+          searchText: trimedText,
+          userId,
+          page: 0,
+          size: page * size + size,
+        }
+      })
         .then(res => {
           console.log("schedule search", res.data);
           const data = res.data.content;
@@ -111,9 +121,9 @@ export default function SearchPage() {
           <div></div>
         </div>
       </SearchTypeWrap>
-        <SearchResultList className="search-result-list">
+      <SearchResultList className="search-result-list">
         {(listLoading) && <p className="no-result">로딩중...</p>}
-        {(!listLoading && noSearchText ) && <p className="no-result">일정이나 사용자를 검색해보세요.</p>}
+        {(!listLoading && noSearchText) && <p className="no-result">일정이나 사용자를 검색해보세요.</p>}
 
         {(searchType === 'user' && !noSearchText) && <>
           {users.map((user, index) => (
@@ -128,8 +138,8 @@ export default function SearchPage() {
           ))}
           {(!listLoading && schedules.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
         </>}
-          {hasNext && <Button onClick={handleLoadMore}>더보기</Button>}
-        </SearchResultList>
+        {hasNext && <Button onClick={handleLoadMore}>더보기</Button>}
+      </SearchResultList>
     </Container>
   );
 

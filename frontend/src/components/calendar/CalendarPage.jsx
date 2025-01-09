@@ -9,11 +9,16 @@ import axios from 'axios';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
+import Radio from '../../ui/Radio';
+import CategoryEditModal from './CategoryEditModal';
 
 export default function CalendarPage() {
   const [weekendsVisible, setWeekendsVisible] = useState(true); // 주말 표시 여부 상태
   const [currentEvents, setCurrentEvents] = useState([]); // 현재 표시 중인 이벤트 상태
   const [eventList, setEventList] = useState([]); // 서버에서 가져온 이벤트 목록 상태
+  const [categoryBoxOpen, setCategoryBoxOpen] = useState(false); // 카테고리 박스 오픈 상태
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false); // 카테고리 모달 오픈 상태
+  const [selectedCategory, setSelectedCategory] = useState(new Set()); // 선택된 카테고리 id 목록 (set으로 중복 방지)
   const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate
   const { user, loading } = useAuth(); // 인증된 사용자 정보 및 로딩 상태 가져오기
   const { id } = useParams();
@@ -35,6 +40,7 @@ export default function CalendarPage() {
     }
   `;
 
+
   useEffect(() => {
     // 인증되지 않은 사용자는 로그인 페이지로 이동
     if (!loading && !user) {
@@ -44,6 +50,8 @@ export default function CalendarPage() {
 
     // 인증된 사용자가 있다면 일정 데이터를 불러오기
     if (!loading && user) {
+      setSelectedCategory(new Set(user.categories.map((category) => category.id))); // 초기 상태: 전체 카테고리 선택
+
       axios
         .get('/api/schedules?id=' + user.id) // 사용자 ID 기반으로 일정 데이터 요청
         .then((response) => {
@@ -100,17 +108,73 @@ export default function CalendarPage() {
     return dayNumber;
   };
 
+  // 전체 카테고리 선택 토글
+  const selectAllCategoryToggle = (e) => {
+    if (e.target.checked) {
+      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
+    } else {
+      setSelectedCategory(new Set());
+    }
+  };
+
+  // 개별 카테고리 선택 토글
+  const selectCategoryToggle = (e) => {
+    const categoryId = parseInt(e.target.id);
+    if (selectedCategory.has(categoryId)) {
+      setSelectedCategory((prev) => {
+        const newSelected = new Set(prev);
+        newSelected.delete(categoryId);
+        return newSelected;
+      });
+    } else {
+      setSelectedCategory((prev) => new Set(prev).add(categoryId));
+    }
+  };
+
   return (
     <div className="demo-app-main">
-      <div>
+      <div className='calendar-header'>
         <ProfileImage>
           {/* 사용자 프로필 이미지 */}
-          <img 
-            src={user?.profileImageUrl ?? defaultProfileImage} 
-            alt="profile" 
+          <img
+            src={user?.profileImageUrl ?? defaultProfileImage}
+            alt="profile"
             onError={(e) => (e.target.src = defaultProfileImage)} // 이미지 로드 실패 시 기본 이미지로 대체
           />
-        </ProfileImage> 
+        </ProfileImage>
+        <CategoryWrap>
+          {/* 카테고리 필터 */}
+          <div className="filter-icon" onClick={() => setCategoryBoxOpen(!categoryBoxOpen)}>
+            카테고리 필터 버튼 (임시로 배치함, 나중에 위치 변경해 주세요)
+            <img src="/images/icon/filter.svg" alt="filter" />
+          </div>
+          {categoryBoxOpen && <div className="category-box">
+            <div className='title'>카테고리</div>
+            <CategoryLabel htmlFor="all">
+              <input type="checkbox" id="all" name="category" className='category-check' onChange={selectAllCategoryToggle} checked={selectedCategory.size === user.categories.length}
+              />
+              <div className='color-box'>
+                <img src="/images/icon/checkWhite.svg" alt="check" />
+              </div>
+              <span>전체</span>
+            </CategoryLabel>
+            {user.categories.map((category) => (
+              <CategoryLabel key={category.id} htmlFor={category.id} color={category.color}>
+                <input type="checkbox" id={category.id} name="category" className='category-check' onChange={selectCategoryToggle} checked={selectedCategory.has(category.id)} />
+                <div className='color-box'>
+                  <img src="/images/icon/checkWhite.svg" alt="check" />
+                </div>
+                <span>{category.categoryName}</span>
+              </CategoryLabel>
+            ))}
+
+            <div className='category-button' onClick={() => setCategoryModalOpen(true)}>
+              <img src="/images/icon/setting.svg" alt="plus" />
+              <span>카테고리 편집...</span>
+            </div>
+          </div>}
+        </CategoryWrap>
+
       </div>
       <div>
         <FullCalendar
@@ -144,6 +208,7 @@ export default function CalendarPage() {
           currentEvents={currentEvents} // 현재 이벤트 목록 전달
         />
       </div>
+      {categoryModalOpen && <CategoryEditModal categories={user.categories} onClose={() => setCategoryModalOpen(false)} />}
     </div>
   );
 }
@@ -197,4 +262,102 @@ function Sidebar({ weekendsVisible, handleWeekendsToggle, currentEvents }) {
       </div>
     </div>
   );
+};
+
+const CategoryWrap = styled.div`
+position: relative;
+flex-shrink: 0;
+& .filter-icon {
+  font-size: 12px;
+  white-space: nowrap;
+  height: 24px;
+  display: flex;
+  align-items: center;
+
+  & img {
+    width: auto;
+    height: 100%;
+  }
 }
+
+
+& .category-box {
+  position: absolute;
+  top: 28px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  white-space: nowrap;
+  gap: 12px;
+  padding: 24px;
+  background-color: white;
+  z-index: 100;
+  border-radius: 4px;
+  border: 1px solid var(--light-gray);
+
+  & .title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+
+  & label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  & .category-button {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+
+    & img {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+`;
+
+
+const CategoryLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  & .color-box {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: ${(props) => props.color ?? 'var(--light-gray)'};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    box-sizing: border-box;
+    cursor: pointer;
+
+    & img {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  & input:checked + .color-box img {
+    display: block;
+  }
+
+  & input {
+    display: none;
+  }
+
+  & span {
+    font-size: 16px;
+  }
+`;

@@ -44,7 +44,7 @@ export default function ScheduleListItem(props) {
           </div>
           <div className="info">
             <span className="title">{data?.title || "제목 없는 일정"}</span>
-            <span className="content">{data?.content}</span>
+            <span className="content">{data?.detail}</span>
             <span className="date">
               {generateDateFormat(data?.startDate, data?.startTime, data?.endDate, data?.endTime)}
             </span>

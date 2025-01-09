@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.domain;
 
+import com.busanit.myplannerbackend.entity.Category;
 import com.busanit.myplannerbackend.entity.Follow;
 import com.busanit.myplannerbackend.entity.User;
 import jakarta.validation.constraints.NotEmpty;
@@ -30,6 +31,7 @@ public class UserDTO {
 
   private List<Long> followers;
   private List<Long> follows;
+  private List<Category> categories;
 
   public static UserDTO toDTO(User user) {
     UserDTOBuilder builder = UserDTO.builder()
@@ -47,6 +49,7 @@ public class UserDTO {
 
     builder.followers(followerIds);
     builder.follows(followIds);
+    builder.categories(user.getCategories());
 
     return builder.build();
   }
