@@ -21,7 +21,7 @@ const CalendarWrite = () => {
   const [repeat, setRepeat] = useState(false);  // 반복 여부
   const [reminder, setReminder] = useState(false);  // 5분 전 알림 여부
   const [viewOnlyMe, setViewOnlyMe] = useState(false);  // 
-  const [checklist, setChecklist] = useState(['', '']);
+  const [checklist, setChecklist] = useState([]);
   const [detail, setDetail] = useState('');
   const [image, setImage] = useState(null); // 이미지 상태
   const [createdAt, setCreatedAt] = useState(''); // 등록 시간
@@ -105,12 +105,16 @@ const CalendarWrite = () => {
       isRepeat: repeat,
       isAlarm: reminder,
       isPrivate: viewOnlyMe,
-      checkList: checklist.length > 0 ? checklist.join(',') : '', // 배열을 문자열로 변환하기
+      checkListItem: checklist.map(item => ({
+        content: item,
+        isDone: false  // 기본적으로 완료 여부는 false
+      })),
       detail: detail,
       imageUrl: image || '',
-      done: true,
+      done: false,
       createdAt: createdAt || new Date().toISOString(), // 현재 시간
       userId: user.id || '',
+      color: "#FF0000",
     };
 
     console.log("전송할 데이터: ", scheduleData);
@@ -162,7 +166,7 @@ const CalendarWrite = () => {
             {date} {/* 오늘 날짜 표시 */}
           </p>
           <select 
-            value={category} 
+            value={categoryId} 
             onChange={(e) => setCategoryId(e.target.value)}
           >
             <option value="0">카테고리</option>

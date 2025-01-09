@@ -1,12 +1,15 @@
 package com.busanit.myplannerbackend.controller;
 
+import com.busanit.myplannerbackend.domain.CheckListDTO;
 import com.busanit.myplannerbackend.domain.ScheduleDTO;
 import com.busanit.myplannerbackend.domain.UserDTO;
 import com.busanit.myplannerbackend.entity.Category;
+import com.busanit.myplannerbackend.entity.CheckList;
 import com.busanit.myplannerbackend.entity.Schedule;
 import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.repository.UserRepository;
 import com.busanit.myplannerbackend.service.CategoryService;
+import com.busanit.myplannerbackend.service.CheckListService;
 import com.busanit.myplannerbackend.service.ScheduleService;
 import com.busanit.myplannerbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -29,32 +34,27 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     private final UserService userService;
     private final CategoryService categoryService;
+    private final CheckListService checkListService;
 
     // 일정 등록
     @PostMapping
-    public ResponseEntity<Void> createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
+    public ResponseEntity createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
         // Schedule 엔티티에서 userId를 통해 User 엔티티 조회
-        System.out.println(scheduleDTO);
 //        if (scheduleDTO.getUser() == null || scheduleDTO.getUser().getId() == null) {
 //            return ResponseEntity.badRequest().body(null);
 //        }
+//        User user = userService.findById(scheduleDTO.getUserId());  // 사용자 존재 여부 확인
+//        Category category = categoryService.findById(scheduleDTO.getCategoryId());  // 사용자 존재 여부 확인
 
-        // 문자열 체크리스트를 배열로 변환
-        if (scheduleDTO.getCheckList() != null && !scheduleDTO.getCheckList().isEmpty()) {
-            String[] checkListArray = scheduleDTO.getCheckList().split(","); // 쉼표로 구분하기
-            scheduleDTO.setCheckList(String.join(",", checkListArray)); // 필요에 따라 다시 문자열로 저장
-        } else {
-            scheduleDTO.setCheckList(""); // 비어있는 경우
-        }
-
-        User user = userService.findById(scheduleDTO.getUserId());  // 사용자 존재 여부 확인
-        Category category = categoryService.findById(scheduleDTO.getCategoryId());  // 사용자 존재 여부 확인
-
-        scheduleDTO.setUser(UserDTO.toDTO(user));
-        scheduleDTO.setCategory(category);
+//        Schedule schedule = ScheduleDTO.toEntity(scheduleDTO, user);
+//        schedule.setUser(user);
+//        schedule.setCategory(category);
 
         scheduleService.createSchedule(scheduleDTO);
-        return ResponseEntity.noContent().build();
+//        checkListService.saveCheckList(scheduleDTO.getCheckListItem(), schedule);
+
+        //return ResponseEntity.noContent().build();
+        return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
     // 모든 일정 조회
