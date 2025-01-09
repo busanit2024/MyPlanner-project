@@ -18,8 +18,8 @@ const CalendarUpdate = () => {
   const [isPickerVisible, setIsPickerVisible] = useState(false);
 
   const [title, setTitle] = useState(eventData?.title || '');
-  const [category, setCategory] = useState(eventData?.category || {});
-  const [categoryId, setCategoryId] = useState(eventData?.categoryId || 0); // 카테고리 ID
+  const [category, setCategory] = useState(eventData?.category || { id: 5, name: "과제" });
+  const [categoryId, setCategoryId] = useState(eventData?.categoryId || 5); // 카테고리 ID
   const [participants, setParticipants] = useState(eventData?.participants || []); // 참가자
   const [date, setDate] = useState(''); // 날짜
   const [startDate, setStartDate] = useState(eventData?.startDate || '');   // 시작 날짜
@@ -228,8 +228,13 @@ const CalendarUpdate = () => {
             {date}
           </p>
           <select 
-            value={category.id} 
-            onChange={(e) => setCategoryId(e.target.value)}
+            value={categoryId} 
+            onChange={(e) => {
+                setCategoryId(e.target.value);
+                // 카테고리 업데이트
+                const selectedCategory = category.find(cat => cat.id === parseInt(e.target.value));
+                setCategory(selectedCategory || {});
+            }}
           >
             <option value="4">약속</option>
             <option value="5">과제</option>
