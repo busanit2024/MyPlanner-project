@@ -12,6 +12,8 @@ import com.busanit.myplannerbackend.repository.ScheduleRepository;
 import com.busanit.myplannerbackend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.Check;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -119,5 +121,30 @@ public class ScheduleService {
     //일정 제목으로 검색(임시)
     public Slice<Schedule> searchByTitle(String title, Pageable pageable) {
       return scheduleRepository.findByTitleContainingIgnoreCaseAndIsPrivateFalseOrderByCreatedAtDesc(title, pageable);
+    }
+
+    //완료되지 않은 개인 일정 종료일이 가까운 순으로 조회
+    public Page<Schedule> getTodoSchedules(Long userId, Pageable pageable) {
+      return scheduleRepository.findByUserIdAndDoneFalseOrderByEndDateAsc(userId, pageable);
+    }
+
+    //일정 완료 상태 관리
+    public void scheduleDoneToggle(Long id, boolean done) {
+      Schedule schedule = scheduleRepository.findById(id).orElse(null);
+      if (schedule == null) {
+        throw new RuntimeException("Schedule not found");
+      }
+      schedule.setDone(done);
+      scheduleRepository.save(schedule);
+    }
+
+    //일정 체크리스트 완료 상태 관리
+    public void checkListDoneToggle(Long id, boolean done) {
+      CheckList checkList = checkListRepository.findById(id).orElse(null);
+      if (checkList == null) {
+        throw new RuntimeException("CheckList not found");
+      }
+      checkList.setIsDone(done);
+      checkListRepository.save(checkList);
     }
 }
