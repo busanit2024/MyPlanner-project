@@ -13,6 +13,7 @@ import com.busanit.myplannerbackend.service.CheckListService;
 import com.busanit.myplannerbackend.service.ScheduleService;
 import com.busanit.myplannerbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +52,11 @@ public class ScheduleController {
 //        Schedule schedule = ScheduleDTO.toEntity(scheduleDTO, user);
 //        schedule.setUser(user);
 //        schedule.setCategory(category);
+
+        // 체크리스트가 null일 경우 빈 리스트로 초기화
+        if (scheduleDTO.getCheckList() == null) {
+            scheduleDTO.setCheckList(new ArrayList<>());
+        }
 
         scheduleService.createSchedule(scheduleDTO);
 //        checkListService.saveCheckList(scheduleDTO.getCheckListItem(), schedule);
@@ -105,6 +112,11 @@ public class ScheduleController {
     // 일정 수정
     @PutMapping("/{id}")
     public Schedule updateSchedule(@PathVariable Long id, @RequestBody Schedule scheduleDetails) {
+        // 체크리스트가 null인 경우 빈 리스트로 초기화
+        if (scheduleDetails.getCheckList() == null) {
+            scheduleDetails.setCheckList(new ArrayList<>());
+        }
+
         return scheduleService.updateSchedule(id, scheduleDetails);
     }
 

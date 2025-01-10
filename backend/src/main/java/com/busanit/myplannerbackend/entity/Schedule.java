@@ -30,26 +30,26 @@ public class Schedule {
     @Column(name = "start_date", nullable = false)
     private Date startDate; // 시작일
 
-    @Column(name = "start_time", nullable = false)
+    @Column(name = "start_time")
     private String startTime; // 시작 시간
 
     @Column(name = "end_date", nullable = false)
     private Date endDate;   // 종료일
 
-    @Column(name = "end_time", nullable = false)
+    @Column(name = "end_time")
     private String endTime;   // 종료 시간
 
     @Column(name = "all_day", nullable = false)
-    private Boolean allDay; // 종일 여부
+    private Boolean allDay = false; // 종일 여부
 
     @Column(name = "is_repeat")
     private String isRepeat;  // 반복 기간
 
     @Column(name = "is_alarm")
-    private Boolean isAlarm;  // 알람 여부
+    private Boolean isAlarm = false;  // 알람 여부
 
     @Column(name = "is_private", nullable = false)
-    private Boolean isPrivate;  // 공개 여부
+    private Boolean isPrivate = false;  // 나만 보기 여부
 
     @Column(name = "image_url", columnDefinition = "LONGTEXT")
     private String imageUrl;  // 이미지 URL
@@ -62,7 +62,7 @@ public class Schedule {
     private List<CheckList> checkList;   // 체크리스트
 
     @Column(name = "done", nullable = false)
-    private Boolean done;  // 일정 완료 여부
+    private Boolean done = false;  // 일정 완료 여부
 
     @Column(name = "detail")
     private String detail;  // 상세 내용
