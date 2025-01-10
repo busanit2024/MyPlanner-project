@@ -14,6 +14,7 @@ import com.busanit.myplannerbackend.service.ScheduleService;
 import com.busanit.myplannerbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -93,6 +94,24 @@ public class ScheduleController {
         Pageable pageable = PageRequest.of(page, size);
         Slice<Schedule> slice = scheduleService.searchByTitle(searchText, pageable);
         return ScheduleDTO.toDTO(slice);
+    }
+
+    //미완료 일정 조회
+    @GetMapping("/todo")
+    public Page<ScheduleDTO> getTodoSchedules(@RequestParam Long userId, @RequestParam int size) {
+        Pageable pageable = PageRequest.of(0, size);
+        Page<Schedule> page = scheduleService.getTodoSchedules(userId, pageable);
+        return page.map(ScheduleDTO::toDTO);
+    }
+
+    @GetMapping("/check")
+    public void scheduleDoneCheck(@RequestParam Long id, @RequestParam boolean done) {
+        scheduleService.scheduleDoneToggle(id, done);
+    }
+
+    @GetMapping("/checklist/check")
+    public void checkListDoneCheck(@RequestParam Long id, @RequestParam boolean done) {
+        scheduleService.checkListDoneToggle(id, done);
     }
 
     // 일정 수정
