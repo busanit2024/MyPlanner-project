@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.entity;
 
+import com.busanit.myplannerbackend.domain.CommentDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -82,8 +83,15 @@ public class Schedule {
 //    @JoinColumn(name = "group_id")
 //    private Group group;  // 그룹 (Group 엔티티와의 관계)
 
-    @OneToMany(mappedBy = "schedule_id", cascade = CascadeType.ALL, orphanRemoval = true)
+    //참여자
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants;
+
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
+
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Heart> hearts;
 }
 
 

@@ -1,9 +1,6 @@
 package com.busanit.myplannerbackend.domain;
 
-import com.busanit.myplannerbackend.entity.Category;
-import com.busanit.myplannerbackend.entity.CheckList;
-import com.busanit.myplannerbackend.entity.Schedule;
-import com.busanit.myplannerbackend.entity.User;
+import com.busanit.myplannerbackend.entity.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -66,6 +63,10 @@ public class ScheduleDTO {
 
     private List<ParticipantDTO> participants;
 
+    private List<CommentDTO> comments; // 전체 댓글 목록
+
+    private List<UserDTO> heartUsers; // 좋아요 누른 유저 목록
+
     public static Schedule toEntity(ScheduleDTO scheduleDTO, User user) {
         Schedule schedule = new Schedule();
         schedule.setId(scheduleDTO.getId());
@@ -102,6 +103,8 @@ public class ScheduleDTO {
             checkListDTOS.add(checkListDTO);
         }
 
+        List<User> heartUsers = schedule.getHearts().stream().map(Heart::getUser).toList();
+
         ScheduleDTOBuilder builder = ScheduleDTO.builder()
                 .id(schedule.getId())
                 .type(schedule.getType())
@@ -123,7 +126,9 @@ public class ScheduleDTO {
                 //보안상 User필드를 UserDTO로 변환
                 .user(UserDTO.toDTO(schedule.getUser()))
                 .category(schedule.getCategory())
-                .participants(ParticipantDTO.toDTO(schedule.getParticipants()));
+                .participants(ParticipantDTO.toDTO(schedule.getParticipants()))
+                .comments(CommentDTO.toDTO(schedule.getComments()))
+                .heartUsers(UserDTO.toDTO(heartUsers));
 
         return builder.build();
     }
