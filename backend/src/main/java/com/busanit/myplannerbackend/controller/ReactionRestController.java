@@ -1,0 +1,68 @@
+package com.busanit.myplannerbackend.controller;
+
+import com.busanit.myplannerbackend.domain.CommentDTO;
+import com.busanit.myplannerbackend.domain.UserDTO;
+import com.busanit.myplannerbackend.entity.User;
+import com.busanit.myplannerbackend.service.CommentService;
+import com.busanit.myplannerbackend.service.HeartService;
+import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.misc.Pair;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequiredArgsConstructor
+@RequestMapping("/api/reaction")
+public class ReactionRestController {
+  private final CommentService commentService;
+  private final HeartService heartService;
+
+  //댓글 리스트 슬라이스
+  @GetMapping("/comment/list")
+  public Slice<CommentDTO> getCommentList(@RequestParam Long scheduleId, @RequestParam int page, @RequestParam int size) {
+    Pageable pageable = PageRequest.of(page, size);
+
+    return commentService.getComment(scheduleId, pageable);
+  }
+
+  //댓글 작성
+  @PostMapping("/comment/write")
+  public void writeComment(@RequestBody CommentDTO commentDTO, @RequestBody Long userId) {
+    commentService.writeComment(commentDTO, userId);
+  }
+
+  //댓글 수정
+  @PostMapping("/comment/update")
+  public void updateComment(@RequestBody CommentDTO commentDTO) {
+    commentService.updateComment(commentDTO);
+  }
+
+  //댓글 삭제
+  @GetMapping("/comment/delete")
+  public void deleteComment(@RequestParam Long id) {
+    commentService.deleteComment(id);
+  }
+
+  //좋아요 토글
+  @GetMapping("/like")
+  public void like(@RequestParam Long scheduleId, @RequestParam Long userId) {
+    heartService.HeartToggle(scheduleId, userId);
+  }
+
+  //좋아요 누른 유저 정보 불러오기
+  @GetMapping("/like/list")
+  public Slice<UserDTO> getLikeList(@RequestParam Long scheduleId, @RequestParam int page, @RequestParam int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return heartService.getHeartUsers(scheduleId, pageable);
+  }
+
+  //전체 좋아요 갯수
+  @GetMapping("/like/count")
+  public int getLikeCount(@RequestParam Long scheduleId) {
+    return heartService.getHeartCount(scheduleId);
+  }
+}
