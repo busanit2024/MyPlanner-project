@@ -82,8 +82,8 @@ public class Schedule {
 //    @JoinColumn(name = "group_id")
 //    private Group group;  // 그룹 (Group 엔티티와의 관계)
 
-
-
+    @OneToMany(mappedBy = "schedule_id", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Participant> participants;
 }
 
 

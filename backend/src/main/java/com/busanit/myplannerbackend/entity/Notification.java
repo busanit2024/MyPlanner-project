@@ -54,7 +54,7 @@ public class Notification {
   private boolean isRead;
 
   public enum NotiType {
-    INVITE, FOLLOW, LIKE_POST, COMMENT
+    INVITE, FOLLOW, PARTICIPATE, LIKE_POST, COMMENT
   }
 
   public static Notification of(User user, NotiType type, User fromUser, Long targetId) {

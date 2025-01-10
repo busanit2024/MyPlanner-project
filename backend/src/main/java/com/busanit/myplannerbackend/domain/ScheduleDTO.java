@@ -64,6 +64,8 @@ public class ScheduleDTO {
 
     private Long categoryId;            // 카테고리 아이디
 
+    private List<ParticipantDTO> participants;
+
     public static Schedule toEntity(ScheduleDTO scheduleDTO, User user) {
         Schedule schedule = new Schedule();
         schedule.setId(scheduleDTO.getId());
@@ -120,7 +122,8 @@ public class ScheduleDTO {
                 .color(schedule.getColor())
                 //보안상 User필드를 UserDTO로 변환
                 .user(UserDTO.toDTO(schedule.getUser()))
-                .category(schedule.getCategory());
+                .category(schedule.getCategory())
+                .participants(ParticipantDTO.toDTO(schedule.getParticipants()));
 
         return builder.build();
     }
