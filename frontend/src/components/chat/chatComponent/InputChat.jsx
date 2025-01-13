@@ -102,18 +102,18 @@ export default function InputChat({ onSendMessage, isLeft }) {
     };
 
     const handleImageUpload = async(files) => {
-        for(const file of files) {
-            if (file) {
-                try {
-                    const imageInfo = await imageFileUpload(file);
-                    if (imageInfo && imageInfo.url) {
-                        await onSendMessage(imageInfo.url);
-                        setImageModalOpen(false);
-                    }
-                } catch (error) {
-                    console.error('이미지 업로드 실패:', error);
-                }
+        try {
+            const uploadPromises = files.map(file => imageFileUpload(file));
+            const results = await Promise.all(uploadPromises);
+            const imageUrls = results.map(result => result.url).filter(url => url);
+            
+            if (imageUrls.length > 0) {
+                // 이미지 URL들을 JSON 문자열로 변환하여 하나의 메시지로 전송
+                await onSendMessage(JSON.stringify(imageUrls));
+                setImageModalOpen(false);
             }
+        } catch (error) {
+            console.error('이미지 업로드 실패:', error);
         }
     };
 

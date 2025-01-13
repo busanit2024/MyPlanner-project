@@ -50,11 +50,19 @@ const MessageBubble = styled.div`
     background: none;
     max-width: 200px;
     
+    .image-grid {
+      display: grid;
+      grid-template-columns: ${props => props.imageCount > 1 ? 'repeat(2, 1fr)' : '1fr'};
+      gap: 4px;
+      width: 100%;
+      aspect-ratio: ${props => props.imageCount > 1 ? '1/1' : 'auto'};
+    }
+
     img {
-      max-width: 100%;
-      height: auto;
+      width: 100%;
+      height: 100%;
       border-radius: 8px;
-      object-fit: contain;
+      object-fit: ${props => props.imageCount > 1 ? 'cover' : 'contain'};
     }
   `}
 `;
@@ -67,10 +75,27 @@ const TimeStamp = styled.span`
 `;
 
 const ChatMessage = ({ message, displayMessage, time, isMine, senderName, senderProfile }) => {
-  // 메시지가 이미지 URL인지 확인하는 함수
+  // 메시지가 이미지 URL인지 확인
   const isImageMessage = (msg) => {
-    return msg?.includes('firebasestorage.googleapis.com') || 
-           msg?.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+    if (!msg) return false;
+    try {
+      const urls = JSON.parse(msg);
+      return Array.isArray(urls) && urls.every(url => 
+        url.includes('firebasestorage.googleapis.com') || 
+        url.match(/\.(jpeg|jpg|gif|png)$/i)
+      );
+    } catch {
+      return msg.includes('firebasestorage.googleapis.com') || 
+             msg.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+    }
+  };
+
+  const getImageUrls = (msg) => {
+    try {
+      return JSON.parse(msg);
+    } catch {
+      return [msg];
+    }
   };
 
   return (
@@ -85,16 +110,26 @@ const ChatMessage = ({ message, displayMessage, time, isMine, senderName, sender
       />
       <MessageContent isMine={isMine}>
         <SenderName isMine={isMine}>{senderName}</SenderName>
-        <MessageBubble isMine={isMine} message={message} isImage={isImageMessage(message)}>
+        <MessageBubble 
+          isMine={isMine} 
+          message={message} 
+          isImage={isImageMessage(message)}
+          imageCount={isImageMessage(message) ? getImageUrls(message).length : 0}
+        >
           {isImageMessage(message) ? (
-            <img 
-              src={message} 
-              alt="첨부 이미지"
-              onError={(e) => {
-                console.error('이미지 로드 실패:', message);
-                e.target.style.display = 'none';
-              }} 
-            />
+            <div className="image-grid">
+              {getImageUrls(message).map((url, index) => (
+                <img 
+                  key={index}
+                  src={url} 
+                  alt="첨부 이미지"
+                  onError={(e) => {
+                    console.error('이미지 로드 실패:', url);
+                    e.target.style.display = 'none';
+                  }} 
+                />
+              ))}
+            </div>
           ) : (
             message
           )}
