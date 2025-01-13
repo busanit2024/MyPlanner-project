@@ -97,13 +97,18 @@ export default function InputChat({ onSendMessage }) {
 
     const handleImageUpload = async(files) => {
         for(const file of files) {
-            console.log('Uploaded file:', file);
-            let imageInfo = null;
             if (file) {
-                imageInfo = await imageFileUpload(file);
+                try {
+                    const imageInfo = await imageFileUpload(file);
+                    if (imageInfo && imageInfo.url) {
+                        await onSendMessage(imageInfo.url);
+                        setImageModalOpen(false);
+                    }
+                } catch (error) {
+                    console.error('이미지 업로드 실패:', error);
+                }
             }
-            console.log('Uploaded imageInfo:', imageInfo);
-        };
+        }
     };
 
     const handleSend = async () => {

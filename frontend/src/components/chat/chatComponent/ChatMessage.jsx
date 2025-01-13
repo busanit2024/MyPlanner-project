@@ -39,12 +39,25 @@ const MessageBubble = styled.div`
   min-width: min-content;
   width: fit-content;
   
-  /* 16자 기준으로 줄바꿈 처리 */
-  white-space: ${props => props.message?.length > 30 ? 'pre-wrap' : 'nowrap'};
-  word-break: ${props => props.message?.length > 30 ? 'break-word' : 'keep-all'};
-  overflow-wrap: ${props => props.message?.length > 30 ? 'break-word' : 'normal'};
+  /* 이미지일 경우 패딩 제거 */
+  ${props => props.isImage && `
+    padding: 0;
+    overflow: hidden;
+    
+    img {
+      max-width: 200px;
+      max-height: 200px;
+      object-fit: contain;
+    }
+  `}
   
-  text-align: left;
+  /* 텍스트 메시지일 경우에만 적용 */
+  ${props => !props.isImage && `
+    white-space: ${props.message?.length > 30 ? 'pre-wrap' : 'nowrap'};
+    word-break: ${props.message?.length > 30 ? 'break-word' : 'keep-all'};
+    overflow-wrap: ${props.message?.length > 30 ? 'break-word' : 'normal'};
+    text-align: left;
+  `}
 `;
 
 
@@ -55,6 +68,12 @@ const TimeStamp = styled.span`
 `;
 
 const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
+  // 메시지가 이미지 URL인지 확인하는 함수
+  const isImageMessage = (msg) => {
+    return msg?.includes('firebasestorage.googleapis.com') || 
+           msg?.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+  };
+
   return (
     <MessageContainer isMine={isMine}>
       <ProfileImage 
@@ -67,8 +86,19 @@ const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
       />
       <MessageContent isMine={isMine}>
         <SenderName isMine={isMine}>{senderName}</SenderName>
-        <MessageBubble isMine={isMine} message={message}>
-          {message}
+        <MessageBubble isMine={isMine} message={message} isImage={isImageMessage(message)}>
+          {isImageMessage(message) ? (
+            <img 
+              src={message} 
+              alt="첨부 이미지"
+              onError={(e) => {
+                console.error('이미지 로드 실패:', message);
+                e.target.style.display = 'none';
+              }} 
+            />
+          ) : (
+            message
+          )}
         </MessageBubble>
         <TimeStamp>
           {new Date(time).toLocaleTimeString('ko-KR', {
