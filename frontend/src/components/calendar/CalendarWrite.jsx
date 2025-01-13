@@ -9,16 +9,22 @@ import { ChromePicker } from 'react-color';
 const CalendarWrite = () => {
   const { user, loading } = useAuth();
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [label, setLabel] = useState({ color: '' });
-  const [isPickerVisible, setIsPickerVisible] = useState(false);  // 색상 선택기 보이기 여부
 
   const [title, setTitle] = useState('');
   const [categoryList, setCategoryList] = useState([]); // 카테고리 목록
   const [categoryId, setCategoryId] = useState(4); // 카테고리 ID
   const [participants, setParticipants] = useState([]);
   const [date, setDate] = useState(''); // 오늘 날짜 상태
-  const [startDate, setStartDate] = useState(''); // 시작 날짜 상태
-  const [endDate, setEndDate] = useState(''); // 끝 날짜 상태
+
+  const { startDate, endDate } = location.state || {};
+
+  const setStartDate = useState(startDate || ''); // 시작 날짜 상태
+  const setEndDate = useState(endDate || ''); // 끝 날짜 상태
+
   const [startTime, setStartTime] = useState(''); // 시작 시간 상태
   const [endTime, setEndTime] = useState(''); // 끝 시간 상태
   const [allDay, setAllDay] = useState(false);  // 종일 여부
@@ -33,19 +39,14 @@ const CalendarWrite = () => {
   const [done, setDone] = useState(false);  // 일정 완료 여부
   const [checkDone, setCheckDone] = useState([]);  // 체크리스트 완료 여부
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
   // URL로부터 전달된 데이터
-  const { startDate: initialStartDate, endDate: initialEndDate } = location.state || {};
+  // const { startDate: initialStartDate, endDate: initialEndDate } = location.state || {};
 
   // 컴포넌트가 마운트될 때 오늘 날짜로 초기화
   useEffect(() => {
     const today = new Date();
     const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD 형식
     setDate(formattedDate);
-    setStartDate(''); // 시작 날짜 초기화
-    setEndDate(''); // 끝 날짜 초기화
   }, []);
 
   useEffect(() => {
@@ -62,16 +63,6 @@ const CalendarWrite = () => {
       // setCategoryId(user.categories[4].id); // 첫 번째 카테고리 ID로 초기화
     }
   }, [loading, user]);
-
-  const handleColorChange = useCallback(
-    (color) => {
-      setColor(color);
-    }, [color]
-  );
-
-  const togglePicker = () => {
-    setIsPickerVisible(!isPickerVisible); // 색상 선택기 토글
-  };
 
   const handleAddParticipant = () => {
     setParticipants(user?.follows.map(follow => follow.id) || []);

@@ -15,7 +15,6 @@ const CalendarUpdate = () => {
   const eventData = location.state?.eventData;
 
   const [label, setLabel] = useState({ color: '' });
-  const [isPickerVisible, setIsPickerVisible] = useState(false);
 
   const [title, setTitle] = useState(eventData?.title || '');
   const [category, setCategory] = useState(eventData?.category || { id: 5, name: "과제" });
@@ -115,16 +114,6 @@ const CalendarUpdate = () => {
   //     return newCheckDone;
   //   });
   // }, [checklist]);
-
-  const handleColorChange = useCallback(
-    (color) => {
-      setColor(color);
-    }, [color]
-  );
-
-  const togglePicker = () => {
-    setIsPickerVisible(!isPickerVisible);
-  };
 
   const handleAddParticipant = () => {
     setParticipants([...participants, `참가자${participants.length + 1}`]);
