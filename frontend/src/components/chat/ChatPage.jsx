@@ -9,47 +9,47 @@ import { useAuth } from "../../context/AuthContext";
 import { useNoti } from "../../context/NotiContext";
 
 const ChatContainer = styled.div`
-    display: flex;
-    width: 100%;
-    height: calc(100vh - 84px);
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 84px);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 `;
 
 const ChatList = styled.div`
-    width: 40%;  
-    border-right: 1px solid var(--light-gray);
-    padding: 24px 23px 24px 24px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
+  width: 40%;  
+  border-right: 1px solid var(--light-gray);
+  padding: 24px 23px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 `;
 
 const ChatListScroll = styled.div`
-    overflow-y: auto;
-    flex-grow: 1;
+  overflow-y: auto;
+  flex-grow: 1;
 `;
 
 const NewChatButtonContainer = styled.span`
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    bottom: 100px;
-    right: 24px;
-    z-index: 2;
-    background: var(--primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    
-    &:hover {
-        opacity: 0.9;
-    }
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  bottom: 100px;
+  right: 24px;
+  z-index: 2;
+  background: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  
+  &:hover {
+    opacity: 0.9;
+  }
 `;
 
 export default function ChatPage() {
@@ -128,10 +128,10 @@ export default function ChatPage() {
                     setSelectedRoom(null);
                     setChatRooms([]);
                     setChatPartner({
-                        email: '',
-                        name: '',
-                        profileImage: null
-                    });
+        email: '',
+        name: '',
+        profileImage: null
+    });
                 }
                 navigate("/login", { replace: true });
             }
@@ -162,7 +162,7 @@ export default function ChatPage() {
                 
                 return fetch(`/api/chat/rooms/${room.id}/read-status`, {
                     method: 'POST',
-                    headers: {
+                headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
@@ -307,7 +307,7 @@ export default function ChatPage() {
                     /> 
                 </NewChatButtonContainer>
             </ChatList>
-    
+
             {selectedRoom ? (
                 <ChatRoom
                     selectedRoom={selectedRoom}
