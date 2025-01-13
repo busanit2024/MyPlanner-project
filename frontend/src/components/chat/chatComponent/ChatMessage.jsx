@@ -29,22 +29,34 @@ const SenderName = styled.span`
 `;
 
 const MessageBubble = styled.div`
-  background-color: ${props => props.isMine ? 'var(--primary-color)' : 'var(--chat-gray)'};
-  color: ${props => props.isMine ? 'white' : 'black'};
-  padding: 8px 12px;
-  border-radius: 12px;
-  box-sizing: border-box;
-  display: inline-block;
-  max-width: 70%;
-  min-width: min-content;
-  width: fit-content;
-  
-  /* 16자 기준으로 줄바꿈 처리 */
-  white-space: ${props => props.message?.length > 30 ? 'pre-wrap' : 'nowrap'};
-  word-break: ${props => props.message?.length > 30 ? 'break-word' : 'keep-all'};
-  overflow-wrap: ${props => props.message?.length > 30 ? 'break-word' : 'normal'};
-  
-  text-align: left;
+  ${props => !props.isImage && `
+    background-color: ${props.isMine ? 'var(--primary-color)' : 'var(--chat-gray)'};
+    color: ${props.isMine ? 'white' : 'black'};
+    padding: 8px 12px;
+    border-radius: 12px;
+    box-sizing: border-box;
+    display: inline-block;
+    max-width: 70%;
+    min-width: min-content;
+    width: fit-content;
+    white-space: ${props.message?.length > 30 ? 'pre-wrap' : 'nowrap'};
+    word-break: ${props.message?.length > 30 ? 'break-word' : 'keep-all'};
+    overflow-wrap: ${props.message?.length > 30 ? 'break-word' : 'normal'};
+    text-align: left;
+  `}
+
+  ${props => props.isImage && `
+    padding: 0;
+    background: none;
+    max-width: 200px;
+    
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+  `}
 `;
 
 
@@ -54,7 +66,13 @@ const TimeStamp = styled.span`
   margin-top: 4px;
 `;
 
-const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
+const ChatMessage = ({ message, displayMessage, time, isMine, senderName, senderProfile }) => {
+  // 메시지가 이미지 URL인지 확인하는 함수
+  const isImageMessage = (msg) => {
+    return msg?.includes('firebasestorage.googleapis.com') || 
+           msg?.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+  };
+
   return (
     <MessageContainer isMine={isMine}>
       <ProfileImage 
@@ -67,8 +85,19 @@ const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
       />
       <MessageContent isMine={isMine}>
         <SenderName isMine={isMine}>{senderName}</SenderName>
-        <MessageBubble isMine={isMine} message={message}>
-          {message}
+        <MessageBubble isMine={isMine} message={message} isImage={isImageMessage(message)}>
+          {isImageMessage(message) ? (
+            <img 
+              src={message} 
+              alt="첨부 이미지"
+              onError={(e) => {
+                console.error('이미지 로드 실패:', message);
+                e.target.style.display = 'none';
+              }} 
+            />
+          ) : (
+            message
+          )}
         </MessageBubble>
         <TimeStamp>
           {new Date(time).toLocaleTimeString('ko-KR', {
