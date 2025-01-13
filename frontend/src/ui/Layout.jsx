@@ -5,11 +5,12 @@ import RightSidebar from "./RightSidebar";
 import { useState } from "react";
 import { FaChevronLeft, FaCircleXmark } from "react-icons/fa6";
 import { useSearch } from "../context/SearchContext";
+import Button from "./Button";
 
 
 export default function Layout() {
   const [open, setOpen] = useState(true);
-  const { searchText, setSearchText, handleSearch } = useSearch();
+  const { searchText, setSearchText, handleSearch, handleWriteSchedule, handleEditSchedule, handleDeleteSchedule } = useSearch();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -53,6 +54,22 @@ export default function Layout() {
     }
   };
 
+  const checkWriteButton = () => {
+    if (location.pathname.includes("/calendarWrite")) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const checkEditButton = () => {
+    if (location.pathname.includes("/calendarUpdate")) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   return (
     <Container className="layout">
       <SideNavbar />
@@ -65,6 +82,7 @@ export default function Layout() {
               </div>}
             <span>{setPageName()}</span>
           </div>
+          {!checkWriteButton() && !checkEditButton() &&
           <SearchForm onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}>
             <SearchInputWrap value={searchText}>
               <input id="search" underline grow placeholder="검색어를 입력하세요" value={searchText} onChange={(e) => setSearchText(e.target.value)} onInput={(e) => setSearchText(e.target.value)} />
@@ -74,6 +92,11 @@ export default function Layout() {
               <img src="/images/icon/search.svg" alt="search" onClick={handleSearch} />
             </div>
           </SearchForm>
+          }
+
+          {checkWriteButton() &&
+            <Button color="primary" onClick={handleWriteSchedule}>작성하기</Button>
+          }
           <div className="sidebar-icon" onClick={() => setOpen(!open)}>
             <img src="/images/icon/menu.svg" alt="sidebar open" />
           </div>

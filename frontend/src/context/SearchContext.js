@@ -9,6 +9,27 @@ export const SearchProvider = ({ children }) => {
   const [onSearch, setOnSearch] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [onWriteSchedule, setOnWriteSchedule] = useState(null);
+  const [onEditSchedule, setOnEditSchedule] = useState(null);
+  const [onDeleteSchedule, setOnDeleteSchedule] = useState(null);
+
+  const handleWriteSchedule = () => {
+    if (onWriteSchedule) {
+      onWriteSchedule();
+    }
+  }
+
+  const handleEditSchedule = () => {
+    if (onEditSchedule) {
+      onEditSchedule();
+    }
+  }
+
+  const handleDeleteSchedule = () => {
+    if (onDeleteSchedule) {
+      onDeleteSchedule();
+    }
+  }
 
   useEffect(() => {
     if (!location.pathname.includes(`/search`)) {
@@ -28,11 +49,11 @@ export const SearchProvider = ({ children }) => {
   };
 
   return (
-    <SearchContext.Provider value={{searchText, setSearchText, handleSearch, setOnSearch, searchType, setSearchType}}>
+    <SearchContext.Provider value={{searchText, setSearchText, handleSearch, setOnSearch, searchType, setSearchType, handleWriteSchedule, handleEditSchedule, handleDeleteSchedule, setOnWriteSchedule, setOnEditSchedule, setOnDeleteSchedule}}>
       {children}
     </SearchContext.Provider>
   );
-}
+};
 
 export const useSearch = () => {
   return useContext(SearchContext);

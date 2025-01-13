@@ -1,4 +1,4 @@
-.calendar-write {
+/* .calendar-write {
   padding: var(--layout-padding);
   font-family: 'Arial', sans-serif;
   background-color: #f9f9f9;
@@ -69,7 +69,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%); /* 중앙 정렬 */
+  transform: translate(-50%, -50%);
 }
 
 .label {
@@ -223,4 +223,4 @@ input:checked + .slider:before {
   padding: 8px;
   margin-top: 10px;
   resize: none;
-}
+} */
