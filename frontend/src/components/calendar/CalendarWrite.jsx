@@ -61,7 +61,7 @@ const CalendarWrite = () => {
   useEffect(() => {
     // 탑바에 일정 작성 버튼 표시하기 위해 context 사용
       setOnWriteSchedule(() => handleSubmit);
-  }, [setOnWriteSchedule]);
+  }, [setOnWriteSchedule, title, categoryId, participants, startDate, endDate, startTime, endTime, allDay, repeat, reminder, viewOnlyMe, checklist, detail, image, createdAt, color, done, checkDone]);
 
   const handleAddParticipant = () => {
     setParticipants(user?.follows.map(follow => follow.id) || []);
@@ -308,9 +308,6 @@ const CalendarWrite = () => {
           />
         </DescSection>
       </InputContainer>
-      <div className='button-wrap'>
-        <Button color="primary" onClick={handleSubmit}>완료</Button>
-      </div>
     </Container >
   );
 };

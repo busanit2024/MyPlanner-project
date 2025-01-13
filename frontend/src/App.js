@@ -51,6 +51,7 @@ function App() {
                 <Route path='notification' element={<NotificationPage />} />
                 <Route path='calendarWrite' element={<CalendarWrite />} />
                 <Route path='calendarUpdate/:id' element={<CalendarUpdate />} />
+                <Route path="schedule/:id" element={<CalendarUpdate />} />
                 <Route path='feed' element={<FeedPage />} />
                 <Route path='user/:userId' element={<UserProfilePage />} />
                 <Route path='group' element={<GroupPage />} />

@@ -180,7 +180,6 @@ public class ScheduleService {
       checkListRepository.save(checkList);
     }
 
-
     //일정 초대
     //targetUser를 participant 리스트에 추가한다
     public void inviteUser(Long scheduleId, Long targetUserId) {
