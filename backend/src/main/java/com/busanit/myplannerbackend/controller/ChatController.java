@@ -121,6 +121,14 @@ public class ChatController {
                 });
     }
 
+
+
+
+
+
+
+
+
     // 읽음 상태 업데이트
     @PostMapping("/rooms/{roomId}/read")
     public Mono<Map<String, String>> updateLastRead(

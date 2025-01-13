@@ -146,7 +146,7 @@ export default function ChatPage() {
     const handleLeaveChat = async (roomId) => {
         try {
             // 웹소켓 연결 해제
-            disconnect();  // 이제 정상적으로 동작할 것입니다
+            disconnect(); 
             
             // 채팅방 나가기 API 호출
             const response = await fetch(`/api/chat/rooms/${roomId}/leave`, {

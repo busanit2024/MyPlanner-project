@@ -4,6 +4,7 @@ import ChatTitle from './ChatTitle';
 import ChatMessage from './ChatMessage';
 import InputChat from './InputChat';
 import EditTeamChatTitle from './EditTeamChatTitle';
+import SystemMessage from '../../../ui/SystemMessage';
 
 const ChatRoomContainer = styled.div`
     flex-grow: 1;
@@ -302,9 +303,21 @@ const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected,
                         <React.Fragment key={date}>
                             <ChatDate>{date}</ChatDate>
                             {msgs.map((msg, index) => {
+                                if(msg.messageType === "LEAVE"){
+                                    return <SystemMessage key={msg.id} content={msg.contents}
+                                            margin="8px 0" backgroundColor="var(--light-gray)" color="var(--dark-gray)" padding="4px 10px" />;
+                                }
                                 const isMyMessage = msg.senderEmail === user?.email;
                                 const sender = selectedRoom.participants.find(p => p.email === msg.senderEmail);
-                                const isLastMessage = index === msgs.length - 1;
+
+                                // 같은 시간대의 메시지인지 확인
+                                const currentMessageTime = new Date(msg.sendTime).getTime();
+                                const nextMessage = msgs[index + 1];
+                                const nextMessageTime = nextMessage ? new Date(nextMessage.sendTime).getTime() : null;
+
+                                // 다음 메시지가 같은 사람이고 1분 이내의 메시지면 시간 표시하지 않음
+                                const showTime = !nextMessage || nextMessage.senderEmail !== msg.senderEmail || 
+                                    Math.abs(currentMessageTime - nextMessageTime) > 60000;
 
                                 return (
                                     <ChatMessage
@@ -318,8 +331,7 @@ const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected,
                                             ? user.profileImageUrl 
                                             : sender?.profileImageUrl || '/images/default/defaultProfileImage.png'}
                                         showSenderInfo={isTeamChat && !isMyMessage} 
-                                        readStatuses={readStatuses}
-                                        selectedRoom={selectedRoom}
+                                        showTime={showTime}
                                     />
                                 );
                             })}
