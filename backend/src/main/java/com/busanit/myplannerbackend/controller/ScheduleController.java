@@ -67,10 +67,18 @@ public class ScheduleController {
     }
 
     // 모든 일정 조회
-    @GetMapping
-    public List<Schedule> getAllSchedules(Long id) {
-        return scheduleService.getAllSchedules(id);
+//    @GetMapping
+//    public List<Schedule> getAllSchedules(Long id) {
+//
+//        return scheduleService.getAllSchedules(id);
+//    }
+
+    @GetMapping // 모든 일정 가져오기
+    public ResponseEntity<List<Schedule>> getAllSchedules() {
+        List<Schedule> schedules = scheduleService.getAllSchedules();
+        return ResponseEntity.ok(schedules);
     }
+
 
     // 특정 일정 조회
     @GetMapping("/{id}")
@@ -128,6 +136,12 @@ public class ScheduleController {
         scheduleService.checkListDoneToggle(id, done);
     }
 
+    @GetMapping("/user/{id}")
+    public ResponseEntity<List<Schedule>> getSchedulesByUserId(@PathVariable Long id) {
+        List<Schedule> schedules = scheduleService.getSchedulesByUserId(id);
+        return ResponseEntity.ok(schedules);
+    }
+
     // 일정 수정
     @PutMapping("/{id}")
     public Schedule updateSchedule(@PathVariable Long id, @RequestBody Schedule scheduleDetails) {
@@ -146,3 +160,5 @@ public class ScheduleController {
         return ResponseEntity.noContent().build();
     }
 }
+
+
