@@ -75,14 +75,13 @@ const NewMessageAlert = styled.div`
     }
 `;
 
-const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected, onSendMessage, onLeaveChat, stompClient }) => {
+const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected, onSendMessage, onLeaveChat }) => {
     const scrollRef = useRef(null);
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
     const [isUserNearBottom, setIsUserNearBottom] = useState(true);
     const lastMessageWasMine = useRef(false);
     const isTeamChat = selectedRoom.chatRoomType === "TEAM";
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const [readStatuses, setReadStatuses] = useState({});
 
     const otherParticipant = selectedRoom.participants.find(p => p.email !== user.email);
 
@@ -106,46 +105,6 @@ const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected,
             setIsUserNearBottom(true);
         }
     }, []);
-
-    // 읽음 상태 업데이트
-    const updateMyReadStatus = useCallback(async () => {
-        if (!messages?.length || !selectedRoom?.id) return;
-
-        const lastMessageId = messages[messages.length - 1].id;
-        try {
-            const response = await fetch(`/api/chat/rooms/${selectedRoom.id}/read`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userEmail: user.email,
-                    lastChatLogId: lastMessageId
-                })
-            });
-            
-            if (!response.ok) throw new Error('Failed to update read status');
-            const updatedStatuses = await response.json();
-            console.log('읽음 상태 업데이트 응답:', updatedStatuses);
-            setReadStatuses(updatedStatuses);
-            
-        } catch (error) {
-            console.error('읽음 상태 업데이트 실패:', error);
-        }
-    }, [messages, selectedRoom?.id, user?.email]);
-
-    // 읽음 상태 가져오기
-    const fetchReadStatuses = useCallback(async () => {
-        try {
-            const response = await fetch(`/api/chat/rooms/${selectedRoom.id}/unread`);
-            if (!response.ok) throw new Error('Failed to fetch read statuses');
-            const data = await response.json();
-            console.log('서버 응답 데이터:', data);
-            setReadStatuses(data);
-        } catch (error) {
-            console.error('읽음 상태 조회 실패:', error);
-        }
-    }, [selectedRoom?.id]);
 
     // 스크롤 이벤트 리스너
     useEffect(() => {
@@ -213,41 +172,6 @@ const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected,
             }
         }
     }, [messages, user?.email, isUserNearBottom, scrollToBottom]);
-
-    // 채팅방 변경 시 초기화
-    useEffect(() => {
-        if (selectedRoom?.id) {
-            setShowNewMessageAlert(false);
-            setIsUserNearBottom(true);
-            lastMessageWasMine.current = false;
-            setTimeout(scrollToBottom, 100);
-            fetchReadStatuses();
-        }
-    }, [selectedRoom?.id, scrollToBottom, fetchReadStatuses]);
-
-    // 읽음상태 실시간 업데이트
-    useEffect(() => {
-        if (!stompClient || !selectedRoom?.id) return;
-    
-        const subscription = stompClient.subscribe(
-            `/sub/chat/rooms/${selectedRoom.id}/read-status`,
-            (message) => {
-                const updatedStatuses = JSON.parse(message.body);
-                console.log('Received read status update:', updatedStatuses);
-                setReadStatuses(updatedStatuses); // 새로운 상태로 완전히 교체
-            }
-        );
-    
-        return () => subscription.unsubscribe();
-    }, [selectedRoom?.id, stompClient]);
-
-    // 스크롤이 하단에 있을 때 읽음 상태 업데이트
-    useEffect(() => {
-        if (isUserNearBottom && messages?.length > 0) {
-            updateMyReadStatus();
-        }
-    }, [messages, isUserNearBottom, updateMyReadStatus]);
-
 
 
     // 메시지 그룹화(날짜별로)

@@ -64,7 +64,7 @@ export default function ChatPage() {
         name: '',
         profileImage: null
     });
-    const [stompClient, setStompClient] = useState(null);
+
 
     const { messages, sendMessage, isConnected, loadChatHistory, disconnect } = useChat(
         selectedRoom?.id || roomId,
@@ -206,6 +206,29 @@ export default function ChatPage() {
         }
     };
 
+     // 로그아웃이나 페이지 이탈 시 정리 작업
+     useEffect(() => {
+        if (!loading && !user) {
+            // WebSocket 연결 해제
+            disconnect();
+            // 상태 초기화
+            setSelectedRoom(null);
+            setChatRooms([]);
+            setChatPartner({
+                email: '',
+                name: '',
+                profileImage: null
+            });
+            navigate("/login");
+        }
+
+        // 컴포넌트 언마운트 시 정리
+        return () => {
+            disconnect();
+        };
+    }, [user, loading, disconnect, navigate]);
+
+
     return (
         <ChatContainer>
             <ChatList>
@@ -230,7 +253,6 @@ export default function ChatPage() {
                     onSendMessage={handleSendMessage}
                     onChatRoomUpdate={handleChatRoomUpdate}
                     onLeaveChat={handleLeaveChat}
-                    stompClient={stompClient}
                 />
             ) : (
                 <div style={{ 
