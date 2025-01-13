@@ -62,20 +62,14 @@ public class Schedule {
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CheckList> checkList;   // 체크리스트
 
-    @Column(name = "detail")
-    private String detail;      // 상세내용
-
     @Column(name = "done", nullable = false)
     private Boolean done = false;  // 일정 완료 여부
 
     @Column(name = "detail")
     private String detail;  // 상세 내용
 
-    @Column(name = "color")
-    private String color;   // 일정 색깔
-
     @Column(name = "color", nullable = false)
-    private String color;
+    private String color;   // 일정 색깔
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
