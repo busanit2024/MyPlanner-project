@@ -65,7 +65,7 @@ export default function ChatPage() {
         profileImage: null
     });
 
-    const { messages, sendMessage, isConnected, loadChatHistory } = useChat(
+    const { messages, sendMessage, isConnected, loadChatHistory, disconnect } = useChat(
         selectedRoom?.id || roomId,
         user?.email  
     );
@@ -142,20 +142,37 @@ export default function ChatPage() {
         }, 0);
     };
 
-    const handleLeaveChat = () => {
-        // 선택된 채팅방 초기화
-        setSelectedRoom(null);
-
-        // 채팅방 목록 새로고침
-        if (user?.email) {
-            fetch(`/api/chat/rooms/user/${user.email}`)
-            .then(res => res.json())
-            .then(rooms => {
-                setChatRooms(rooms);
-            })
-            .catch(error => {
-                console.error('채팅방 목록 로드 실패:', error);
+    const handleLeaveChat = async (roomId) => {
+        try {
+            // 웹소켓 연결 해제
+            disconnect();  // 이제 정상적으로 동작할 것입니다
+            
+            // 채팅방 나가기 API 호출
+            const response = await fetch(`/api/chat/rooms/${roomId}/leave`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userEmail: user.email })
             });
+    
+            if (!response.ok) {
+                throw new Error('채팅방 나가기 실패');
+            }
+    
+            // 채팅방 목록에서 해당 채팅방 제거
+            setChatRooms(prevRooms => prevRooms.filter(room => room.id !== roomId));
+    
+            // 선택된 채팅방 초기화
+            setSelectedRoom(null);
+            setChatPartner({
+                email: '',
+                name: '',
+                profileImage: null
+            });
+    
+        } catch (error) {
+            console.error('채팅방 나가기 실패:', error);
         }
     };
     
@@ -172,6 +189,20 @@ export default function ChatPage() {
             fetchMessages();
         }
     }, [selectedRoom]);
+
+    // 채팅방 제목 설정 후 업데이트
+    const handleChatRoomUpdate = (updatedRoom) => {
+        setChatRooms(prevRooms => 
+            prevRooms.map(room => 
+                room.id === updatedRoom.id ? updatedRoom : room
+            )
+        );
+
+         // 현재 선택된 방이 업데이트된 방이라면 selectedRoom도 업데이트
+        if (selectedRoom?.id === updatedRoom.id) {
+            setSelectedRoom(updatedRoom);
+        }
+    };
 
     return (
         <ChatContainer>
@@ -195,6 +226,7 @@ export default function ChatPage() {
                     user={user}
                     isConnected={isConnected}
                     onSendMessage={handleSendMessage}
+                    onChatRoomUpdate={handleChatRoomUpdate}
                     onLeaveChat={handleLeaveChat}
                 />
             ) : (

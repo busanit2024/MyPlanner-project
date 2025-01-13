@@ -42,18 +42,19 @@ public class User {
   private Role role;
   private String profileImageUrl;
 
+
   public enum Role {
     ADMIN, USER
   }
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Schedule> schedules;
 
   @OneToMany(mappedBy = "followFrom")
   private List<Follow> follows;
 
   @OneToMany(mappedBy = "followTo")
   private List<Follow> followers;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+  private List<Category> categories;
 
   public static User toEntity(UserJoinDTO dto) {
     UserBuilder builder = User.builder()

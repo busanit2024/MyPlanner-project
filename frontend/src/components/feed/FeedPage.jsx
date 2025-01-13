@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import ScheduleListItem from "../../ui/ScheduleListItem";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Button from "../../ui/Button";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
@@ -13,20 +14,59 @@ export default function FeedPage() {
   const [feedType, setFeedType] = useState("follow");
   const [followFeed, setFollowFeed] = useState([]);
   const [exploreFeed, setExploreFeed] = useState([]);
-  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedState, setFeedState] = useState({
+    loading: false,
+    page: 0,
+    hasNext: false
+  });
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
     page: 0,
     hasNext: false
   });
+  const userRef = useRef(user);
+  const containerRef = useRef(null);
+  const scrollPositon = useRef(0);
 
+  // 초기 로딩 (유저정보 로딩되면 팔로잉 리스트와 피드 불러오기)
   useEffect(() => {
     if (!loading && user) {
+      userRef.current = user;
       fetchFollowingList();
+      fetchFeedByType();
     }
   }, [user, loading]);
 
+  // 피드 타입 변경시 피드 초기화 및 불러오기
+  useEffect(() => {
+    setFeedState({
+      loading: true,
+      page: 0,
+      hasNext: false
+    });
+    setFollowFeed([]);
+    setExploreFeed([]);
+    fetchFeedByType();
 
+  }, [feedType]);
+
+  useEffect(() => {
+    if (feedState.page > 0) {
+      fetchFeedByType();
+    }
+  }, [feedState.page]);
+
+  const fetchFeedByType = () => {
+    if (feedType === "follow") {
+      if (userRef.current) {
+        fetchFollowFeed();
+      }
+    } else {
+      fetchFeed();
+    }
+  };
+
+  // 팔로잉 유저 리스트 불러오기
   const fetchFollowingList = () => {
     axios.get(`/api/user/following`, {
       params: {
@@ -47,10 +87,72 @@ export default function FeedPage() {
       });
   }
 
+  // 전체 피드 불러오기
+  const fetchFeed = () => {
+    setFeedState((prev) => ({ ...prev, loading: true }));
+    const size = 10;
+
+    axios.get(`/api/schedules/feed`, {
+      params: {
+        page: 0,
+        size: feedState.page * size + size
+      }
+    })
+      .then(res => {
+        console.log(res.data);
+        setExploreFeed(res.data.content ?? []);
+        setFeedState((prev) => ({ ...prev, hasNext: !res.data.last }));
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {
+        setFeedState((prev) => ({ ...prev, loading: false }));
+        containerRef.current.scrollTop = scrollPositon.current;
+      });
+  };
+
+  // 팔로잉 피드 불러오기
+  const fetchFollowFeed = () => {
+    setFeedState((prev) => ({ ...prev, loading: true }));
+    const size = 10;
+
+    axios.get(`/api/schedules/feed/follow`, {
+      params: {
+        userId: user?.id,
+        page: 0,
+        size: feedState.page * size + size
+      }
+    })
+      .then(res => {
+        console.log(res.data);
+        setFollowFeed(res.data.content ?? []);
+        setFeedState((prev) => ({ ...prev, hasNext: !res.data.last }));
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {
+        setFeedState((prev) => ({ ...prev, loading: false }));
+        if(containerRef.current) {
+        containerRef.current.scrollTop = scrollPositon.current;
+        }
+      });
+  };
+
+  //더 불러올때 스크롤 위치 저장
+  const handleLoadMore = () => {
+    if (containerRef.current) {
+    scrollPositon.current = containerRef.current.scrollTop;
+    }
+    setFeedState((prev) => ({ ...prev, page: prev.page + 1 }));
+  }
+
+
 
 
   return (
-    <Container>
+    <Container className="feed-page" ref={containerRef}>
       <FeedTypeWrap>
         <div className={`feed-type ${feedType === "follow" ? "active" : ""}`} onClick={() => setFeedType("follow")}>
           <span>팔로우</span>
@@ -62,30 +164,37 @@ export default function FeedPage() {
         </div>
       </FeedTypeWrap>
       <FeedResultList>
-        {feedLoading && <div>로딩중...</div>}
         {feedType === "follow" && <>
-        <FollowingListContainer>
-          {followingList.map((item) => (
-            <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
-            <div className="avatar" key={item.id}>
-              <img src={item.profileImageUrl || defaultProfileImageUrl} alt="profile" />
-            </div>
-            <span className="username">{item.username}</span>
-          </div>
+          <FollowingListContainer>
+            {followingList.map((item) => (
+              <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
+                <div className="avatar" key={item.id}>
+                  <img src={item.profileImageUrl || defaultProfileImageUrl} alt="profile" onError={(e) => e.target.src = defaultProfileImageUrl} />
+                </div>
+                <span className="username">{item.username}</span>
+              </div>
+            ))}
+          </FollowingListContainer>
+          {followFeed.map((item) => (
+            <ScheduleListItem key={item.id} data={item} />
           ))}
-        </FollowingListContainer>
+          {feedState.loading && <div className="no-result">로딩중...</div>}
 
-          {!feedLoading && <>
-            {followFeed.length === 0 && <div className="no-result">팔로우한 사용자의 새 글이 없어요.</div>}
-            <ScheduleListItem />
-          </>}
+          {(!feedState.loading && followFeed.length === 0) && <div className="no-result">팔로우한 사용자의 새 글이 없어요.</div>}
         </>}
 
 
-        {(!feedLoading && feedType === "explore") && <>
-          {exploreFeed.length === 0 && <div className="no-result">새 글이 없어요.</div>}
-          <ScheduleListItem />
+        {feedType === "explore" && <>
+          {exploreFeed.map((item) => (
+            <ScheduleListItem key={item.id} data={item} />
+          ))}
+          {feedState.loading && <div className="no-result">로딩중...</div>}
+          {(!feedState.loading && exploreFeed.length === 0) && <div className="no-result">새 글이 없어요.</div>}
         </>}
+        {feedState.hasNext &&
+          <div style={{ padding: "24px" }}>
+            <Button onClick={handleLoadMore}>더 불러오기</Button>
+          </div>}
       </FeedResultList>
     </Container>
   );
@@ -96,9 +205,14 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
+  overflow-y: auto;
 `;
 
 const FeedTypeWrap = styled.div`
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -177,8 +291,9 @@ const FollowingListContainer = styled.div`
 const FeedResultList = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
-  padding: 24px 128px;
+  padding: 24px 96px;
   box-sizing: border-box;
   width: 100%;
 

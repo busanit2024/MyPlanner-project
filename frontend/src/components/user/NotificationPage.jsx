@@ -28,24 +28,9 @@ export default function NotificationPage() {
     invite: false,
     noti: false,
   });
-  const notiListRef = useRef(notiList);
 
   useEffect(() => {
-    notiListRef.current = notiList;
-  }, [notiList]);
-
-  useEffect(() => {
-    const cleanNotis = () => {
-      const idList = [...notiListRef.current.invite, ...notiListRef.current.noti].filter((noti) => !noti.read).map((noti) => noti.id);
-      if (idList.length > 0) {
-        axios.post(`/api/notification/read`, idList).then((res) => {
-          setUnreadCount(0);
-          clearNotiList();
-        }).catch((error) => {
-          console.error(error);
-        });
-      }
-    };
+    // 페이지 이동시 실시간 알림 초기화
 
     return () => {
       clearNotiList();
@@ -105,15 +90,15 @@ export default function NotificationPage() {
         params: {
           userId: user.id,
           type: "noti",
-          page: page.noti,
-          size: size,
+          page: 0,
+          size: page.noti * size + size,
         },
       });
       setNotiList((prev) => ({
         ...prev,
         noti: [...prev.noti, ...res.data.content],
       }));
-      setHasNext((prev) => ({ ...prev, noti: res.data.hasNext }));
+      setHasNext((prev) => ({ ...prev, noti: !res.data.last }));
     } catch (error) {
       console.error(error);
     } finally {
@@ -128,15 +113,15 @@ export default function NotificationPage() {
         params: {
           userId: user.id,
           type: "invite",
-          page: page.invite,
-          size: size,
+          page: 0,
+          size: page.invite * size + size,
         },
       });
       setNotiList((prev) => ({
         ...prev,
         invite: [...prev.invite, ...res.data.content],
       }));
-      setHasNext((prev) => ({ ...prev, invite: res.data.hasNext }));
+      setHasNext((prev) => ({ ...prev, invite: !res.data.last }));
     } catch (error) {
       console.error(error);
     } finally {

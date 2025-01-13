@@ -74,19 +74,8 @@ const DropdownItem = styled.div`
 
 `;
 
-const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, currentUserEmail, onLeaveChat, ...props }) => {
+const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, currentUserEmail, selectedRoom, onEditTitle, onLeaveChat, ...props }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
-
-  const handleLeaveChat = async() => {
-    if (window.confirm('채팅방을 나가시겠어요?')) {
-      try {
-        await onLeaveChat();
-        setDropdownOpen(false);
-      } catch (error) {
-        console.error('채팅방 나가기 실패:', error);
-      }
-    }
-  };
 
   const toggleDropdown = (e) => {
     e.stopPropagation();
@@ -123,7 +112,18 @@ const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, cu
         />
         {isDropdownOpen && (
           <Dropdown>
-            <DropdownItem onClick={handleLeaveChat}>
+            {isTeam && (  
+                <DropdownItem onClick={() => {
+                    onEditTitle();  
+                    setDropdownOpen(false);  
+                }}>
+                    <p>채팅방 이름 수정</p>
+                </DropdownItem>
+            )}
+            <DropdownItem onClick={() => {
+              if (window.confirm("채팅방을 나가시겠습니까?")) {
+                onLeaveChat();
+              }}}>
               <p>채팅방 나가기</p>
             </DropdownItem>
           </Dropdown>

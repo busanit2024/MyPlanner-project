@@ -1,5 +1,6 @@
 package com.busanit.myplannerbackend.domain;
 
+import com.busanit.myplannerbackend.entity.Category;
 import com.busanit.myplannerbackend.entity.User;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserJoinDTO {
+  //회원가입용 DTO (Id 제외한 모든 정보 있음)
 
   private String firebaseUid;
 
@@ -27,6 +29,7 @@ public class UserJoinDTO {
 
   private User.Role role;
   private String profileImageUrl;
+  private List<Category> categories;
 
   public static UserJoinDTO toDTO(User user) {
     UserJoinDTOBuilder builder = UserJoinDTO.builder()
@@ -37,7 +40,6 @@ public class UserJoinDTO {
             .phone(user.getPhone())
             .role(user.getRole())
             .profileImageUrl(user.getProfileImageUrl());
-
     return builder.build();
   }
 

@@ -1,4 +1,4 @@
-import { act, useEffect, useState } from "react";
+import { act, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSearch } from "../../context/SearchContext";
 import styled from "styled-components";
@@ -7,6 +7,7 @@ import axios from "axios";
 import Button from "../../ui/Button";
 import { useAuth } from "../../context/AuthContext";
 import ScheduleListItem from "../../ui/ScheduleListItem";
+import { list } from "firebase/storage";
 
 export default function SearchPage() {
   const { searchText, setOnSearch, searchType, setSearchType } = useSearch();
@@ -16,7 +17,11 @@ export default function SearchPage() {
   const [users, setUsers] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [listLoading, setListLoading] = useState(false);
+  const [noSearchText, setNoSearchText] = useState(true);
+  const containerRef = useRef(null);
+  const scrollPosition = useRef(0);
 
+  // SearchContext의 onSearch 함수를 setOnSearch로 설정
   useEffect(() => {
     setOnSearch(() => onSearch);
   }, [setOnSearch, searchType]);
@@ -25,48 +30,88 @@ export default function SearchPage() {
     onSearch(searchText, searchType);
   }, [page]);
 
+  // 검색 타입 변경시 상태 초기화 및 다시 불러오기
   useEffect(() => {
     setPage(0);
     setHasNext(false);
     setUsers([]);
+    setSchedules([]);
+    setNoSearchText(!searchText);
     onSearch(searchText, searchType);
   }, [searchType]);
 
 
   const onSearch = (searchText, searchType) => {
+    const trimedText = searchText.trim();
     setListLoading(true);
     const size = 10;
     console.log("user", user);
     const userId = user?.id;
-    if (!userId, !searchText) {
+    if (!userId, !trimedText) {
+      // 검색어 없는 경우 함수 종료
+      setNoSearchText(true);
+      setListLoading(false);
       return;
     }
+    setNoSearchText(false);
 
     if (searchType === 'user') {
-      axios.get(`/api/user/search`, { params: { searchText, userId, page, size } })
+      axios.get(`/api/user/search`, {
+        params: {
+          searchText: trimedText,
+          userId,
+          page: 0,
+          size: page * size + size
+        }
+      })
         .then(res => {
           console.log("user search", res.data);
           const data = res.data.content;
           setUsers(data);
-          setHasNext(res.data.hasNext);
+          setHasNext(!res.data.last);
         })
         .catch(err => {
           console.error(err);
         })
         .finally(() => {
           setListLoading(false);
+          containerRef.current.scrollTop = scrollPosition.current;
         });
     }
     if (searchType === 'schedule') {
-      setListLoading(false);
-      /// 추후구현
+      axios.get(`/api/schedules/search`, {
+        params: {
+          searchText: trimedText,
+          userId,
+          page: 0,
+          size: page * size + size,
+        }
+      })
+        .then(res => {
+          console.log("schedule search", res.data);
+          const data = res.data.content;
+          setSchedules(data);
+          setHasNext(!res.data.last);
+        })
+        .catch(err => {
+          console.error(err);
+        })
+        .finally(() => {
+          setListLoading(false);
+          containerRef.current.scrollTop = scrollPosition.current;
+        });
     }
+  };
+
+  const handleLoadMore = () => {
+    scrollPosition.current = containerRef.current.scrollTop;
+    setPage(page + 1);
   };
 
 
   return (
-    <Container>
-      <SearchTypeWrap>
+    <Container className="search-page" ref={containerRef}>
+      <SearchTypeWrap className="search-type-wrap">
         <div className={`search-type ${searchType === 'schedule' ? 'active' : ''}`} onClick={() => setSearchType("schedule")}>
           <span >일정</span>
           <div></div>
@@ -76,25 +121,25 @@ export default function SearchPage() {
           <div></div>
         </div>
       </SearchTypeWrap>
-        <SearchResultList>
+      <SearchResultList className="search-result-list">
         {(listLoading) && <p className="no-result">로딩중...</p>}
-        {(!listLoading && searchType === 'user') &&
-        <>
-          {(users.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
+        {(!listLoading && noSearchText) && <p className="no-result">일정이나 사용자를 검색해보세요.</p>}
+
+        {(searchType === 'user' && !noSearchText) && <>
           {users.map((user, index) => (
             <UserListItem key={index} user={user} />
           ))}
-        </> }
-        {(!listLoading && searchType === 'schedule') &&
-        <>
-          {(schedules.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
-          {schedules.map((schedule, index) => (
-            <div key={index}>{schedule.title}</div>
-          ))}
-          <ScheduleListItem />
+          {(!listLoading && users.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
         </>}
-          {hasNext && <Button onClick={() => setPage(page + 1)}>더보기</Button>}
-        </SearchResultList>
+
+        {(searchType === 'schedule' && !noSearchText) && <>
+          {schedules.map((schedule, index) => (
+            <ScheduleListItem key={index} data={schedule} />
+          ))}
+          {(!listLoading && schedules.length === 0) && <p className="no-result">검색 결과가 없습니다.</p>}
+        </>}
+        {hasNext && <Button onClick={handleLoadMore}>더보기</Button>}
+      </SearchResultList>
     </Container>
   );
 
@@ -105,9 +150,14 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
+  overflow-y: auto;
 `;
 
 const SearchTypeWrap = styled.div`
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 50;
   display: flex;
   justify-content: center;
   align-items: center;

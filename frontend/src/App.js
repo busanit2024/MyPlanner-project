@@ -12,6 +12,7 @@ import WeeklyPage from './components/calendar/WeeklyPage';
 import DailyPage from './components/calendar/DailyPage';
 import Grid100Page from './components/calendar/Grid100Page';
 import CalendarPage from './components/calendar/CalendarPage';
+import CalendarUpdate from './components/calendar/CalendarUpdate';
 
 import IndexPage from './components/main/IndexPage';
 import FindPage from './components/user/FindPage';
@@ -24,7 +25,7 @@ import { NotiProvider } from './context/NotiContext';
 import FeedPage from './components/feed/FeedPage';
 import UserProfilePage from './components/user/UserProfilePage';
 import GroupPage from './components/group/GroupPage';
-
+import GroupDetail from './components/group/GroupDetail';
 
 function App() {
   return (
@@ -49,9 +50,11 @@ function App() {
                 <Route path='profile/edit' element={<ProfileEditPage />} />
                 <Route path='notification' element={<NotificationPage />} />
                 <Route path='calendarWrite' element={<CalendarWrite />} />
+                <Route path='calendarUpdate/:id' element={<CalendarUpdate />} />
                 <Route path='feed' element={<FeedPage />} />
                 <Route path='user/:userId' element={<UserProfilePage />} />
                 <Route path='group' element={<GroupPage />} />
+                <Route path='group/:groupId' element={<GroupDetail />} />
               </Route>
               <Route path="chat/:roomId" element={<ChatPage />} />
             </Routes>

@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useState } from "react";
 import ImageUploadModal from '../../../ui/ImageUploadModal';
+import { imageFileUpload } from "../../../firebase";
 
 const InputChatBox = styled.div`
     display: flex;
@@ -63,6 +64,7 @@ const Dropdown = styled.div`
     padding : 10px;
     margin-bottom : 5px;
     z-index: 1000;
+    cursor: pointer;
 `;
 
 const DropdownItem = styled.div`
@@ -80,6 +82,7 @@ export default function InputChat({ onSendMessage }) {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isImageModalOpen, setImageModalOpen] = useState(false);
     const [message, setMessage] = useState('');
+    const [uploadedImages, setUploadedImages] = useState([]);
 
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -92,11 +95,20 @@ export default function InputChat({ onSendMessage }) {
         setDropdownOpen(false);
     };
 
-    const handleImageUpload = (files) => {
-        files.forEach(file => {
-            console.log('Uploaded file:', file);
-            // 이미지 업로드 로직 추가해야함
-        });
+    const handleImageUpload = async(files) => {
+        for(const file of files) {
+            if (file) {
+                try {
+                    const imageInfo = await imageFileUpload(file);
+                    if (imageInfo && imageInfo.url) {
+                        await onSendMessage(imageInfo.url);
+                        setImageModalOpen(false);
+                    }
+                } catch (error) {
+                    console.error('이미지 업로드 실패:', error);
+                }
+            }
+        }
     };
 
     const handleSend = async () => {
