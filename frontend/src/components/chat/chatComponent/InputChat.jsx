@@ -6,12 +6,13 @@ import { imageFileUpload } from "../../../firebase";
 const InputChatBox = styled.div`
     display: flex;
     align-items: center;
-    background-color: var(--chat-gray); 
+    background-color: ${props => props.disabled ? '#f0f0f0' : 'var(--chat-gray)'}; 
     border-radius: 50px;
     padding: 6px 16px;
     gap: 12px;
     position: relative;
     margin-right: 24px;
+    opacity: ${props => props.disabled ? 0.7 : 1};
 `;
 
 const Input = styled.input`
@@ -24,6 +25,11 @@ const Input = styled.input`
 
     &::placeholder {
         color: #999;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        background: none;
     }
 `;
 
@@ -78,7 +84,7 @@ const DropdownItem = styled.div`
     }
 `;
 
-export default function InputChat({ onSendMessage }) {
+export default function InputChat({ onSendMessage, isLeft }) {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isImageModalOpen, setImageModalOpen] = useState(false);
     const [message, setMessage] = useState('');
@@ -137,26 +143,28 @@ export default function InputChat({ onSendMessage }) {
 
     return (
         <>
-            <InputChatBox>
+            <InputChatBox disabled={isLeft}>
                 <img 
                     src="images/icon/plus.svg" 
                     alt="plus" 
-                    onClick={toggleDropdown} 
+                    onClick={!isLeft ? toggleDropdown : undefined}
+                    style={{ cursor: isLeft ? 'not-allowed' : 'pointer' }}
                 />
                 <Input 
                     type="text"
-                    placeholder="메시지 보내기..."
+                    placeholder={isLeft ? "퇴장한 채팅방입니다" : "메시지 보내기..."}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
+                    disabled={isLeft}
                 />
                 <SendButton 
                     onClick={handleButtonClick}
-                    disabled={!message.trim()}  // 빈 메시지일 때 비활성화
+                    disabled={!message.trim() || isLeft}
                 >
                     <img src="images/icon/sendMsg_48.png" alt="sent"/>
                 </SendButton>
-                {isDropdownOpen && (
+                {isDropdownOpen && !isLeft && (
                     <Dropdown>
                         <DropdownItem onClick={attachImg}>
                             <img src="images/icon/chatImage.png" alt="이미지 추가" />
