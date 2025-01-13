@@ -40,34 +40,33 @@ const SenderName = styled.span`
 `;
 
 const MessageBubble = styled.div`
-  background-color: ${props => props.isMine ? 'var(--primary-color)' : 'var(--chat-gray)'};
-  color: ${props => props.isMine ? 'white' : 'black'};
-  padding: 8px 12px;
-  border-radius: 12px;
-  box-sizing: border-box;
-  display: inline-block;
-  max-width: 70%;
-  min-width: min-content;
-  width: fit-content;
-  
-   /* 이미지일 경우 패딩 제거 */
-  ${props => props.isImage && `
-    padding: 0;
-    overflow: hidden;
-    
-    img {
-      max-width: 200px;
-      max-height: 200px;
-      object-fit: contain;
-    }
-  `}
-  
-  /* 텍스트 메시지일 경우에만 적용 */
   ${props => !props.isImage && `
+    background-color: ${props.isMine ? 'var(--primary-color)' : 'var(--chat-gray)'};
+    color: ${props.isMine ? 'white' : 'black'};
+    padding: 8px 12px;
+    border-radius: 12px;
+    box-sizing: border-box;
+    display: inline-block;
+    max-width: 70%;
+    min-width: min-content;
+    width: fit-content;
     white-space: ${props.message?.length > 30 ? 'pre-wrap' : 'nowrap'};
     word-break: ${props.message?.length > 30 ? 'break-word' : 'keep-all'};
     overflow-wrap: ${props.message?.length > 30 ? 'break-word' : 'normal'};
     text-align: left;
+  `}
+
+  ${props => props.isImage && `
+    padding: 0;
+    background: none;
+    max-width: 200px;
+    
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      object-fit: contain;
+    }
   `}
 `;
 
@@ -77,7 +76,7 @@ const TimeStamp = styled.span`
   ${props => !props.show && `display : none; `}
 `;
 
-const ChatMessage = ({ message, time, isMine, senderName, senderProfile , showTime, previousMessage, previousSender}) => {
+const ChatMessage = ({ message, displayMessage, time, isMine, senderName, senderProfile , showTime, previousMessage, previousSender}) => {
   // 메시지가 이미지 URL인지 확인하는 함수
   const isImageMessage = (msg) => {
     return msg?.includes('firebasestorage.googleapis.com') || 

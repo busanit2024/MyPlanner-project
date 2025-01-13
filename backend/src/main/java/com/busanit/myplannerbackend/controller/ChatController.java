@@ -58,16 +58,27 @@ public class ChatController {
         message.setSendTime(LocalDateTime.now());
         message.setChatRoomId(chatRoomId);
 
-        return messageService.saveMessage(message)
-                .map(savedMessage -> MessageResponseDTO.builder()
-                        .id(savedMessage.getId())
-                        .contents(savedMessage.getContents())
-                        .senderEmail(message.getSenderEmail())
-                        .sendTime(savedMessage.getSendTime())
-                        .build())
-                .doOnNext(response ->
-                        messagingTemplate.convertAndSend("/sub/chat/rooms/" + chatRoomId, response))
-                .then();
+        return chatRoomService.findById(chatRoomId)
+                .flatMap(chatRoom -> {
+                    // 메시지 전송자가 채팅방 참여자인지 확인
+                    boolean isParticipant = chatRoom.getParticipants().stream()
+                            .anyMatch(p -> p.getEmail().equals(message.getSenderEmail()));
+
+                    if (!isParticipant) {
+                        return Mono.error(new RuntimeException("퇴장한 채팅방입니다."));
+                    }
+
+                    return messageService.saveMessage(message)
+                            .map(savedMessage -> MessageResponseDTO.builder()
+                                    .id(savedMessage.getId())
+                                    .contents(savedMessage.getContents())
+                                    .senderEmail(message.getSenderEmail())
+                                    .sendTime(savedMessage.getSendTime())
+                                    .build())
+                            .doOnNext(response ->
+                                    messagingTemplate.convertAndSend("/sub/chat/rooms/" + chatRoomId, response))
+                            .then();
+                });
     }
 
     //채팅방 이름 변경

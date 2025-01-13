@@ -146,9 +146,8 @@ export default function ChatPage() {
     const handleLeaveChat = async (roomId) => {
         try {
             // 웹소켓 연결 해제
-            disconnect(); 
+            disconnect();
             
-            // 채팅방 나가기 API 호출
             const response = await fetch(`/api/chat/rooms/${roomId}/leave`, {
                 method: 'POST',
                 headers: {
@@ -163,8 +162,6 @@ export default function ChatPage() {
     
             // 채팅방 목록에서 해당 채팅방 제거
             setChatRooms(prevRooms => prevRooms.filter(room => room.id !== roomId));
-    
-            // 선택된 채팅방 초기화
             setSelectedRoom(null);
             setChatPartner({
                 email: '',
@@ -172,8 +169,12 @@ export default function ChatPage() {
                 profileImage: null
             });
     
+            // 채팅 목록 페이지로 이동
+            navigate('/chat');
+    
         } catch (error) {
             console.error('채팅방 나가기 실패:', error);
+            throw error; // 에러를 상위로 전파하여 하위 컴포넌트에서 처리할 수 있도록 함
         }
     };
     
