@@ -48,21 +48,27 @@ const MessageBubble = styled.div`
   ${props => props.isImage && `
     padding: 0;
     background: none;
-    max-width: 200px;
+    max-width: 100%; 
     
     .image-grid {
       display: grid;
-      grid-template-columns: ${props => props.imageCount > 1 ? 'repeat(2, 1fr)' : '1fr'};
-      gap: 4px;
+      grid-template-columns: ${props.imageCount > 1 ? 'repeat(2, 1fr)' : '1fr'};
+      gap: 2px;
       width: 100%;
-      aspect-ratio: ${props => props.imageCount > 1 ? '1/1' : 'auto'};
     }
 
     img {
-      width: 100%;
-      height: 100%;
+      ${props.imageCount === 1 
+        ? `
+          width: 200px; /* 단일 이미지: 가로 고정 */
+          height: auto; /* 세로는 비율에 맞춤 */
+        ` 
+        : `
+          width: 100px; /* 다중 이미지: 가로 고정 */
+          height: 100px; /* 세로 고정 */
+        `}
       border-radius: 8px;
-      object-fit: ${props => props.imageCount > 1 ? 'cover' : 'contain'};
+      object-fit: ${props.imageCount === 1 ? 'contain' : 'cover'}; /* 단일/다중에 따라 fit 방식 다름 */
     }
   `}
 `;
