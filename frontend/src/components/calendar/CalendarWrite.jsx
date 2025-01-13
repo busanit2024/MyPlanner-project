@@ -14,7 +14,7 @@ const CalendarWrite = () => {
 
   const [title, setTitle] = useState('');
   const [categoryList, setCategoryList] = useState([]); // 카테고리 목록
-  const [categoryId, setCategoryId] = useState(0); // 카테고리 ID
+  const [categoryId, setCategoryId] = useState(4); // 카테고리 ID
   const [participants, setParticipants] = useState([]);
   const [date, setDate] = useState(''); // 오늘 날짜 상태
   const [startDate, setStartDate] = useState(''); // 시작 날짜 상태
@@ -24,12 +24,14 @@ const CalendarWrite = () => {
   const [allDay, setAllDay] = useState(false);  // 종일 여부
   const [repeat, setRepeat] = useState(false);  // 반복 여부
   const [reminder, setReminder] = useState(false);  // 5분 전 알림 여부
-  const [viewOnlyMe, setViewOnlyMe] = useState(false);  // 
-  const [checklist, setChecklist] = useState([]);
-  const [detail, setDetail] = useState('');
+  const [viewOnlyMe, setViewOnlyMe] = useState(false);  // 나만 보기 여부
+  const [checklist, setChecklist] = useState([]); // 체크리스트
+  const [detail, setDetail] = useState(''); // 상세 내용
   const [image, setImage] = useState(null); // 이미지 상태
   const [createdAt, setCreatedAt] = useState(''); // 등록 시간
   const [color, setColor] = useState(''); // 색깔
+  const [done, setDone] = useState(false);  // 일정 완료 여부
+  const [checkDone, setCheckDone] = useState([]);  // 체크리스트 완료 여부
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,7 +59,7 @@ const CalendarWrite = () => {
     // 유저 정보 있을 때 유저 카테고리 받아오기
     if(!loading && user) {
       setCategoryList(user.categories);
-      setCategoryId(user.categories[0].id); // 첫 번째 카테고리 ID로 초기화
+      // setCategoryId(user.categories[4].id); // 첫 번째 카테고리 ID로 초기화
     }
   }, [loading, user]);
 
@@ -72,24 +74,32 @@ const CalendarWrite = () => {
   };
 
   const handleAddParticipant = () => {
-    setParticipants([...participants, `참가자${participants.length + 1}`]);
+    setParticipants(user?.follows.map(follow => follow.id) || []);
   };
 
   const handleAddChecklist = () => {
     if (checklist.length < 10) {
       setChecklist([...checklist, '']); // 체크리스트가 10개 미만일 때 빈 문자열 추가
+      setCheckDone([...checkDone, false]);
     }
   };
 
   const handleDeleteChecklist = (index) => {
     const updatedChecklist = checklist.filter((_, i) => i !== index);
     setChecklist(updatedChecklist);
+    setCheckDone(checkDone.filter((_, i) => i !== index));
   }
 
   const handleChecklistChange = (index, value) => {
     const updatedChecklist = [...checklist];
     updatedChecklist[index] = value; // 해당 인덱스의 값을 업데이트
     setChecklist(updatedChecklist);
+  };
+  
+  const handleCheckboxChange = (index) => {
+    const newCheckDone = [...checkDone];
+    newCheckDone[index] = !newCheckDone[index];
+    setCheckDone(newCheckDone);
   };
 
   const handleImageUpload = async (e) => {
@@ -110,7 +120,7 @@ const CalendarWrite = () => {
 
     // 전송할 데이터 객체 생성
     const scheduleData = {
-      title: title,
+      title: title, // 제목
       categoryId: categoryId,
       participants: participants.length > 0 ? participants : [],
       startDate: startDate || date,
@@ -121,13 +131,13 @@ const CalendarWrite = () => {
       isRepeat: repeat,
       isAlarm: reminder,
       isPrivate: viewOnlyMe,
-      checkListItem: checklist.map(item => ({
+      checkListItem: checklist.map((item, index) => ({
         content: item,
-        isDone: false  // 기본적으로 완료 여부는 false
+        isDone: checkDone[index] || false,
       })),
       detail: detail,
       imageUrl: image || '',
-      done: false,
+      done: done,
       createdAt: createdAt || new Date().toISOString(), // 현재 시간
       userId: user.id || '',
       color: color,
@@ -322,6 +332,8 @@ const CalendarWrite = () => {
             <div className="checklist-item" key={index}>
               <input 
                 type="checkbox" 
+                checked={checkDone[index]}
+                onChange={(e) => handleCheckboxChange(index)}
                 style={{ marginRight: '10px' }} 
               />
               <input 

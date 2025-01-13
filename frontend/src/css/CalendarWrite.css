@@ -26,6 +26,26 @@
   cursor: pointer;
 }
 
+.delete-button {
+  background-color: #ff0000;
+  color: rgba(255, 255, 255, 0.884);
+  border: none;
+  border-radius: 50px;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.complete-button {
+  background-color: #000000;
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 50px;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 .input-section {
   margin-top: 20px;
 }
