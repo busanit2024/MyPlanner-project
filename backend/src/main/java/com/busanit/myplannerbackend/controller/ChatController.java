@@ -133,35 +133,4 @@ public class ChatController {
     }
 
 
-
-
-
-
-
-
-
-    // 읽음 상태 업데이트
-    @PostMapping("/rooms/{roomId}/read")
-    public Mono<Map<String, String>> updateLastRead(
-            @PathVariable String roomId,
-            @RequestBody ReadStatusDTO request) {
-        return chatRoomService.updateLastReadMessage(
-                roomId,
-                request.getUserEmail(),
-                request.getLastChatLogId()
-        ).doOnSuccess(readStatusMap -> {
-            // WebSocket을 통해 실시간 업데이트 전송
-            messagingTemplate.convertAndSend(
-                    "/sub/chat/rooms/" + roomId + "/read-status",
-                    readStatusMap
-            );
-        });
-    }
-
-    // 읽지 않은 메시지 수 조회
-    @GetMapping("/rooms/{roomId}/unread")
-    public Mono<Map<String, String>> getUnreadCounts(@PathVariable String roomId) {
-        return chatRoomService.makeUnreadCountMap(roomId);
-    }
-
 }

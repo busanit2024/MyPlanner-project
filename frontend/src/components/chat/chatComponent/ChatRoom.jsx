@@ -248,16 +248,7 @@ const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected,
         }
     }, [messages, isUserNearBottom, updateMyReadStatus]);
 
-    // 메시지 전송 핸들러
-    const handleSendMessage = async (content) => {
-        try {
-            await onSendMessage(content);
-            lastMessageWasMine.current = true;
-            scrollToBottom();
-        } catch (error) {
-            console.error('메시지 전송 실패:', error);
-        }
-    };
+
 
     // 메시지 그룹화(날짜별로)
     const groupedMessages = messages?.reduce((groups, msg) => {
