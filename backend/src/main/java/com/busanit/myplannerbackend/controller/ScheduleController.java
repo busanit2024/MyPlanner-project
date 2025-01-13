@@ -13,6 +13,7 @@ import com.busanit.myplannerbackend.service.CheckListService;
 import com.busanit.myplannerbackend.service.ScheduleService;
 import com.busanit.myplannerbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,8 +25,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/schedules")
@@ -51,6 +54,11 @@ public class ScheduleController {
 //        schedule.setUser(user);
 //        schedule.setCategory(category);
 
+        // 체크리스트가 null일 경우 빈 리스트로 초기화
+        if (scheduleDTO.getCheckList() == null) {
+            scheduleDTO.setCheckList(new ArrayList<>());
+        }
+
         scheduleService.createSchedule(scheduleDTO);
 //        checkListService.saveCheckList(scheduleDTO.getCheckListItem(), schedule);
 
@@ -66,11 +74,17 @@ public class ScheduleController {
 
     // 특정 일정 조회
     @GetMapping("/{id}")
-    public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
-        return scheduleService.getScheduleById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ScheduleDTO> getScheduleDTOById(@PathVariable Long id) {
+        ScheduleDTO scheduleDTO = scheduleService.getScheduleDTOById(id);
+
+        return new ResponseEntity<>(scheduleDTO, HttpStatus.OK);
     }
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
+//        return scheduleService.getScheduleById(id)
+//                .map(ResponseEntity::ok)
+//                .orElse(ResponseEntity.notFound().build());
+//    }
 
     //모든 일정 최신순 슬라이스
     @GetMapping("/feed")
@@ -117,6 +131,11 @@ public class ScheduleController {
     // 일정 수정
     @PutMapping("/{id}")
     public Schedule updateSchedule(@PathVariable Long id, @RequestBody Schedule scheduleDetails) {
+        // 체크리스트가 null인 경우 빈 리스트로 초기화
+        if (scheduleDetails.getCheckList() == null) {
+            scheduleDetails.setCheckList(new ArrayList<>());
+        }
+
         return scheduleService.updateSchedule(id, scheduleDetails);
     }
 

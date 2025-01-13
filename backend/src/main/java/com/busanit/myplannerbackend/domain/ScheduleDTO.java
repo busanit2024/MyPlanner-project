@@ -31,13 +31,13 @@ public class ScheduleDTO {
 
     private String endTime;             // 종료 시간
 
-    private Boolean allDay;             // 종일 여부
+    private Boolean allDay = false;             // 종일 여부
 
     private String isRepeat;            // 반복 기간
 
-    private Boolean isAlarm;            // 알람 여부
+    private Boolean isAlarm = false;            // 알람 여부
 
-    private Boolean isPrivate;          // 공개 여부
+    private Boolean isPrivate = false;          // 공개 여부
 
     private String imageUrl;            // 이미지 URL
 
@@ -47,7 +47,7 @@ public class ScheduleDTO {
 
     private List<CheckListDTO> checkListItem;   // dto로 체크리스트 받아오기 위해 따로 설정
 
-    private Boolean done;                // 완료 여부
+    private Boolean done = false;                // 완료 여부
 
     private String detail;              // 상세 내용
 
@@ -128,7 +128,8 @@ public class ScheduleDTO {
                 .category(schedule.getCategory())
                 .participants(ParticipantDTO.toDTO(schedule.getParticipants()))
                 .comments(CommentDTO.toDTO(schedule.getComments()))
-                .heartUsers(UserDTO.toDTO(heartUsers));
+                .heartUsers(UserDTO.toDTO(heartUsers))
+                .checkList(schedule.getCheckList());
 
         return builder.build();
     }
