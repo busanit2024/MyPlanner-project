@@ -8,13 +8,16 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class ScheduleService {
@@ -39,6 +42,8 @@ public class ScheduleService {
       Schedule schedule = ScheduleDTO.toEntity(scheduleDTO, user);
       Category category = categoryRepository.findById(scheduleDTO.getCategoryId()).orElse(null);
       schedule.setCategory(category);
+      schedule.setCheckList(scheduleDTO.getCheckList() != null ? scheduleDTO.getCheckList() : new ArrayList<>());
+
       scheduleRepository.save(schedule);
 
       for (CheckListDTO checkListDTO : scheduleDTO.getCheckListItem()) {
@@ -65,6 +70,14 @@ public class ScheduleService {
         return scheduleRepository.findById(id);
     }
 
+    // 특정 일정 조회(return DTO)
+    public ScheduleDTO getScheduleDTOById(Long id) {
+        Schedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("일정을 찾을 수 없습니다."));
+
+        return ScheduleDTO.toDTO(schedule);
+    }
+
     // 특정 사용자 ID로 일정 조회
     public List<Schedule> getSchedulesByUserId(Long userId) {
         return scheduleRepository.findByUserId(userId);
@@ -74,6 +87,11 @@ public class ScheduleService {
     public Schedule updateSchedule(Long id, Schedule scheduleDetails) {
         Schedule schedule = scheduleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("일정을 찾을 수 없습니다."));
+
+        // 체크리스트가 null일 경우 빈 리스트로 초기화
+        if (scheduleDetails.getCheckList() == null) {
+            scheduleDetails.setCheckList(new ArrayList<>());
+        }
 
         schedule.setTitle(scheduleDetails.getTitle());
         schedule.setCategory(scheduleDetails.getCategory());
@@ -86,10 +104,28 @@ public class ScheduleService {
         schedule.setIsAlarm(scheduleDetails.getIsAlarm());
         schedule.setIsPrivate(scheduleDetails.getIsPrivate());
         schedule.setImageUrl(scheduleDetails.getImageUrl());
-        schedule.setCheckList(scheduleDetails.getCheckList());
         schedule.setDone(scheduleDetails.getDone());
         schedule.setDetail(scheduleDetails.getDetail());
         schedule.setCreatedAt(scheduleDetails.getCreatedAt());
+
+        // 기존 체크리스트 가져오기
+        List<CheckList> existingCheckLists = checkListRepository.findBySchedule(schedule);
+
+        // 새로운 체크리스트 항목을 처리
+        for (CheckList checkList : scheduleDetails.getCheckList()) {
+            log.info("일정 수정 정보: " + checkList);
+            checkList.setSchedule(schedule);
+            checkListRepository.save(checkList);
+        }
+
+        // 기존 체크리스트 중 삭제된 항목 처리
+        for (CheckList existingCheckList : existingCheckLists) {
+            if (scheduleDetails.getCheckList().stream()
+                    .noneMatch(cl -> cl.getId().equals(existingCheckList.getId()))) {
+                // 삭제된 항목
+                checkListRepository.delete(existingCheckList);
+            }
+        }
 
         return scheduleRepository.save(schedule);
     }
