@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { generateDateFormat } from "../util/generateDateFormat";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 const defaultScheduleImageUrl = "/images/default/defaultScheduleImage.png";
@@ -7,27 +8,6 @@ const defaultScheduleImageUrl = "/images/default/defaultScheduleImage.png";
 export default function ScheduleListItem(props) {
   const { data } = props;
   const navigate = useNavigate();
-
-  const generateDateFormat = (startDate, startTime, endDate, endTime) => {
-    // 날짜 인풋 포맷: 2025-01-08T00:00:00.000+00:00
-    // 시간 인풋 포맷: 24:00
-    // 날짜 출력 포맷: 2025-01-08
-    if (!startDate || !endDate) return "";
-
-    const formatStartDate = startDate.split("T")[0];
-    const formatEndDate = endDate.split("T")[0];
-    
-    if (!startTime && !endTime) {
-      if (formatStartDate === formatEndDate) {
-        return formatStartDate;
-      } else {
-        return `${formatStartDate} ~ ${formatEndDate}`;
-      }
-    } else {
-      return `${formatStartDate} ${startTime} ~ ${formatEndDate} ${endTime}`;
-    }
-  };
-
 
   return (
     <Container className="schedule-list-item">
@@ -44,7 +24,7 @@ export default function ScheduleListItem(props) {
           </div>
           <div className="info">
             <span className="title">{data?.title || "제목 없는 일정"}</span>
-            <span className="content">{data?.content}</span>
+            <span className="content">{data?.detail}</span>
             <span className="date">
               {generateDateFormat(data?.startDate, data?.startTime, data?.endDate, data?.endTime)}
             </span>

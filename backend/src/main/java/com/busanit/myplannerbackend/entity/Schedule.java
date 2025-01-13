@@ -1,10 +1,12 @@
 package com.busanit.myplannerbackend.entity;
 
+import com.busanit.myplannerbackend.domain.CommentDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.OnDelete;
 
 import java.sql.Time;
 import java.util.Date;
@@ -73,8 +75,7 @@ public class Schedule {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;    // 사용자 아이디
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category;  // 카테고리 (Category 엔티티와의 관계)
 
@@ -82,8 +83,15 @@ public class Schedule {
 //    @JoinColumn(name = "group_id")
 //    private Group group;  // 그룹 (Group 엔티티와의 관계)
 
+    //참여자
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Participant> participants;
 
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
 
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Heart> hearts;
 }
 
 

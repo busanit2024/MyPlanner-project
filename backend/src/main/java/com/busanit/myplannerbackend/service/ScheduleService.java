@@ -2,17 +2,12 @@ package com.busanit.myplannerbackend.service;
 
 import com.busanit.myplannerbackend.domain.CheckListDTO;
 import com.busanit.myplannerbackend.domain.ScheduleDTO;
-import com.busanit.myplannerbackend.entity.Category;
-import com.busanit.myplannerbackend.entity.CheckList;
-import com.busanit.myplannerbackend.entity.Schedule;
-import com.busanit.myplannerbackend.entity.User;
-import com.busanit.myplannerbackend.repository.CategoryRepository;
-import com.busanit.myplannerbackend.repository.CheckListRepository;
-import com.busanit.myplannerbackend.repository.ScheduleRepository;
-import com.busanit.myplannerbackend.repository.UserRepository;
+import com.busanit.myplannerbackend.entity.*;
+import com.busanit.myplannerbackend.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -28,6 +23,8 @@ public class ScheduleService {
     private final UserRepository userRepository;
     private final CheckListRepository checkListRepository;
     private final CategoryRepository categoryRepository;
+    private final ParticipantRepository participantRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     // 일정 등록
@@ -104,7 +101,7 @@ public class ScheduleService {
 
     // 모든 일정 최신순 슬라이스
     public Slice<Schedule> getAllScheduleSlice(Pageable pageable) {
-        return scheduleRepository.findAllByOrderByCreatedAtDesc(pageable);
+        return scheduleRepository.findAllByIsPrivateFalseOrderByCreatedAtDesc(pageable);
     }
 
     //내가 팔로우하는 사람의 일정 최신순 슬라이스
@@ -114,11 +111,138 @@ public class ScheduleService {
             return null;
         }
         List<Long> follows = user.getFollows().stream().map(follow -> follow.getFollowTo().getId()).toList();
-        return scheduleRepository.findAllByUserIdInOrderByCreatedAtDesc(follows, pageable);
+        return scheduleRepository.findAllByUserIdInAndIsPrivateFalseOrderByCreatedAtDesc(follows, pageable);
     }
 
     //일정 제목으로 검색(임시)
     public Slice<Schedule> searchByTitle(String title, Pageable pageable) {
-      return scheduleRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(title, pageable);
+      return scheduleRepository.findByTitleContainingIgnoreCaseAndIsPrivateFalseOrderByCreatedAtDesc(title, pageable);
+    }
+
+    //완료되지 않은 개인 일정 종료일이 가까운 순으로 조회
+    public Page<Schedule> getTodoSchedules(Long userId, Pageable pageable) {
+      return scheduleRepository.findByUserIdAndDoneFalseOrderByEndDateAsc(userId, pageable);
+    }
+
+    //일정 완료 상태 관리
+    public void scheduleDoneToggle(Long id, boolean done) {
+      Schedule schedule = scheduleRepository.findById(id).orElse(null);
+      if (schedule == null) {
+        throw new RuntimeException("Schedule not found");
+      }
+      schedule.setDone(done);
+      scheduleRepository.save(schedule);
+    }
+
+    //일정 체크리스트 완료 상태 관리
+    public void checkListDoneToggle(Long id, boolean done) {
+      CheckList checkList = checkListRepository.findById(id).orElse(null);
+      if (checkList == null) {
+        throw new RuntimeException("CheckList not found");
+      }
+      checkList.setIsDone(done);
+      checkListRepository.save(checkList);
+    }
+
+
+    //일정 초대
+    //targetUser를 participant 리스트에 추가한다
+    public void inviteUser(Long scheduleId, Long targetUserId) {
+      Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+      if (schedule == null) {
+        throw new RuntimeException("Schedule not found");
+      }
+      User targetUser = userRepository.findById(targetUserId).orElse(null);
+      if (targetUser == null) {
+        throw new RuntimeException("User not found");
+      }
+
+      Participant newParticipant;
+
+      // 같은 userId를 가진 참여자가 이미 존재하는지 확인
+      Optional<Participant> existingParticipant = schedule.getParticipants().stream().filter(participant -> participant.getUser().getId().equals(targetUserId)).findFirst();
+
+      if (existingParticipant.isPresent()) {
+        newParticipant = existingParticipant.get();
+        // 이미 존재하고, 거절된 상태라면 다시 한 번 초대 보내기
+        if (newParticipant.getStatus().equals(Participant.Status.DECLINED)) {
+          newParticipant.setStatus(Participant.Status.PENDING);
+        } else return;
+      } else {
+        //존재하지 않을 시 새로 만들기
+        newParticipant = Participant.of(schedule, targetUser);
+      }
+
+      participantRepository.save(newParticipant);
+      //일정 초대 시 notification 이벤트 발행
+      newParticipant.publishInviteEvent(eventPublisher);
+    }
+
+    // 초대 삭제
+    public void inviteCancel(Long scheduleId, Long targetUserId) {
+      Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+      if (schedule == null) {
+        throw new RuntimeException("Schedule not found");
+      }
+      User targetUser = userRepository.findById(targetUserId).orElse(null);
+      if (targetUser == null) {
+        throw new RuntimeException("User not found");
+      }
+
+      Participant existingParticipant = participantRepository.findByScheduleIdAndUserId(scheduleId, targetUserId).orElse(null);
+      if (existingParticipant == null) {
+        return;
+      }
+      participantRepository.delete(existingParticipant);
+    }
+
+    //일정 참여하기
+    public void participate(Long scheduleId, Long userId) {
+      Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+      if (schedule == null) {
+        throw new RuntimeException("Schedule not found");
+      }
+      User user = userRepository.findById(userId).orElse(null);
+      if (user == null) {
+        throw new RuntimeException("User not found");
+      }
+
+      Participant newParticipant = Participant.of(schedule, user);
+
+      Optional<Participant> existingParticipant = participantRepository.findByScheduleIdAndUserId(scheduleId, userId);
+
+      if (existingParticipant.isPresent()) {
+        newParticipant = existingParticipant.get();
+        //수락하지 않은 초대가 이미 존재할 시 상태를 수락으로 바꿈
+        if (newParticipant.getStatus().equals(Participant.Status.ACCEPTED)) {
+          return;
+        } else {
+          newParticipant.setStatus(Participant.Status.ACCEPTED);
+        }
+      }
+
+      participantRepository.save(newParticipant);
+      //일정 작성자에게 알림 보내기
+      newParticipant.publishParticipateEvent(eventPublisher);
+    }
+
+    //일정 초대 거절하기
+    public void declineInvite(Long scheduleId, Long userId) {
+      Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+      if (schedule == null) {
+        throw new RuntimeException("Schedule not found");
+      }
+      User user = userRepository.findById(userId).orElse(null);
+      if (user == null) {
+        throw new RuntimeException("User not found");
+      }
+
+      Participant existingParticipant = participantRepository.findByScheduleIdAndUserId(scheduleId, userId).orElse(null);
+      if (existingParticipant == null) {
+        return;
+      }
+
+      existingParticipant.setStatus(Participant.Status.DECLINED);
+      participantRepository.save(existingParticipant);
     }
 }
