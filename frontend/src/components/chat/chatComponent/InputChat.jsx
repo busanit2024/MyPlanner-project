@@ -1,16 +1,18 @@
 import styled from "styled-components";
 import { useState } from "react";
 import ImageUploadModal from '../../../ui/ImageUploadModal';
+import { imageFileUpload } from "../../../firebase";
 
 const InputChatBox = styled.div`
     display: flex;
     align-items: center;
-    background-color: var(--chat-gray); 
+    background-color: ${props => props.disabled ? '#f0f0f0' : 'var(--chat-gray)'}; 
     border-radius: 50px;
     padding: 6px 16px;
     gap: 12px;
     position: relative;
     margin-right: 24px;
+    opacity: ${props => props.disabled ? 0.7 : 1};
 `;
 
 const Input = styled.input`
@@ -23,6 +25,11 @@ const Input = styled.input`
 
     &::placeholder {
         color: #999;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        background: none;
     }
 `;
 
@@ -63,6 +70,7 @@ const Dropdown = styled.div`
     padding : 10px;
     margin-bottom : 5px;
     z-index: 1000;
+    cursor: pointer;
 `;
 
 const DropdownItem = styled.div`
@@ -76,10 +84,11 @@ const DropdownItem = styled.div`
     }
 `;
 
-export default function InputChat({ onSendMessage }) {
+export default function InputChat({ onSendMessage, isLeft }) {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isImageModalOpen, setImageModalOpen] = useState(false);
     const [message, setMessage] = useState('');
+    const [uploadedImages, setUploadedImages] = useState([]);
 
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -92,11 +101,20 @@ export default function InputChat({ onSendMessage }) {
         setDropdownOpen(false);
     };
 
-    const handleImageUpload = (files) => {
-        files.forEach(file => {
-            console.log('Uploaded file:', file);
-            // 이미지 업로드 로직 추가해야함
-        });
+    const handleImageUpload = async(files) => {
+        for(const file of files) {
+            if (file) {
+                try {
+                    const imageInfo = await imageFileUpload(file);
+                    if (imageInfo && imageInfo.url) {
+                        await onSendMessage(imageInfo.url);
+                        setImageModalOpen(false);
+                    }
+                } catch (error) {
+                    console.error('이미지 업로드 실패:', error);
+                }
+            }
+        }
     };
 
     const handleSend = async () => {
@@ -125,26 +143,28 @@ export default function InputChat({ onSendMessage }) {
 
     return (
         <>
-            <InputChatBox>
+            <InputChatBox disabled={isLeft}>
                 <img 
                     src="images/icon/plus.svg" 
                     alt="plus" 
-                    onClick={toggleDropdown} 
+                    onClick={!isLeft ? toggleDropdown : undefined}
+                    style={{ cursor: isLeft ? 'not-allowed' : 'pointer' }}
                 />
                 <Input 
                     type="text"
-                    placeholder="메시지 보내기..."
+                    placeholder={isLeft ? "퇴장한 채팅방입니다" : "메시지 보내기..."}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
+                    disabled={isLeft}
                 />
                 <SendButton 
                     onClick={handleButtonClick}
-                    disabled={!message.trim()}  // 빈 메시지일 때 비활성화
+                    disabled={!message.trim() || isLeft}
                 >
                     <img src="images/icon/sendMsg_48.png" alt="sent"/>
                 </SendButton>
-                {isDropdownOpen && (
+                {isDropdownOpen && !isLeft && (
                     <Dropdown>
                         <DropdownItem onClick={attachImg}>
                             <img src="images/icon/chatImage.png" alt="이미지 추가" />
