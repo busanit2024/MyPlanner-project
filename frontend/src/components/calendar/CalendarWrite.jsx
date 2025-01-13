@@ -20,10 +20,11 @@ const CalendarWrite = () => {
   const [participants, setParticipants] = useState([]);
   const [date, setDate] = useState(''); // 오늘 날짜 상태
 
-  const { startDate, endDate } = location.state || {};
+  // URL로부터 전달된 데이터
+  const { startDate: initialStartDate, endDate: initialEndDate } = location.state || {};
 
-  const setStartDate = useState(startDate || ''); // 시작 날짜 상태
-  const setEndDate = useState(endDate || ''); // 끝 날짜 상태
+  const [startDate, setStartDate] = useState(initialStartDate || ''); // 시작 날짜 상태
+  const [endDate, setEndDate] = useState(initialEndDate || ''); // 끝 날짜 상태
 
   const [startTime, setStartTime] = useState(''); // 시작 시간 상태
   const [endTime, setEndTime] = useState(''); // 끝 시간 상태
@@ -39,8 +40,7 @@ const CalendarWrite = () => {
   const [done, setDone] = useState(false);  // 일정 완료 여부
   const [checkDone, setCheckDone] = useState([]);  // 체크리스트 완료 여부
 
-  // URL로부터 전달된 데이터
-  // const { startDate: initialStartDate, endDate: initialEndDate } = location.state || {};
+  
 
   // 컴포넌트가 마운트될 때 오늘 날짜로 초기화
   useEffect(() => {
