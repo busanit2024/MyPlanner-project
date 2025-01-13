@@ -164,7 +164,7 @@ const CalendarWrite = () => {
     <div className="calendar-write">
       <div className='header' style={{ position: 'relative' }}>
         <h2>일정 입력</h2>
-        <input
+        {/* <input
           value={color}
           onClick={togglePicker}  // 클릭 시 색상 선택기 열기
           style={{ marginLeft: "10px" }}
@@ -183,7 +183,7 @@ const CalendarWrite = () => {
               onChange={color => handleColorChange(color.hex)}
             />
           </div>
-        )}
+        )} */}
         <button className="submit-button"
           onClick={handleSubmit}>
           완료

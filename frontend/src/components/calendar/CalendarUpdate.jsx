@@ -253,7 +253,7 @@ const CalendarUpdate = () => {
         <h2>일정 수정</h2>
         {(isOwner && !done) && (
           <>
-            <input
+            {/* <input
               value={color}
               onClick={togglePicker}
               style={{ marginLeft: "10px" }}
@@ -272,7 +272,7 @@ const CalendarUpdate = () => {
                   onChange={color => handleColorChange(color.hex)}
                 />
               </div>
-            )}
+            )} */}
             <button className="complete-button" onClick={handleComplete}>
               일정 완료
             </button>
