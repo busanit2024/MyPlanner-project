@@ -281,4 +281,5 @@ public class ScheduleService {
       existingParticipant.setStatus(Participant.Status.DECLINED);
       participantRepository.save(existingParticipant);
     }
+
 }
