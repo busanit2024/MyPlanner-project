@@ -68,7 +68,7 @@ public class Schedule {
     @Column(name = "detail")
     private String detail;  // 상세 내용
 
-    @Column(name = "color")
+    @Column(name = "color", nullable = false)
     private String color;   // 일정 색깔
 
     @ManyToOne
