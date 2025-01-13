@@ -3,7 +3,7 @@ import ChatListItem from "./chatComponent/ChatListItem";
 import ChatRoom from "./chatComponent/ChatRoom";
 import NewChatButton from "./chatComponent/NewChatButton";
 import { useChat } from '../../hooks/useChat';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
 
@@ -64,34 +64,137 @@ export default function ChatPage() {
         name: '',
         profileImage: null
     });
-
+    const mounted = useRef(true);
 
     const { messages, sendMessage, isConnected, loadChatHistory, disconnect } = useChat(
         selectedRoom?.id || roomId,
-        user?.email  
+        user?.email || '',
+        mounted
     );
 
     useEffect(() => {
-        if (initialRoom && initialPartner) {
-          // 초기 채팅방과 상대방 정보가 있으면 바로 채팅방 열기
-          setSelectedRoom(initialRoom);
-          setChatPartner(initialPartner);
-        }
-      }, []);
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+            disconnect();
+        };
+    }, [disconnect]);
 
-    // 현재 사용자 정보 가져오기
     useEffect(() => {
-        if (!loading && !user) {
-            navigate("/login");
+        if (initialRoom && initialPartner) {
+            setSelectedRoom(initialRoom);
+            setChatPartner(initialPartner);
         }
-    }, [user, loading]);
+    }, [initialRoom, initialPartner]);
 
-    const handleNewChat = (newChatRoom, selectedUsers) => {
-        //인원수에 따른 채팅방 타입 결정
+    useEffect(() => {
+        if (!loading) {
+            if (!user) {
+                if (mounted.current) {
+                    disconnect();
+                    setSelectedRoom(null);
+                    setChatRooms([]);
+                    setChatPartner({
+                        email: '',
+                        name: '',
+                        profileImage: null
+                    });
+                }
+                navigate("/login", { replace: true });
+            }
+        }
+    }, [user, loading, navigate, disconnect]);
+
+    useEffect(() => {
+        if (selectedRoom) {
+            loadChatHistory();
+        }
+    }, [selectedRoom, loadChatHistory]);
+
+    // handleSelectRoom 함수 정의
+    const handleSelectRoom = useCallback((room, partner) => {
+        if (!mounted.current || !user) return;
+        
+        // 마지막 메시지의 ID를 가져오기 위한 API 호출
+        fetch(`/api/chat/rooms/${room.id}/messages`)
+            .then(response => response.json())
+            .then(messages => {
+                const lastMessage = messages[messages.length - 1];
+                
+                // 읽음 상태 업데이트
+                return fetch(`/api/chat/rooms/${room.id}/read-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userEmail: user.email,
+                        lastChatLogId: lastMessage?.id || null
+                    })
+                });
+            })
+            .then(() => {
+                if (mounted.current) {
+                    setChatRooms(prevRooms => 
+                        prevRooms.map(r => 
+                            r.id === room.id ? { ...r, unreadCount: 0 } : r
+                        )
+                    );
+                }
+            })
+            .catch(error => console.error('읽음 상태 업데이트 실패:', error));
+    
+        setSelectedRoom(null);
+        setChatPartner({
+            email: partner.email,
+            name: partner.username,
+            profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
+        });
+    
+        setTimeout(() => {
+            if (mounted.current) {
+                setSelectedRoom(room);
+            }
+        }, 0);
+    }, [user]);
+
+    
+    const handleLeaveChat = useCallback(async (roomId) => {
+        try {
+            disconnect();
+            
+            const response = await fetch(`/api/chat/rooms/${roomId}/leave`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userEmail: user?.email })
+            });
+    
+            if (!response.ok) {
+                throw new Error('채팅방 나가기 실패');
+            }
+    
+            if (mounted.current) {
+                setChatRooms(prevRooms => prevRooms.filter(room => room.id !== roomId));
+                setSelectedRoom(null);
+                setChatPartner({
+                    email: '',
+                    name: '',
+                    profileImage: null
+                });
+            }
+    
+            navigate('/chat', { replace: true });
+    
+        } catch (error) {
+            console.error('채팅방 나가기 실패:', error);
+        }
+    }, [user?.email, navigate, disconnect]);
+
+    const handleNewChat = useCallback((newChatRoom, selectedUsers) => {
         const isTeamChat = selectedUsers.length > 1;
         const chatRoomType = isTeamChat ? "TEAM" : "INDIVIDUAL";
-
-        //채팅방 정보 설정
         const updatedChatRoom = {
             ...newChatRoom,
             chatRoomType: chatRoomType
@@ -101,9 +204,8 @@ export default function ChatPage() {
         setChatRooms(prevChatRooms => [...prevChatRooms, updatedChatRoom]);
 
         if (newChatRoom.chatRoomType === "INDIVIDUAL") {
-            // 현재 로그인한 사용자와 다른 참여자 찾기
             const partner = newChatRoom.participants.find(
-                p => p.email !== user.email  
+                p => p.email !== user?.email
             );
 
             if (partner) {
@@ -111,129 +213,48 @@ export default function ChatPage() {
                     email: partner.email,
                     name: partner.username,
                     profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
-                });               
+                });
             }
         } else {
-            const otherParticipants = newChatRoom.participants.filter(p => p.email !== user.email);
+            const otherParticipants = newChatRoom.participants.filter(p => p.email !== user?.email);
             setChatPartner({
                 email: null,
-                name: otherParticipants.map(p => p.username).join(', '), 
+                name: otherParticipants.map(p => p.username).join(', '),
                 participants: otherParticipants,
                 isTeam: true
             });
         }
-    };
+    }, [user?.email]);
 
-    const handleSendMessage = (content) => {
-        sendMessage(content);
-    };
-
-    const handleSelectRoom = (room, partner) => {
-        // 기존 선택된 방을 초기화하고 새로운 방 설정
-        setSelectedRoom(null);  // 추가: 먼저 선택 초기화
-        setChatPartner({
-            email: partner.email,
-            name: partner.username,
-            profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
-        });
-        
-        // 약간의 지연 후 새로운 방 설정
-        setTimeout(() => {
-            setSelectedRoom(room);
-        }, 0);
-    };
-
-    const handleLeaveChat = async (roomId) => {
-        try {
-            // 웹소켓 연결 해제
-            disconnect();
-            
-            const response = await fetch(`/api/chat/rooms/${roomId}/leave`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userEmail: user.email })
-            });
-    
-            if (!response.ok) {
-                throw new Error('채팅방 나가기 실패');
-            }
-    
-            // 채팅방 목록에서 해당 채팅방 제거
-            setChatRooms(prevRooms => prevRooms.filter(room => room.id !== roomId));
-            setSelectedRoom(null);
-            setChatPartner({
-                email: '',
-                name: '',
-                profileImage: null
-            });
-    
-            // 채팅 목록 페이지로 이동
-            navigate('/chat');
-    
-        } catch (error) {
-            console.error('채팅방 나가기 실패:', error);
-            throw error; // 에러를 상위로 전파하여 하위 컴포넌트에서 처리할 수 있도록 함
-        }
-    };
-    
-    // useChat 훅 의존성에 selectedRoom 추가
-    useEffect(() => {
-        if (selectedRoom) {
-            const fetchMessages = async () => {
-                try {
-                    loadChatHistory();
-                } catch (error) {
-                    console.error('메시지 로드 실패:', error);
-                }
-            };
-            fetchMessages();
-        }
-    }, [selectedRoom]);
-
-    // 채팅방 제목 설정 후 업데이트
-    const handleChatRoomUpdate = (updatedRoom) => {
+    const handleChatRoomUpdate = useCallback((updatedRoom) => {
         setChatRooms(prevRooms => 
             prevRooms.map(room => 
                 room.id === updatedRoom.id ? updatedRoom : room
             )
         );
 
-         // 현재 선택된 방이 업데이트된 방이라면 selectedRoom도 업데이트
         if (selectedRoom?.id === updatedRoom.id) {
             setSelectedRoom(updatedRoom);
         }
-    };
+    }, [selectedRoom?.id]);
 
-     // 로그아웃이나 페이지 이탈 시 정리 작업
-     useEffect(() => {
-        if (!loading && !user) {
-            // WebSocket 연결 해제
-            disconnect();
-            // 상태 초기화
-            setSelectedRoom(null);
-            setChatRooms([]);
-            setChatPartner({
-                email: '',
-                name: '',
-                profileImage: null
-            });
-            navigate("/login");
-        }
+    const handleSendMessage = useCallback((content) => {
+        sendMessage(content);
+    }, [sendMessage]);
 
-        // 컴포넌트 언마운트 시 정리
-        return () => {
-            disconnect();
-        };
-    }, [user, loading, disconnect, navigate]);
-
+    if (loading) {
+        return <div>로딩중...</div>;
+    }
 
     return (
         <ChatContainer>
             <ChatList>
                 <ChatListScroll>
-                    <ChatListItem chatRooms={chatRooms} onSelectRoom={handleSelectRoom}/> 
+                    <ChatListItem 
+                        chatRooms={chatRooms} 
+                        onSelectRoom={handleSelectRoom} 
+                        user={user}
+                    /> 
                 </ChatListScroll>
                 <NewChatButtonContainer>
                     <NewChatButton 

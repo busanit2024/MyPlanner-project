@@ -21,6 +21,7 @@ const ProfileImage = styled.img`
 
 const ChatInfo = styled.div`
   flex: 1;
+  position: relative;
 `;
 
 const ChatHeader = styled.div`
@@ -42,6 +43,18 @@ const Date = styled.span`
 const Message = styled.div`
   font-size: 14px;
   color: #333;
+`;
+
+const UnreadBadge = styled.span`
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  position: absolute;
+  right: 10px;
+  top: 80%;
+  transform: translateY(-60%);
 `;
 
 // 날짜 포맷팅
@@ -66,25 +79,26 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }
   // 채팅방 목록 로딩
   const fetchChatRooms = async () => {
     try {
-      const response = await fetch(`/api/chat/rooms/user/${user.email}`);
-      if (!response.ok) {
-        throw new Error('채팅방 목록을 불러오는데 실패했습니다.');
-      }
-      const data = await response.json();
+      const [roomsResponse, unreadResponse] = await Promise.all([
+        fetch(`/api/chat/rooms/user/${user.email}`),
+        fetch(`/api/chat/rooms/unread/${user.email}`)
+      ]);
 
-      setLocalChatRooms(prevRooms => {
-        const updatedRooms = data.map(newRoom => {
-          const existingRoom = prevRooms.find(room => room.id === newRoom.id);
-          if (existingRoom) {
-            return {
-              ...newRoom,
-              participants: existingRoom.participants || newRoom.participants
-            };
-          }
-          return newRoom;
-        });
-        return updatedRooms;
-      });
+      if (!roomsResponse.ok || !unreadResponse.ok) {
+        throw new Error('데이터를 불러오는데 실패했습니다.');
+      }
+
+      const [rooms, unreadCounts] = await Promise.all([
+        roomsResponse.json(),
+        unreadResponse.json()
+      ]);
+
+      const roomsWithUnread = rooms.map(room => ({
+        ...room,
+        unreadCount: unreadCounts[room.id] || 0
+      }));
+
+      setLocalChatRooms(roomsWithUnread);
     } catch (error) {
       console.error('채팅방 목록 로딩 에러: ', error);
     }
@@ -109,6 +123,17 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  const handleRoomSelect = (chatRoom, chatInfo) => {
+    // 채팅방 선택 시 unreadCount를 0으로 설정
+    setLocalChatRooms(prevRooms => 
+      prevRooms.map(room => 
+        room.id === chatRoom.id ? { ...room, unreadCount: 0 } : room
+      )
+    );
+
+    onSelectRoom(chatRoom, chatInfo);
+  };
 
   const allChatRooms = [...(propsChatRooms || []), ...localChatRooms]
     .reduce((unique, room) => {
@@ -195,7 +220,7 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }
         return (
           <Container 
             key={chatRoom.id}
-            onClick={() => onSelectRoom(chatRoom, chatInfo)}
+            onClick={() => handleRoomSelect(chatRoom, chatInfo)}
             style={{ cursor: 'pointer' }}
           >
             {chatInfo.isTeam ? (
@@ -214,13 +239,14 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }
             )}
             <ChatInfo>
               <ChatHeader>
-                <Name>{chatInfo.name || "알 수 없음"}</Name>
-                <Date>{lastMessageDate}</Date>
+                  <Name>{chatInfo.name || "알 수 없음"}</Name>
+                  <Date>{lastMessageDate}</Date>
               </ChatHeader>
-              <Message>
-                {/* {chatRoom.lastMessage || "새로운 채팅방이 생성되었습니다."} */}
-                {getDisplayMessage(chatRoom.lastMessage)}
-              </Message>
+              <Message>{getDisplayMessage(chatRoom.lastMessage)}</Message>
+                {console.log('Unread count for room', chatRoom.id, ':', chatRoom.unreadCount)}
+                {chatRoom.unreadCount > 0 && (
+                    <UnreadBadge>{chatRoom.unreadCount}</UnreadBadge>
+                )}
             </ChatInfo>
           </Container>
         );

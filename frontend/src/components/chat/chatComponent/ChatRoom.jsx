@@ -122,35 +122,20 @@ const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected,
     // 메시지 전송 핸들러
     const handleSendMessage = async (content) => {
         try {
-            // 사용자가 채팅방에 있는지 먼저 확인
-            const isUserInRoom = selectedRoom.participants.some(p => p.email === user.email);
-            
             if (!isUserInRoom) {
                 console.error('퇴장한 채팅방입니다.');
                 return;
             }
-
-            // 채팅방 정보 재확인
-            const roomResponse = await fetch(`/api/chat/rooms/${selectedRoom.id}`);
-            if (!roomResponse.ok) {
-                console.error('채팅방 정보 확인 실패');
-                return;
-            }
-
-            const currentRoom = await roomResponse.json();
-            const isStillParticipant = currentRoom.participants.some(p => p.email === user.email);
-            
-            if (!isStillParticipant) {
-                console.error('퇴장한 채팅방입니다.');
-                return;
-            }
-
-            // 참여 확인 후 메시지 전송
+    
             await onSendMessage(content);
             lastMessageWasMine.current = true;
             scrollToBottom();
         } catch (error) {
             console.error('메시지 전송 실패:', error);
+            // 에러가 권한 관련이면 채팅방 상태 업데이트
+            if (error.status === 403) {
+                onLeaveChat(selectedRoom.id);
+            }
         }
     };
 

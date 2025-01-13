@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Stomp } from '@stomp/stompjs';
 
-export const useChat = (roomId, userEmail) => {
+export const useChat = (roomId, userEmail, mounted) => {
     const [messages, setMessages] = useState([]);
     const client = useRef(null);
 
@@ -31,33 +31,33 @@ export const useChat = (roomId, userEmail) => {
     }, []);
 
     const connect = useCallback(() => {
-        if (!roomId || !userEmail) {
-            return;
-        }
+        if (!roomId || !userEmail || !mounted.current) return;
         
         const socket = new WebSocket('ws://localhost:8080/chat');
         client.current = Stomp.over(socket);
         
         client.current.connect({}, () => {
-            console.log('Connected');
-            // 메시지 수신
+            if (!mounted.current) {
+                disconnect();
+                return;
+            }
+
             client.current.subscribe(`/sub/chat/rooms/${roomId}`, (message) => {
-            //누군가 발송했던 메시지를 리스트에 추가
-            const newMessage = JSON.parse(message.body);
-            // 중복체크
-            setMessages(prevMessages => {
-                const isDuplicate = prevMessages.some(msg => 
-                    msg.sendTime === newMessage.sendTime && 
-                    msg.senderEmail === newMessage.senderEmail && 
-                    msg.contents === newMessage.contents
-                );
-                if (isDuplicate) return prevMessages;
-                return [...prevMessages, newMessage];
+                if (!mounted.current) return;
+
+                const newMessage = JSON.parse(message.body);
+                setMessages(prevMessages => {
+                    const isDuplicate = prevMessages.some(msg => 
+                        msg.sendTime === newMessage.sendTime && 
+                        msg.senderEmail === newMessage.senderEmail && 
+                        msg.contents === newMessage.contents
+                    );
+                    if (isDuplicate) return prevMessages;
+                    return [...prevMessages, newMessage];
+                });
             });
         });
-    });
-}, [roomId, userEmail]);
-
+    }, [roomId, userEmail, disconnect]);
 
     // roomId가 변경될 때마다 연결 재설정 및 메시지 초기화
     useEffect(() => {
@@ -73,11 +73,11 @@ export const useChat = (roomId, userEmail) => {
                 client.current = null;
             }  
         };
-    }, [roomId, userEmail,  connect, loadChatHistory]);
+    }, [roomId, userEmail, connect, loadChatHistory]);
 
     // 메시지 전송 함수
     const sendMessage = useCallback((content) => {
-        if (!client.current?.connected) {
+        if (!client.current?.connected || !mounted.current) {
             console.log('연결되지 않음, 재연결 시도');
             connect();
             return;
@@ -92,5 +92,11 @@ export const useChat = (roomId, userEmail) => {
         client.current.send(`/pub/chat/rooms/${roomId}/send`, {}, JSON.stringify(message));
     }, [roomId, userEmail, connect]);
 
-    return { messages, sendMessage, isConnected: !!client.current?.connected, loadChatHistory, disconnect };
-}; 
+    return { 
+        messages, 
+        sendMessage, 
+        isConnected: !!client.current?.connected, 
+        loadChatHistory, 
+        disconnect 
+    };
+};

@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
 import java.util.Map;
 
 
@@ -60,7 +61,6 @@ public class ChatController {
 
         return chatRoomService.findById(chatRoomId)
                 .flatMap(chatRoom -> {
-                    // 메시지 전송자가 채팅방 참여자인지 확인
                     boolean isParticipant = chatRoom.getParticipants().stream()
                             .anyMatch(p -> p.getEmail().equals(message.getSenderEmail()));
 
@@ -69,14 +69,21 @@ public class ChatController {
                     }
 
                     return messageService.saveMessage(message)
-                            .map(savedMessage -> MessageResponseDTO.builder()
-                                    .id(savedMessage.getId())
-                                    .contents(savedMessage.getContents())
-                                    .senderEmail(message.getSenderEmail())
-                                    .sendTime(savedMessage.getSendTime())
-                                    .build())
-                            .doOnNext(response ->
-                                    messagingTemplate.convertAndSend("/sub/chat/rooms/" + chatRoomId, response))
+                            .doOnSuccess(savedMessage -> {
+                                // 채팅방 정보 업데이트
+                                chatRoom.setLastMessage(message.getContents());
+                                chatRoom.setLastMessageAt(message.getSendTime());
+                                chatRoomService.save(chatRoom).subscribe();
+
+                                // 메시지 전송
+                                MessageResponseDTO response = MessageResponseDTO.builder()
+                                        .id(savedMessage.getId())
+                                        .contents(savedMessage.getContents())
+                                        .senderEmail(message.getSenderEmail())
+                                        .sendTime(savedMessage.getSendTime())
+                                        .build();
+                                messagingTemplate.convertAndSend("/sub/chat/rooms/" + chatRoomId, response);
+                            })
                             .then();
                 });
     }
@@ -130,6 +137,33 @@ public class ChatController {
                                 }
                             });
                 });
+    }
+
+    @GetMapping("/rooms/unread/{email}")
+    public Mono<Map<String, Long>> getUnreadCounts(@PathVariable String email) {
+        return chatRoomService.findByParticipantEmail(email)
+                .flatMap(chatRoom -> messageService.getUnreadMessageCount(chatRoom.getId(), email)
+                        .map(unreadCount -> new AbstractMap.SimpleEntry<>(chatRoom.getId(), unreadCount)))
+                .collectMap(Map.Entry::getKey, Map.Entry::getValue);
+    }
+
+    @PostMapping("/rooms/{roomId}/read-status")
+    public Mono<Void> updateReadStatus(
+            @PathVariable String roomId,
+            @RequestBody ReadStatusDTO readStatusDTO) {
+        System.out.println("Updating read status for room: " + roomId
+                + ", user: " + readStatusDTO.getUserEmail()
+                + ", messageId: " + readStatusDTO.getLastChatLogId());
+
+        return messageService.markAsRead(
+                roomId,
+                readStatusDTO.getUserEmail(),
+                readStatusDTO.getLastChatLogId()
+        ).doOnSuccess(v -> {
+            System.out.println("Read status updated successfully");
+        }).doOnError(e -> {
+            System.err.println("Error updating read status: " + e.getMessage());
+        });
     }
 
 

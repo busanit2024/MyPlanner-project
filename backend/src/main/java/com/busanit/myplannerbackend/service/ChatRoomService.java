@@ -39,6 +39,9 @@ public class ChatRoomService {
     public Flux<ChatRoom> findByParticipantEmail(String email) {
         return chatRoomRepository.findByParticipantsEmailContaining(email);
     }
+    public Mono<ChatRoom> save(ChatRoom chatRoom) {
+        return chatRoomRepository.save(chatRoom);
+    }
 
     @Transactional
     public Mono<ChatRoom> createChatRoom(ChatRoomRequest request) {
