@@ -218,6 +218,17 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
         }
     };
 
+    // 이미지 메시지 감지
+    const isImageMessage = (msg) => {
+        return msg?.includes('firebasestorage.googleapis.com') || 
+               msg?.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+    };
+
+    // 메시지 내용 표시 처리
+    const getDisplayMessage = (msg) => {
+        return isImageMessage(msg) ? '사진을 보냈습니다.' : msg;
+    };
+
     return (
         <ChatRoomContainer>
             <ChatTitleWrapper>
@@ -260,6 +271,7 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                                     <ChatMessage
                                         key={msg.id}
                                         message={msg.contents}
+                                        displayMessage={getDisplayMessage(msg.contents)}
                                         time={msg.sendTime}
                                         isMine={isMyMessage}
                                         senderName={isMyMessage ? user.username : sender?.username}

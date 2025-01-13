@@ -67,7 +67,7 @@ const TimeStamp = styled.span`
   margin-top: 4px;
 `;
 
-const ChatMessage = ({ message, time, isMine, senderName, senderProfile }) => {
+const ChatMessage = ({ message, displayMessage, time, isMine, senderName, senderProfile }) => {
   // 메시지가 이미지 URL인지 확인하는 함수
   const isImageMessage = (msg) => {
     return msg?.includes('firebasestorage.googleapis.com') || 

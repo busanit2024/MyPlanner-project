@@ -166,6 +166,18 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
     }
   };
 
+  // 이미지 메시지 감지
+  const isImageMessage = (msg) => {
+    return msg?.includes('firebasestorage.googleapis.com') || 
+           msg?.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+  };
+
+  // lastMessage 표시 처리
+  const getDisplayMessage = (msg) => {
+    if (!msg) return "새로운 채팅방이 생성되었습니다.";
+    return isImageMessage(msg) ? "사진을 보냈습니다." : msg;
+  };
+
   return (
     <>
       {allChatRooms.map(chatRoom => {
@@ -198,7 +210,8 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom }) => {
                 <Date>{lastMessageDate}</Date>
               </ChatHeader>
               <Message>
-                {chatRoom.lastMessage || "새로운 채팅방이 생성되었습니다."}
+                {/* {chatRoom.lastMessage || "새로운 채팅방이 생성되었습니다."} */}
+                {getDisplayMessage(chatRoom.lastMessage)}
               </Message>
             </ChatInfo>
           </Container>
