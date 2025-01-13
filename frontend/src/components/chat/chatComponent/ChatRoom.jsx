@@ -121,6 +121,30 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
     // 메시지 전송 핸들러
     const handleSendMessage = async (content) => {
         try {
+            // 사용자가 채팅방에 있는지 먼저 확인
+            const isUserInRoom = selectedRoom.participants.some(p => p.email === user.email);
+            
+            if (!isUserInRoom) {
+                console.error('퇴장한 채팅방입니다.');
+                return;
+            }
+
+            // 채팅방 정보 재확인
+            const roomResponse = await fetch(`/api/chat/rooms/${selectedRoom.id}`);
+            if (!roomResponse.ok) {
+                console.error('채팅방 정보 확인 실패');
+                return;
+            }
+
+            const currentRoom = await roomResponse.json();
+            const isStillParticipant = currentRoom.participants.some(p => p.email === user.email);
+            
+            if (!isStillParticipant) {
+                console.error('퇴장한 채팅방입니다.');
+                return;
+            }
+
+            // 참여 확인 후 메시지 전송
             await onSendMessage(content);
             lastMessageWasMine.current = true;
             scrollToBottom();
@@ -229,6 +253,9 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
         return isImageMessage(msg) ? '사진을 보냈습니다.' : msg;
     };
 
+    // 사용자가 채팅방에 있는지 확인
+    const isUserInRoom = selectedRoom.participants.some(p => p.email === user.email);
+
     return (
         <ChatRoomContainer>
             <ChatTitleWrapper>
@@ -295,7 +322,10 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
             )}
 
             <ChatInput>
-                <InputChat onSendMessage={handleSendMessage} />
+                <InputChat 
+                    onSendMessage={handleSendMessage} 
+                    isLeft={!isUserInRoom}  // 사용자가 채팅방을 나갔는지 여부 전달
+                />
             </ChatInput>
         </ChatRoomContainer>
     );
