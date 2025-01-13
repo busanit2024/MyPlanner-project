@@ -59,13 +59,27 @@ const MessageBubble = styled.div`
   ${props => props.isImage && `
     padding: 0;
     background: none;
-    max-width: 200px;
+    max-width: 100%; 
     
+    .image-grid {
+      display: grid;
+      grid-template-columns: ${props.imageCount > 1 ? 'repeat(2, 1fr)' : '1fr'};
+      gap: 2px;
+      width: 100%;
+    }
+
     img {
-      max-width: 100%;
-      height: auto;
+      ${props.imageCount === 1 
+        ? `
+          width: 200px; /* 단일 이미지: 가로 고정 */
+          height: auto; /* 세로는 비율에 맞춤 */
+        ` 
+        : `
+          width: 100px; /* 다중 이미지: 가로 고정 */
+          height: 100px; /* 세로 고정 */
+        `}
       border-radius: 8px;
-      object-fit: contain;
+      object-fit: ${props.imageCount === 1 ? 'contain' : 'cover'}; /* 단일/다중에 따라 fit 방식 다름 */
     }
   `}
 `;
@@ -76,11 +90,28 @@ const TimeStamp = styled.span`
   ${props => !props.show && `display : none; `}
 `;
 
-const ChatMessage = ({ message, time, isMine, senderName, senderProfile , showTime}) => {
-  // 메시지가 이미지 URL인지 확인하는 함수
+const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderProfile , showTime}) => {
+  // 메시지가 이미지 URL인지 확인
   const isImageMessage = (msg) => {
-    return msg?.includes('firebasestorage.googleapis.com') || 
-           msg?.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+    if (!msg) return false;
+    try {
+      const urls = JSON.parse(msg);
+      return Array.isArray(urls) && urls.every(url => 
+        url.includes('firebasestorage.googleapis.com') || 
+        url.match(/\.(jpeg|jpg|gif|png)$/i)
+      );
+    } catch {
+      return msg.includes('firebasestorage.googleapis.com') || 
+             msg.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+    }
+  };
+
+  const getImageUrls = (msg) => {
+    try {
+      return JSON.parse(msg);
+    } catch {
+      return [msg];
+    }
   };
 
   return (
@@ -103,17 +134,27 @@ const ChatMessage = ({ message, time, isMine, senderName, senderProfile , showTi
               hour12: true
             })}
           </TimeStamp>
-          <MessageBubble isMine={isMine} message={message} isImage={isImageMessage(message)}>
+          <MessageBubble 
+          isMine={isMine} 
+          message={message} 
+          isImage={isImageMessage(message)}
+          imageCount={isImageMessage(message) ? getImageUrls(message).length : 0}
+        >
             {isImageMessage(message) ? (
-              <img 
-                src={message} 
-                alt="첨부 이미지"
-                onError={(e) => {
-                  console.error('이미지 로드 실패:', message);
-                  e.target.style.display = 'none';
-                }} 
-              />
-            ) : (
+              <div className="image-grid">
+              {getImageUrls(message).map((url, index) => (
+                <img 
+                    key={index}
+                  src={url} 
+                    alt="첨부 이미지"
+                    onError={(e) => {
+                      console.error('이미지 로드 실패:', url);
+                      e.target.style.display = 'none';
+                    }} 
+                  />
+                ))}
+            </div>
+          ) : (
               message
             )}
           </MessageBubble>
