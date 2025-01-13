@@ -3,14 +3,8 @@ package com.busanit.myplannerbackend.service;
 import com.busanit.myplannerbackend.domain.NotificationDTO;
 import com.busanit.myplannerbackend.domain.UserDTO;
 import com.busanit.myplannerbackend.domain.UserEditDTO;
-import com.busanit.myplannerbackend.entity.ChatRoom;
-import com.busanit.myplannerbackend.entity.Follow;
-import com.busanit.myplannerbackend.entity.Notification;
-import com.busanit.myplannerbackend.entity.User;
-import com.busanit.myplannerbackend.repository.ChatRoomRepository;
-import com.busanit.myplannerbackend.repository.FollowRepository;
-import com.busanit.myplannerbackend.repository.NotificationRepository;
-import com.busanit.myplannerbackend.repository.UserRepository;
+import com.busanit.myplannerbackend.entity.*;
+import com.busanit.myplannerbackend.repository.*;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -18,11 +12,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.util.Pair;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -34,9 +31,27 @@ public class UserService {
   private final SimpMessagingTemplate messagingTemplate;  // WebSocket 의존성 추가
   private final ChatRoomRepository chatRoomRepository;
 
+  private final List<Pair<String, String>> defaultCategoryList = List.of(
+          Pair.of("약속", "#7EC1FF"),
+          Pair.of("과제", "#F9AD47"),
+          Pair.of("스터디", "#5ADCB3"),
+          Pair.of("여행", "#FF898D")
+  );
+  private final CategoryRepository categoryRepository;
+
   public void save(User user) {
     userRepository.save(user);
   }
+
+  @Transactional
+  public void join(User user) {
+    User savedUser = userRepository.save(user);
+    for (Pair<String, String> data : defaultCategoryList) {
+      Category category = Category.of(savedUser, data.getFirst(), data.getSecond());
+      categoryRepository.save(category);
+    }
+  }
+
 
   public User findById(Long id) {
     return userRepository.findById(id).orElse(null);

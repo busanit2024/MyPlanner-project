@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '../../css/CalendarWrite.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { imageFileUpload } from '../../firebase';
+import { ChromePicker } from 'react-color';
 
 const CalendarWrite = () => {
   const { user, loading } = useAuth();
 
+  const [label, setLabel] = useState({ color: '' });
+  const [isPickerVisible, setIsPickerVisible] = useState(false);  // 색상 선택기 보이기 여부
+
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('카테고리');
-  const [categoryId, setCategoryId] = useState(0); // 카테고리 ID
+  const [categoryList, setCategoryList] = useState([]); // 카테고리 목록
+  const [categoryId, setCategoryId] = useState(4); // 카테고리 ID
   const [participants, setParticipants] = useState([]);
   const [date, setDate] = useState(''); // 오늘 날짜 상태
   const [startDate, setStartDate] = useState(''); // 시작 날짜 상태
@@ -20,12 +24,14 @@ const CalendarWrite = () => {
   const [allDay, setAllDay] = useState(false);  // 종일 여부
   const [repeat, setRepeat] = useState(false);  // 반복 여부
   const [reminder, setReminder] = useState(false);  // 5분 전 알림 여부
-  const [viewOnlyMe, setViewOnlyMe] = useState(false);  // 
-  const [checklist, setChecklist] = useState(['', '']);
-  const [detail, setDetail] = useState('');
+  const [viewOnlyMe, setViewOnlyMe] = useState(false);  // 나만 보기 여부
+  const [checklist, setChecklist] = useState([]); // 체크리스트
+  const [detail, setDetail] = useState(''); // 상세 내용
   const [image, setImage] = useState(null); // 이미지 상태
   const [createdAt, setCreatedAt] = useState(''); // 등록 시간
-  const [color, setColor] = useState('#6c757d'); // 기본 색상
+  const [color, setColor] = useState(''); // 색깔
+  const [done, setDone] = useState(false);  // 일정 완료 여부
+  const [checkDone, setCheckDone] = useState([]);  // 체크리스트 완료 여부
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,39 +48,58 @@ const CalendarWrite = () => {
     setEndDate(''); // 끝 날짜 초기화
   }, []);
 
-  // // 사용자 ID 가져오는 로직 추가
-  // useEffect(() => {
-  //   const fetchUserData = async () => {
-  //     try {
-  //       const response = await axios.get('/api/user'); // 사용자 정보 API 호출
-  //       setUserId(response.data.id); // 사용자 ID 설정
-  //     } catch (error) {
-  //       console.error('사용자 정보를 가져오는 데 실패했습니다:', error);
-  //     }
-  //   };
+  useEffect(() => {
+    if (!label.color) {
+      setColor(''); // 받아온 레이블 컬러가 없을 시 빈칸
+    }
+    setColor(label.color);  // 데이터 있을 시 컬러 세팅
+  }, [label]);
 
-  //   fetchUserData();
-  // }, []);
+  useEffect(() => {
+    // 유저 정보 있을 때 유저 카테고리 받아오기
+    if(!loading && user) {
+      setCategoryList(user.categories);
+      // setCategoryId(user.categories[4].id); // 첫 번째 카테고리 ID로 초기화
+    }
+  }, [loading, user]);
+
+  const handleColorChange = useCallback(
+    (color) => {
+      setColor(color);
+    }, [color]
+  );
+
+  const togglePicker = () => {
+    setIsPickerVisible(!isPickerVisible); // 색상 선택기 토글
+  };
 
   const handleAddParticipant = () => {
-    setParticipants([...participants, `참가자${participants.length + 1}`]);
+    setParticipants(user?.follows.map(follow => follow.id) || []);
   };
 
   const handleAddChecklist = () => {
     if (checklist.length < 10) {
       setChecklist([...checklist, '']); // 체크리스트가 10개 미만일 때 빈 문자열 추가
+      setCheckDone([...checkDone, false]);
     }
   };
 
   const handleDeleteChecklist = (index) => {
     const updatedChecklist = checklist.filter((_, i) => i !== index);
     setChecklist(updatedChecklist);
+    setCheckDone(checkDone.filter((_, i) => i !== index));
   }
 
   const handleChecklistChange = (index, value) => {
     const updatedChecklist = [...checklist];
     updatedChecklist[index] = value; // 해당 인덱스의 값을 업데이트
     setChecklist(updatedChecklist);
+  };
+  
+  const handleCheckboxChange = (index) => {
+    const newCheckDone = [...checkDone];
+    newCheckDone[index] = !newCheckDone[index];
+    setCheckDone(newCheckDone);
   };
 
   const handleImageUpload = async (e) => {
@@ -95,7 +120,7 @@ const CalendarWrite = () => {
 
     // 전송할 데이터 객체 생성
     const scheduleData = {
-      title: title,
+      title: title, // 제목
       categoryId: categoryId,
       participants: participants.length > 0 ? participants : [],
       startDate: startDate || date,
@@ -106,14 +131,16 @@ const CalendarWrite = () => {
       isRepeat: repeat,
       isAlarm: reminder,
       isPrivate: viewOnlyMe,
-      checkList: checklist.length > 0 ? checklist.join(',') : '', // 배열을 문자열로 변환하기
+      checkListItem: checklist.map((item, index) => ({
+        content: item,
+        isDone: checkDone[index] || false,
+      })),
       detail: detail,
       imageUrl: image || '',
-      done: true,
+      done: done,
       createdAt: createdAt || new Date().toISOString(), // 현재 시간
       userId: user.id || '',
-      color, // 추가된 색상 데이터
-
+      color: color,
     };
 
     console.log("전송할 데이터: ", scheduleData);
@@ -135,8 +162,28 @@ const CalendarWrite = () => {
 
   return (
     <div className="calendar-write">
-      <div className='header'>
+      <div className='header' style={{ position: 'relative' }}>
         <h2>일정 입력</h2>
+        <input
+          value={color}
+          onClick={togglePicker}  // 클릭 시 색상 선택기 열기
+          style={{ marginLeft: "10px" }}
+        />
+        {isPickerVisible && (
+          <div className='color-picker-container' 
+            style={{ 
+              position: 'absolute', 
+              zIndex: 2, 
+              top: 'calc(100% - 5px)', 
+              left: '50%',
+              transform: 'translateX(-50%)'
+            }}>
+            <ChromePicker
+              color={color}
+              onChange={color => handleColorChange(color.hex)}
+            />
+          </div>
+        )}
         <button className="submit-button"
           onClick={handleSubmit}>
           완료
@@ -160,25 +207,17 @@ const CalendarWrite = () => {
           value={title} 
           onChange={(e) => setTitle(e.target.value)} 
         />
-        <input 
-          type="text" 
-          className="input-field" 
-          placeholder="#f6f6f6" 
-          value={color} 
-          onChange={(e) => setColor(e.target.value)} 
-        />
         <div className="date-category-container">
           <p className="date-display">
             {date} {/* 오늘 날짜 표시 */}
           </p>
           <select 
-            value={category} 
             onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="0">카테고리</option>
-            <option value="1">미팅</option>
-            <option value="2">약속</option>
-            <option value="3">기타</option>
+            value={categoryId}
+          > {/* 유저 카테고리 불러오기 */}
+            {categoryList.map((category) => (
+              <option key={category.id} value={category.id}>{category.categoryName}</option>
+            ))}
           </select>
         </div>
         <hr />
@@ -293,9 +332,10 @@ const CalendarWrite = () => {
             <div className="checklist-item" key={index}>
               <input 
                 type="checkbox" 
+                checked={checkDone[index]}
+                onChange={(e) => handleCheckboxChange(index)}
                 style={{ marginRight: '10px' }} 
               />
-
               <input 
                 type="text" 
                 value={item} 

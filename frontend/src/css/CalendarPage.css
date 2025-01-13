@@ -11,6 +11,11 @@
     align-items: center;
     margin-bottom: 10px;
   }
+
+  .category-select {
+    display: flex;
+    align-items: center;
+  }
   
   .calendar-weekdays,
   .calendar-days {

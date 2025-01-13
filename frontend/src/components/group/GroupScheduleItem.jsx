@@ -30,12 +30,16 @@ const Container = styled.div`
   gap: 24px;
   padding: 12px 0;
   cursor: pointer;
+  border-bottom: 1px solid var(--light-gray);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
 
   &:hover img {
     transition: all 0.3s;
     transform: scale(1.1);
     filter: brightness(0.9);
-
   }
 `;
 

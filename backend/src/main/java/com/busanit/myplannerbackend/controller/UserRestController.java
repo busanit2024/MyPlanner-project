@@ -4,7 +4,9 @@ import com.busanit.myplannerbackend.domain.NotificationDTO;
 import com.busanit.myplannerbackend.domain.UserDTO;
 import com.busanit.myplannerbackend.domain.UserEditDTO;
 import com.busanit.myplannerbackend.domain.UserJoinDTO;
+import com.busanit.myplannerbackend.entity.Category;
 import com.busanit.myplannerbackend.entity.User;
+import com.busanit.myplannerbackend.service.CategoryService;
 import com.busanit.myplannerbackend.service.UserService;
 import com.google.firebase.auth.FirebaseAuthException;
 import lombok.RequiredArgsConstructor;
@@ -15,11 +17,14 @@ import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserRestController {
   private final UserService userService;
+  private final CategoryService categoryService;
 
   @GetMapping("/{userId}")
   public ResponseEntity<UserDTO> getUser(@PathVariable Long userId) {
@@ -72,6 +77,13 @@ public class UserRestController {
     return ResponseEntity.ok().build();
   }
 
+  //카테고리 업데이트
+  @PostMapping("/updateCategory")
+  public ResponseEntity<String> updateCategory(@RequestBody List<Category> categoryList, @RequestParam Long userId) {
+    categoryService.updateCategoryList(categoryList, userId);
+    return ResponseEntity.ok().build();
+  }
+
   //토큰으로 유저 찾기
   @GetMapping("/find")
   public ResponseEntity<UserDTO> getUser(@RequestHeader("Authorization") String authHeader) {
@@ -90,7 +102,7 @@ public class UserRestController {
   //회원가입
   @PostMapping("/join")
   public ResponseEntity<String> joinUser(@RequestBody UserJoinDTO userJoinDTO) {
-    userService.save(User.toEntity(userJoinDTO));
+    userService.join(User.toEntity(userJoinDTO));
     return ResponseEntity.ok("가입 성공");
   }
 

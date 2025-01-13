@@ -24,6 +24,7 @@
     "fullcalendar-scheduler": "^6.1.15",
     "glob": "^11.0.0",
     "react": "^19.0.0",
+    "react-color": "^2.19.3",
     "react-dom": "^19.0.0",
     "react-icon": "^1.0.0",
     "react-icons": "^5.4.0",

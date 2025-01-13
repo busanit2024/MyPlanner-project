@@ -1,15 +1,15 @@
 package com.busanit.myplannerbackend.domain;
 
-import com.busanit.myplannerbackend.entity.Category;
-import com.busanit.myplannerbackend.entity.Schedule;
-import com.busanit.myplannerbackend.entity.User;
+import com.busanit.myplannerbackend.entity.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Slice;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -31,25 +31,27 @@ public class ScheduleDTO {
 
     private String endTime;             // 종료 시간
 
-    private Boolean allDay;             // 종일 여부
+    private Boolean allDay = false;             // 종일 여부
 
     private String isRepeat;            // 반복 기간
 
-    private Boolean isAlarm;            // 알람 여부
+    private Boolean isAlarm = false;            // 알람 여부
 
-    private Boolean isPrivate;          // 공개 여부
+    private Boolean isPrivate = false;          // 공개 여부
 
     private String imageUrl;            // 이미지 URL
 
     private Date createdAt;             // 등록 날짜
 
-    private String checkList;           // 체크리스트
+    private List<CheckList> checkList;           // 체크리스트
 
-    private String detail;              // 상세내용
+    private List<CheckListDTO> checkListItem;   // dto로 체크리스트 받아오기 위해 따로 설정
 
-    private Boolean done;                // 완료 여부
+    private Boolean done = false;                // 완료 여부
 
-    private String color;               // 색상
+    private String detail;              // 상세 내용
+
+    private String color;               // 일정 색깔
 
     private UserDTO user;                  // 유저
 
@@ -58,6 +60,12 @@ public class ScheduleDTO {
     private Category category;          // 카테고리
 
     private Long categoryId;            // 카테고리 아이디
+
+    private List<ParticipantDTO> participants;
+
+    private List<CommentDTO> comments; // 전체 댓글 목록
+
+    private List<UserDTO> heartUsers; // 좋아요 누른 유저 목록
 
     public static Schedule toEntity(ScheduleDTO scheduleDTO, User user) {
         Schedule schedule = new Schedule();
@@ -74,9 +82,9 @@ public class ScheduleDTO {
         schedule.setIsPrivate(scheduleDTO.getIsPrivate());
         schedule.setImageUrl(scheduleDTO.getImageUrl());
         schedule.setCreatedAt(scheduleDTO.getCreatedAt());
-        schedule.setCheckList(scheduleDTO.getCheckList());
-        schedule.setDetail(scheduleDTO.getDetail());
+//        schedule.setCheckList(scheduleDTO.getCheckList());
         schedule.setDone(scheduleDTO.getDone());
+        schedule.setDetail(scheduleDTO.getDetail());
         schedule.setColor(scheduleDTO.getColor());
         schedule.setUser(user);
         schedule.setCategory(scheduleDTO.getCategory());
@@ -84,6 +92,19 @@ public class ScheduleDTO {
     }
 
     public static ScheduleDTO toDTO(Schedule schedule) {
+        List<CheckListDTO> checkListDTOS = new ArrayList<>();
+
+        for (CheckList checkList : schedule.getCheckList()) {
+            CheckListDTO checkListDTO = new CheckListDTO();
+            checkListDTO.setId(checkList.getId());
+            checkListDTO.setContent(checkList.getContent());
+            checkListDTO.setIsDone(checkList.getIsDone());
+            checkListDTO.setSchedule(schedule);
+            checkListDTOS.add(checkListDTO);
+        }
+
+        List<User> heartUsers = schedule.getHearts().stream().map(Heart::getUser).toList();
+
         ScheduleDTOBuilder builder = ScheduleDTO.builder()
                 .id(schedule.getId())
                 .type(schedule.getType())
@@ -98,13 +119,17 @@ public class ScheduleDTO {
                 .isPrivate(schedule.getIsPrivate())
                 .imageUrl(schedule.getImageUrl())
                 .createdAt(schedule.getCreatedAt())
-                .checkList(schedule.getCheckList())
                 .detail(schedule.getDetail())
+                .checkList(schedule.getCheckList())
                 .done(schedule.getDone())
                 .color(schedule.getColor())
                 //보안상 User필드를 UserDTO로 변환
                 .user(UserDTO.toDTO(schedule.getUser()))
-                .category(schedule.getCategory());
+                .category(schedule.getCategory())
+                .participants(ParticipantDTO.toDTO(schedule.getParticipants()))
+                .comments(CommentDTO.toDTO(schedule.getComments()))
+                .heartUsers(UserDTO.toDTO(heartUsers))
+                .checkList(schedule.getCheckList());
 
         return builder.build();
     }
