@@ -37,10 +37,11 @@ const defaultProfileImage = "/images/default/defaultProfileImage.png";
 
 export default function SideNavbar() {
   const { user, logout } = useAuth();
-  const { unreadCount } = useNoti();
+  const { unreadCount,  unreadChatCount } = useNoti();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
+
 
   const handleLogout = () => {
     Swal.fire({
@@ -86,6 +87,7 @@ export default function SideNavbar() {
               {item.name}
             </Link>
             {item.name === "알림" && unreadCount > 0 && <span className="badge">{unreadCount}</span>}
+            {item.name === "쪽지" && unreadChatCount > 0 && <span className="badge">{unreadChatCount}</span>}
           </NavItem>
         ))}
         <NavItem style={{ justifySelf: "flex-end", marginTop: "auto"}}>

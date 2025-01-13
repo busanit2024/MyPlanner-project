@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useAuth } from '../../../context/AuthContext';
 import { useEffect, useState } from 'react';
 import TeamChatProfileImage from './TeamChatProfileImage';
 
@@ -57,7 +56,6 @@ const UnreadBadge = styled.span`
   transform: translateY(-60%);
 `;
 
-// 날짜 포맷팅
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
   
@@ -72,66 +70,21 @@ const formatDate = (timestamp) => {
   }
 };
 
-const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }) => {
-  const { user } = useAuth();
+const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, user }) => {
   const [localChatRooms, setLocalChatRooms] = useState([]);
 
-  // 채팅방 목록 로딩
-  const fetchChatRooms = async () => {
-    try {
-      const [roomsResponse, unreadResponse] = await Promise.all([
-        fetch(`/api/chat/rooms/user/${user.email}`),
-        fetch(`/api/chat/rooms/unread/${user.email}`)
-      ]);
-
-      if (!roomsResponse.ok || !unreadResponse.ok) {
-        throw new Error('데이터를 불러오는데 실패했습니다.');
-      }
-
-      const [rooms, unreadCounts] = await Promise.all([
-        roomsResponse.json(),
-        unreadResponse.json()
-      ]);
-
-      const roomsWithUnread = rooms.map(room => ({
-        ...room,
-        unreadCount: unreadCounts[room.id] || 0
-      }));
-
-      setLocalChatRooms(roomsWithUnread);
-    } catch (error) {
-      console.error('채팅방 목록 로딩 에러: ', error);
-    }
-  };
-
   useEffect(() => {
-    if (deletedRoomId) {
-      setLocalChatRooms(prevRooms => 
-        prevRooms.filter(room => room.id !== deletedRoomId)
-      );
+    if (propsChatRooms) {
+      setLocalChatRooms(propsChatRooms);
     }
-  }, [deletedRoomId]);
-
-  useEffect(() => {
-    if (user?.email) {
-      fetchChatRooms();
-
-      const interval = setInterval(() => {
-        fetchChatRooms();
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [user]);
+  }, [propsChatRooms]);
 
   const handleRoomSelect = (chatRoom, chatInfo) => {
-    // 채팅방 선택 시 unreadCount를 0으로 설정
     setLocalChatRooms(prevRooms => 
       prevRooms.map(room => 
         room.id === chatRoom.id ? { ...room, unreadCount: 0 } : room
       )
     );
-
     onSelectRoom(chatRoom, chatInfo);
   };
 
@@ -159,53 +112,49 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }
       return dateB.localeCompare(dateA);
     });
 
-  // 채팅방 정보 가져오기
   const getChatRoomInfo = (chatRoom) => {
     if (!Array.isArray(chatRoom.participants) || chatRoom.participants.length === 0) {
-        return {
-            isTeam: false,
-            name: "알 수 없는 사용자",
-            email: "",
-            profileImageUrl: "/images/default/defaultProfileImage.png"
-        };
+      return {
+        isTeam: false,
+        name: "알 수 없는 사용자",
+        email: "",
+        profileImageUrl: "/images/default/defaultProfileImage.png"
+      };
     }
     
     const isTeamChat = chatRoom.chatRoomType === "TEAM";
     const otherParticipants = chatRoom.participants.filter(
-        participant => participant.email !== user.email
+      participant => participant.email !== user.email
     );
 
     if (isTeamChat) {
-        return {
-            isTeam: true,
-            name: chatRoom.chatroomTitle || otherParticipants.map(p => p.username).join(', '),
-            participants: chatRoom.participants
-        };
+      return {
+        isTeam: true,
+        name: chatRoom.chatroomTitle || otherParticipants.map(p => p.username).join(', '),
+        participants: chatRoom.participants
+      };
     } else {
-        // 개인 채팅의 경우 상대방이 없을 때도 처리
-        const otherUser = otherParticipants[0] || {
-            username: "알 수 없는 사용자",
-            email: "",
-            profileImageUrl: "/images/default/defaultProfileImage.png"
-        };
-        
-        return {
-            isTeam: false,
-            name: otherUser.username,
-            email: otherUser.email,
-            profileImageUrl: otherUser.profileImageUrl,
-            ...otherUser
-        };
+      const otherUser = otherParticipants[0] || {
+        username: "알 수 없는 사용자",
+        email: "",
+        profileImageUrl: "/images/default/defaultProfileImage.png"
+      };
+      
+      return {
+        isTeam: false,
+        name: otherUser.username,
+        email: otherUser.email,
+        profileImageUrl: otherUser.profileImageUrl,
+        ...otherUser
+      };
     }
   };
 
-  // 이미지 메시지 감지
   const isImageMessage = (msg) => {
     return msg?.includes('firebasestorage.googleapis.com') || 
            msg?.match(/\.(jpeg|jpg|gif|png)$/i) != null;
   };
 
-  // lastMessage 표시 처리
   const getDisplayMessage = (msg) => {
     if (!msg) return "새로운 채팅방이 생성되었습니다.";
     return isImageMessage(msg) ? "사진을 보냈습니다." : msg;
@@ -239,14 +188,13 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }
             )}
             <ChatInfo>
               <ChatHeader>
-                  <Name>{chatInfo.name || "알 수 없음"}</Name>
-                  <Date>{lastMessageDate}</Date>
+                <Name>{chatInfo.name || "알 수 없음"}</Name>
+                <Date>{lastMessageDate}</Date>
               </ChatHeader>
               <Message>{getDisplayMessage(chatRoom.lastMessage)}</Message>
-                {console.log('Unread count for room', chatRoom.id, ':', chatRoom.unreadCount)}
-                {chatRoom.unreadCount > 0 && (
-                    <UnreadBadge>{chatRoom.unreadCount}</UnreadBadge>
-                )}
+              {chatRoom.unreadCount > 0 && (
+                <UnreadBadge>{chatRoom.unreadCount}</UnreadBadge>
+              )}
             </ChatInfo>
           </Container>
         );

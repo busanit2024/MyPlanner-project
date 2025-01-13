@@ -6,6 +6,7 @@ import { useChat } from '../../hooks/useChat';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
+import { useNoti } from "../../context/NotiContext";
 
 const ChatContainer = styled.div`
     display: flex;
@@ -64,6 +65,7 @@ export default function ChatPage() {
         name: '',
         profileImage: null
     });
+    const { setUnreadChatCount } = useNoti();
     const mounted = useRef(true);
 
     const { messages, sendMessage, isConnected, loadChatHistory, disconnect } = useChat(
@@ -71,6 +73,37 @@ export default function ChatPage() {
         user?.email || '',
         mounted
     );
+
+    // 채팅방 목록과 읽지 않은 메시지 수를 가져오는 함수
+    const fetchChatRoomsAndUnreadCount = useCallback(async () => {
+        if (!user?.email) return;
+        
+        try {
+            const [roomsResponse, unreadResponse] = await Promise.all([
+                fetch(`/api/chat/rooms/user/${user.email}`),
+                fetch(`/api/chat/rooms/unread/${user.email}`)
+            ]);
+
+            const [rooms, unreadCounts] = await Promise.all([
+                roomsResponse.json(),
+                unreadResponse.json()
+            ]);
+
+            // 전체 읽지 않은 메시지 수 계산
+            const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+            setUnreadChatCount(totalUnread);
+
+            // 채팅방 목록 업데이트
+            const roomsWithUnread = rooms.map(room => ({
+                ...room,
+                unreadCount: unreadCounts[room.id] || 0
+            }));
+            setChatRooms(roomsWithUnread);
+
+        } catch (error) {
+            console.error('Failed to fetch chat rooms and unread counts:', error);
+        }
+    }, [user?.email, setUnreadChatCount]);
 
     useEffect(() => {
         mounted.current = true;
@@ -111,17 +144,22 @@ export default function ChatPage() {
         }
     }, [selectedRoom, loadChatHistory]);
 
-    // handleSelectRoom 함수 정의
+    useEffect(() => {
+        if (user?.email) {
+            fetchChatRoomsAndUnreadCount();
+            const interval = setInterval(fetchChatRoomsAndUnreadCount, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [user?.email, fetchChatRoomsAndUnreadCount]);
+
     const handleSelectRoom = useCallback((room, partner) => {
         if (!mounted.current || !user) return;
         
-        // 마지막 메시지의 ID를 가져오기 위한 API 호출
         fetch(`/api/chat/rooms/${room.id}/messages`)
             .then(response => response.json())
             .then(messages => {
                 const lastMessage = messages[messages.length - 1];
                 
-                // 읽음 상태 업데이트
                 return fetch(`/api/chat/rooms/${room.id}/read-status`, {
                     method: 'POST',
                     headers: {
@@ -140,6 +178,8 @@ export default function ChatPage() {
                             r.id === room.id ? { ...r, unreadCount: 0 } : r
                         )
                     );
+                    // 전체 읽지 않은 메시지 수 다시 계산
+                    fetchChatRoomsAndUnreadCount();
                 }
             })
             .catch(error => console.error('읽음 상태 업데이트 실패:', error));
@@ -156,9 +196,8 @@ export default function ChatPage() {
                 setSelectedRoom(room);
             }
         }, 0);
-    }, [user]);
+    }, [user, fetchChatRoomsAndUnreadCount]);
 
-    
     const handleLeaveChat = useCallback(async (roomId) => {
         try {
             disconnect();
@@ -183,6 +222,8 @@ export default function ChatPage() {
                     name: '',
                     profileImage: null
                 });
+                // 채팅방 나가기 후 읽지 않은 메시지 수 업데이트
+                fetchChatRoomsAndUnreadCount();
             }
     
             navigate('/chat', { replace: true });
@@ -190,7 +231,7 @@ export default function ChatPage() {
         } catch (error) {
             console.error('채팅방 나가기 실패:', error);
         }
-    }, [user?.email, navigate, disconnect]);
+    }, [user?.email, navigate, disconnect, fetchChatRoomsAndUnreadCount]);
 
     const handleNewChat = useCallback((newChatRoom, selectedUsers) => {
         const isTeamChat = selectedUsers.length > 1;
@@ -236,7 +277,10 @@ export default function ChatPage() {
         if (selectedRoom?.id === updatedRoom.id) {
             setSelectedRoom(updatedRoom);
         }
-    }, [selectedRoom?.id]);
+        
+        // 채팅방 업데이트 시 읽지 않은 메시지 수 업데이트
+        fetchChatRoomsAndUnreadCount();
+    }, [selectedRoom?.id, fetchChatRoomsAndUnreadCount]);
 
     const handleSendMessage = useCallback((content) => {
         sendMessage(content);
