@@ -151,6 +151,26 @@ const CalendarWrite = () => {
     }
   };
 
+  // 날짜 유효성 검사 함수
+  const isEndDateVaild = (newEndDate) => {
+    if (newEndDate < startDate) {
+      alert('끝 날짜는 시작 날짜보다 이전일 수 없습니다.');
+      setEndDate(startDate);
+      return false;
+    }
+    return true;
+  };
+
+  // 시간 유효성 검사 함수
+  const isEndTimeValid = (newEndTime) => {
+    if (startDate === endDate && newEndTime < startTime) {
+      alert('끝 시간은 시간 시간보다 이전일 수 없습니다.');
+      setEndTime(startTime);
+      return false;
+    }
+    return true;
+  };
+
   return (
     <div className="calendar-write">
       <div className='header' style={{ position: 'relative' }}>
@@ -250,6 +270,7 @@ const CalendarWrite = () => {
               setStartTime(''); // 날짜 변경 시 시간 초기화
             }}
           />
+          {/* 시작 시간 */}
           {startDate && !allDay && (
             <input 
               type="time" 
@@ -266,16 +287,25 @@ const CalendarWrite = () => {
             disabled={allDay}
             value={endDate}
             onChange={(e) => {
-              setEndDate(e.target.value);
-              setEndTime(''); // 날짜 변경 시 시간 초기화
+              const newEndDate = e.target.value;
+              if (isEndDateVaild(newEndDate)) {
+                setEndDate(newEndDate);
+                setEndTime(''); // 날짜 변경 시 시간 초기화
+              }
             }}
           />
+          {/* 끝 시간 */}
           {endDate && !allDay && (
             <input 
               type="time" 
               className="input-field" 
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
+              onChange={(e) => {
+                const newEndTime = e.target.value;
+                if (isEndTimeValid(newEndTime)) {
+                  setEndTime(e.target.value);
+                }
+              }}
             />
           )}
         </div>
