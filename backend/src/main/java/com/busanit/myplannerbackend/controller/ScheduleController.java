@@ -59,11 +59,11 @@ public class ScheduleController {
             scheduleDTO.setCheckList(new ArrayList<>());
         }
 
-        scheduleService.createSchedule(scheduleDTO);
+        Schedule response = scheduleService.createSchedule(scheduleDTO);
 //        checkListService.saveCheckList(scheduleDTO.getCheckListItem(), schedule);
 
         //return ResponseEntity.noContent().build();
-        return new ResponseEntity<>("success", HttpStatus.OK);
+        return new ResponseEntity<Long>(response.getId(), HttpStatus.OK);
     }
 
     // 모든 일정 조회
@@ -126,11 +126,13 @@ public class ScheduleController {
         return page.map(ScheduleDTO::toDTO);
     }
 
+    //일정 완료
     @GetMapping("/check")
     public void scheduleDoneCheck(@RequestParam Long id, @RequestParam boolean done) {
         scheduleService.scheduleDoneToggle(id, done);
     }
 
+    //체크리스트 완료
     @GetMapping("/checklist/check")
     public void checkListDoneCheck(@RequestParam Long id, @RequestParam boolean done) {
         scheduleService.checkListDoneToggle(id, done);
@@ -144,13 +146,14 @@ public class ScheduleController {
 
     // 일정 수정
     @PutMapping("/{id}")
-    public Schedule updateSchedule(@PathVariable Long id, @RequestBody Schedule scheduleDetails) {
+    public ScheduleDTO updateSchedule(@PathVariable Long id, @RequestBody Schedule scheduleDetails) {
         // 체크리스트가 null인 경우 빈 리스트로 초기화
         if (scheduleDetails.getCheckList() == null) {
             scheduleDetails.setCheckList(new ArrayList<>());
         }
 
-        return scheduleService.updateSchedule(id, scheduleDetails);
+        Schedule response = scheduleService.updateSchedule(id, scheduleDetails);
+        return ScheduleDTO.toDTO(response);
     }
 
     // 일정 삭제
@@ -159,6 +162,23 @@ public class ScheduleController {
         scheduleService.deleteSchedule(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/invite/{scheduleId}")
+    public ResponseEntity<String> inviteUsers(@RequestBody List<Long> userIds, @PathVariable Long scheduleId) {
+        for (Long userId : userIds) {
+            scheduleService.inviteUser(scheduleId, userId);
+        }
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    @PostMapping("/invite/{scheduleId}/cancel")
+    public ResponseEntity<String> inviteCancel(@RequestBody List<Long> userIds, @PathVariable Long scheduleId) {
+        for (Long userId : userIds) {
+            scheduleService.inviteCancel(scheduleId, userId);
+        }
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
 }
 
 

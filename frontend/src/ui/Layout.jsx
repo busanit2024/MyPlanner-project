@@ -103,9 +103,8 @@ export default function Layout() {
               {isOwner && (
                 <>
                   <Button color="" onClick={handleCompleteSchedule}>{isDone ? "완료 취소" : "완료"}</Button>
-                  <Button color="primary" onClick={handleEditSchedule}>수정</Button>
                   <Button color="danger" onClick={handleDeleteSchedule}>삭제</Button>
-
+                  <Button color="primary" onClick={handleEditSchedule}>수정</Button>
                 </>
               )}
 

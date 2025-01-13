@@ -7,6 +7,8 @@ import styled from 'styled-components';
 import Switch from '../../ui/Switch';
 import Button from '../../ui/Button';
 import { useSearch } from '../../context/SearchContext';
+import Modal from '../../ui/Modal';
+import UserSelectModal from './UserSelectModal';
 
 const CalendarWrite = () => {
   const { user, loading } = useAuth();
@@ -32,6 +34,7 @@ const CalendarWrite = () => {
   const [color, setColor] = useState(''); // 색깔
   const [done, setDone] = useState(false);  // 일정 완료 여부
   const [checkDone, setCheckDone] = useState([]);  // 체크리스트 완료 여부
+  const [userSelectModalOpen, setUserSelectModalOpen] = useState(true); // 유저 선택 모달 오픈 여부
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,15 +59,15 @@ const CalendarWrite = () => {
       setCategoryId(null);
     }
   }, [loading, user]);
-  
-  
+
+
   useEffect(() => {
     // 탑바에 일정 작성 버튼 표시하기 위해 context 사용
-      setOnWriteSchedule(() => handleSubmit);
+    setOnWriteSchedule(() => handleSubmit);
   }, [setOnWriteSchedule, title, categoryId, participants, startDate, endDate, startTime, endTime, allDay, repeat, reminder, viewOnlyMe, checklist, detail, image, createdAt, color, done, checkDone]);
 
   const handleAddParticipant = () => {
-    setParticipants(user?.follows.map(follow => follow.id) || []);
+    setUserSelectModalOpen(true);
   };
 
   const handleAddChecklist = () => {
@@ -115,7 +118,6 @@ const CalendarWrite = () => {
     const scheduleData = {
       title: title, // 제목
       categoryId: categoryId,
-      participants: participants.length > 0 ? participants : [],
       startDate: startDate || date,
       endDate: endDate || date,
       startTime: startTime,
@@ -145,6 +147,15 @@ const CalendarWrite = () => {
           'Content-Type': 'application/json',
         },
       });
+
+      if (participants.length > 0) {
+        const scheduleId = response.data;
+        const participantIds = participants.map((participant) => participant.id);
+        await axios.post(`/api/schedules/invite/${scheduleId}`, 
+          participantIds,
+        );
+      }
+
       console.log('일정이 저장되었습니다:', response.data);
       navigate('/calendar');
     } catch (error) {
@@ -155,6 +166,8 @@ const CalendarWrite = () => {
 
   return (
     <Container>
+      <UserSelectModal title={"일정 참가자 추가"} onClose={() => setUserSelectModalOpen(false)} isOpen={userSelectModalOpen} participants={participants} setParticipants={setParticipants}>
+      </UserSelectModal>
 
       {/* 이미지 업로드 */}
       <ImageInput onClick={() => document.getElementById('imageUpload').click()}>
@@ -193,10 +206,13 @@ const CalendarWrite = () => {
           <div className='participant-list'>
             {participants.map((participant, index) => (
               <div key={index} className="participant">
-                <img src="/images/icon/user.svg" alt="User" />
-                <div className='delete-overlay' onClick={() => setParticipants(participants.filter((_, i) => i !== index))}>
-                  <img src="/images/icon/cancelWhite.svg" alt="Delete" />
+                <div className='profile-image'>
+                  <img src={participant.profileImageUrl} alt="Profile" />
+                  <div className='delete-overlay' onClick={() => setParticipants(participants.filter((_, i) => i !== index))}>
+                    <img src="/images/icon/cancelWhite.svg" alt="Delete" />
+                  </div>
                 </div>
+                <div className='username'>{participant.username}</div>
               </div>
             ))}
             <div className="participant add" onClick={handleAddParticipant}>
@@ -321,12 +337,12 @@ const Container = styled.div`
   width: 100%;
   box-sizing: border-box;
   padding: 24px 128px;
-
+/* 
   & img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
+  } */
 `;
 
 const ImageInput = styled.div`
@@ -345,6 +361,8 @@ const ImageInput = styled.div`
 
   .uploaded-image {
     width: auto;
+    height: 100%;
+    object-fit: cover;
   }
 
   input {
@@ -406,23 +424,28 @@ const Participants = styled.div`
 
   & .participant-list {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    align-items: start;
+    gap: 12px;
   }
 
   & .participant {
-    position: relative;
-    flex-shrink: 0;
-    width: 58px;
-    height: 58px;
-    background-color: var(--light-gray);
-    border-radius: 50%;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
     align-items: center;
-    cursor: pointer;  
 
-    &:hover .delete-overlay {
+    & .profile-image {
+      position: relative;
+      flex-shrink: 0;
+      width: 58px;
+      height: 58px;
+      background-color: var(--light-gray);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      &:hover .delete-overlay {
       display: flex;
     }
 
@@ -447,8 +470,14 @@ const Participants = styled.div`
       object-fit: cover;
       border-radius: 50%;
     }
+  }
 
     &.add {
+      flex-shrink: 0;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      align-self: flex-start;
       border: 1px solid var(--light-gray);
       background-color: #fff;
       display: flex;

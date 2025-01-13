@@ -8,6 +8,9 @@ import { ChromePicker } from 'react-color';
 import styled from 'styled-components';
 import Switch from '../../ui/Switch';
 import { useSearch } from '../../context/SearchContext';
+import UserSelectModal from './UserSelectModal';
+
+const defaultProfileImageUrl = '/images/default/defaultProfileImage.png';
 
 const CalendarUpdate = () => {
   const { user, loading } = useAuth();
@@ -25,6 +28,7 @@ const CalendarUpdate = () => {
   const [categoryList, setCategoryList] = useState([]);
   const [categoryId, setCategoryId] = useState(eventData?.categoryId || 5); // 카테고리 ID
   const [participants, setParticipants] = useState(eventData?.participants || []); // 참가자
+  const [newParticipants, setNewParticipants] = useState([]); // 추가할 참가자
   const [date, setDate] = useState(''); // 날짜
   const [startDate, setStartDate] = useState(eventData?.startDate || '');   // 시작 날짜
   const [endDate, setEndDate] = useState(eventData?.endDate || '');   // 끝 날짜
@@ -42,7 +46,9 @@ const CalendarUpdate = () => {
   const [color, setColor] = useState(eventData?.color || '');   // 색상
   const [done, setDone] = useState(eventData?.done);  // 일정 완료 여부
   const [isOwner, setIsOwner] = useState(false);  // 작성자 확인
+  const [userSelectModalOpen, setUserSelectModalOpen] = useState(false);
   const doneRef = useRef(done);
+  const newParticipantsRef = useRef(newParticipants);
 
   useEffect(() => {
     //탑바에서 수정, 삭제, 완료 버튼 표시하기 위해 context 사용
@@ -57,6 +63,10 @@ const CalendarUpdate = () => {
   useEffect(() => {
     setIsOwnerContext(isOwner);
   }, [setIsOwnerContext, isOwner]);
+
+  useEffect(() => {
+    newParticipantsRef.current = newParticipants;
+  }, [newParticipants]);
 
   useEffect(() => {
     setIsDone(done);
@@ -80,7 +90,13 @@ const CalendarUpdate = () => {
 
           setTitle(scheduleData.title);
           setCategoryId(scheduleData.category?.id);
-          setParticipants(scheduleData.participants?.map((participant) => participant.userId) || []);
+          setParticipants(scheduleData.participants);
+          setNewParticipants(scheduleData.participants.map((participant) => ({ 
+            id: participant.user.id, 
+            username: participant.user.username, 
+            profileImageUrl: participant.user.profileImageUrl, 
+            email: participant.user.email, 
+            status: participant.status })));
           setStartDate(scheduleData.startDate.split('T')[0]);
           setEndDate(scheduleData.endDate.split('T')[0]);
           setStartTime(scheduleData.startTime);
@@ -122,18 +138,9 @@ const CalendarUpdate = () => {
     }
   }, [id, user, loading]);
 
-  // useEffect(() => {
-  //   setCheckDone(prev => {
-  //     const newCheckDone = [...prev];
-  //     while (newCheckDone.length < checklist.length) {
-  //       newCheckDone.push(false); // 체크 상태 추가
-  //     }
-  //     return newCheckDone;
-  //   });
-  // }, [checklist]);
 
   const handleAddParticipant = () => {
-    setParticipants([...participants, `참가자${participants.length + 1}`]);
+    setUserSelectModalOpen(true);
   };
 
   const handleAddChecklist = () => {
@@ -188,7 +195,7 @@ const CalendarUpdate = () => {
 
   const handleComplete = async () => {
     let confirmed = false;
-    let checkDone = false ;
+    let checkDone = false;
     if (doneRef.current) {
       confirmed = window.confirm("일정을 완료되지 않은 상태로 변경하시겠습니까?");
       checkDone = false;
@@ -218,7 +225,6 @@ const CalendarUpdate = () => {
     const scheduleData = {
       title: title,
       category: categoryList.find((category) => category.id === parseInt(categoryId)) || null,
-      participants: participants.length > 0 ? participants : [],
       startDate: startDate || date,
       endDate: endDate || date,
       startTime: startTime,
@@ -238,12 +244,36 @@ const CalendarUpdate = () => {
 
     console.log("제출할 데이터: ", scheduleData);
 
+    const newParticipantList = newParticipantsRef.current;
+    console.log("새로운 참가자 목록: ", newParticipantList);
+    console.log("기존 참가자 목록: ", participants);
+
+    const usersToInvite = newParticipantList.filter((participant) =>
+      !participants.some((p) => p.user.id === participant.id)
+    );
+
+    const usersToDelete = participants.filter((participant) =>
+      !newParticipantList.some((p) => p.id === participant.user.id)
+    );
+
+    console.log("초대할 사용자: ", usersToInvite);
+    console.log("삭제할 사용자: ", usersToDelete);
+
     try {
       const response = await axios.put(`/api/schedules/${id}`, JSON.stringify(scheduleData), {
         headers: {
           'Content-Type': 'application/json',
         },
       });
+
+      if (usersToInvite.length > 0) {
+        await axios.post(`/api/schedules/invite/${id}`, usersToInvite.map((user) => user.id));
+      }
+
+      if (usersToDelete.length > 0) {
+        await axios.post(`/api/schedules/invite/${id}/cancel`, usersToDelete.map((user) => user.user.id));
+      }
+
       console.log('일정이 수정되었습니다:', response.data);
       navigate('/calendar');
     } catch (error) {
@@ -252,12 +282,15 @@ const CalendarUpdate = () => {
     }
   };
 
+
   if (loading) {
     return <div>로딩 중...</div>;
   }
 
   return (
     <Container>
+      <UserSelectModal title={"일정 참가자 추가"} onClose={() => setUserSelectModalOpen(false)} isOpen={userSelectModalOpen} participants={newParticipants} setParticipants={setNewParticipants}>
+      </UserSelectModal>
 
       {/* 이미지 업로드 */}
       {isOwner ? (
@@ -283,7 +316,7 @@ const CalendarUpdate = () => {
           <input className='title'
             type="text"
             placeholder={`${isOwner ? "제목" : "제목 없는 일정"} ${done ? '(완료된 일정)' : ''}`}
-            value={`${title} ${done ? '(완료된 일정)' : ''}`}
+            value={`${title}`}
             onChange={(e) => setTitle(e.target.value)}
             disabled={!isOwner || done}
           />
@@ -314,14 +347,18 @@ const CalendarUpdate = () => {
         <Participants className='input-field participant'>
           <span style={{ fontSize: "18px", marginBottom: "8px" }}>참가자</span>
           <div className='participant-list'>
-            {participants.map((participant, index) => (
+            {newParticipants.map((participant, index) => (
               <div key={index} className="participant">
-                <img src="/images/icon/user.svg" alt="User" />
-                {isOwner && (
-                  <div className='delete-overlay' onClick={() => setParticipants(participants.filter((_, i) => i !== index))}>
+                <div className='profile-image'>
+                  <img src={participant?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src = defaultProfileImageUrl} alt="profile" />
+                  <div className='delete-overlay' onClick={() => setNewParticipants(newParticipants.filter((_, i) => i !== index))}>
                     <img src="/images/icon/cancelWhite.svg" alt="Delete" />
                   </div>
-                )}
+                  <div className={`status-overlay ${participant.status !== 'ACCEPTED' && 'visible'}`} >
+                    {participant.status === 'PENDING' ? '초대중' : participant.status === 'DECLINED' ? '거절됨' : '추가됨'}
+                  </div>
+                </div>
+                <div className='username'>{participant?.username}</div>
               </div>
             ))}
             {isOwner && (
@@ -461,11 +498,6 @@ const Container = styled.div`
   box-sizing: border-box;
   padding: 24px 128px;
 
-  & img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
 `;
 
 const ImageInput = styled.div`
@@ -483,7 +515,9 @@ const ImageInput = styled.div`
   margin-bottom: 20px;
 
   .uploaded-image {
+    height: 100%;
     width: auto;
+    object-fit: cover;
   }
 
   input {
@@ -571,29 +605,28 @@ const Participants = styled.div`
 
   & .participant-list {
     display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  & .no-participant {
-    font-size: 16px;
-    color: var(--mid-gray);
+    align-items: start;
+    gap: 12px;
   }
 
   & .participant {
-    position: relative;
-    flex-shrink: 0;
-    width: 58px;
-    height: 58px;
-    background-color: var(--light-gray);
-    border-radius: 50%;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
     align-items: center;
-    cursor: pointer; 
-  
 
-    &:hover .delete-overlay {
+    & .profile-image {
+      position: relative;
+      flex-shrink: 0;
+      width: 58px;
+      height: 58px;
+      background-color: var(--light-gray);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      &:hover .delete-overlay {
       display: flex;
     }
 
@@ -612,14 +645,39 @@ const Participants = styled.div`
       display: none;
     }
 
+    & .status-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-color: #000;
+      opacity: 0.5;
+      color: #fff;
+      justify-content: center;
+      align-items: center;
+      display: none;
+
+      &.visible {
+        display: flex;
+      }
+    }
+
     & img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       border-radius: 50%;
     }
+  }
 
     &.add {
+      flex-shrink: 0;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      align-self: flex-start;
       border: 1px solid var(--light-gray);
       background-color: #fff;
       display: flex;

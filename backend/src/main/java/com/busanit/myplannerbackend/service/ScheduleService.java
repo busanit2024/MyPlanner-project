@@ -31,7 +31,7 @@ public class ScheduleService {
 
     @Transactional
     // 일정 등록
-    public void createSchedule(ScheduleDTO scheduleDTO) {
+    public Schedule createSchedule(ScheduleDTO scheduleDTO) {
       //userId에 해당하는 User 객체를 찾아서 엔티티로 변환시 사용
       Long userId = scheduleDTO.getUserId();
       User user = userRepository.findById(userId).orElse(null);
@@ -44,8 +44,6 @@ public class ScheduleService {
       schedule.setCategory(category);
       schedule.setCheckList(scheduleDTO.getCheckList() != null ? scheduleDTO.getCheckList() : new ArrayList<>());
 
-      scheduleRepository.save(schedule);
-
       for (CheckListDTO checkListDTO : scheduleDTO.getCheckListItem()) {
         CheckList checkList_entity = new CheckList();
         checkList_entity.setContent(checkListDTO.getContent());
@@ -53,6 +51,8 @@ public class ScheduleService {
         checkList_entity.setSchedule(schedule);
         checkListRepository.save(checkList_entity);
       }
+
+      return scheduleRepository.save(schedule);
     }
 
     // 모든 일정 조회
@@ -182,6 +182,7 @@ public class ScheduleService {
 
     //일정 초대
     //targetUser를 participant 리스트에 추가한다
+    @Transactional
     public void inviteUser(Long scheduleId, Long targetUserId) {
       Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
       if (schedule == null) {
@@ -208,9 +209,9 @@ public class ScheduleService {
         newParticipant = Participant.of(schedule, targetUser);
       }
 
-      participantRepository.save(newParticipant);
+      Participant savedParticipant =  participantRepository.save(newParticipant);
       //일정 초대 시 notification 이벤트 발행
-      newParticipant.publishInviteEvent(eventPublisher);
+      savedParticipant.publishInviteEvent(eventPublisher);
     }
 
     // 초대 삭제
@@ -232,6 +233,7 @@ public class ScheduleService {
     }
 
     //일정 참여하기
+    @Transactional
     public void participate(Long scheduleId, Long userId) {
       Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
       if (schedule == null) {
@@ -262,6 +264,7 @@ public class ScheduleService {
     }
 
     //일정 초대 거절하기
+    @Transactional
     public void declineInvite(Long scheduleId, Long userId) {
       Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
       if (schedule == null) {
