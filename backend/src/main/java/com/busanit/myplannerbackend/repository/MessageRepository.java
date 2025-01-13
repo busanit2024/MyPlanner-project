@@ -11,5 +11,12 @@ public interface MessageRepository extends ReactiveMongoRepository<Message, Stri
     Flux<Message> findByChatRoomIdOrderBySendTimeAsc(String chatRoomId);
     Mono<Void> deleteByChatRoomId(String chatRoomId);
     Mono<Message> findFirstByChatRoomIdOrderBySendTimeDesc(String chatRoomId);
-    Mono<Long> countByChatRoomIdAndIdAfter(String chatRoomId, String messageId);
+
+    @Query(value = "{ 'chatRoomId': ?0, 'senderEmail': { '$ne': ?1 } }", count = true)
+    Mono<Long> countByChatRoomIdAndSenderEmailNot(String chatRoomId, String userEmail);
+
+    @Query(value = "{ 'chatRoomId': ?0, '_id': { '$gt': { '$oid': ?1 } }, 'senderEmail': { '$ne': ?2 } }", count = true)
+    Mono<Long> countByChatRoomIdAndIdAfterAndSenderEmailNot(String chatRoomId, String lastReadId, String userEmail);
+
+
 }

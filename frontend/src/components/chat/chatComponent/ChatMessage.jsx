@@ -5,7 +5,7 @@ const MessageContainer = styled.div`
   display: flex;
   flex-direction: ${props => props.isMine ? 'row-reverse' : 'row'};
   align-items: center;
-  margin: ${props => props.isNewSender ? '10px 0 0 0' : '2px 0'};
+  margin: ${props => props.isNewSender ? '5px 0' : '2px 0'};
   gap: 8px;
 `;
 
@@ -76,7 +76,7 @@ const TimeStamp = styled.span`
   ${props => !props.show && `display : none; `}
 `;
 
-const ChatMessage = ({ message, displayMessage, time, isMine, senderName, senderProfile , showTime, previousMessage, previousSender}) => {
+const ChatMessage = ({ message, time, isMine, senderName, senderProfile , showTime}) => {
   // 메시지가 이미지 URL인지 확인하는 함수
   const isImageMessage = (msg) => {
     return msg?.includes('firebasestorage.googleapis.com') || 

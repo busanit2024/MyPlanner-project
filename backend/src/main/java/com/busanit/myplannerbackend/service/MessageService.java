@@ -35,8 +35,17 @@ public class MessageService {
     public Mono<Long> getUnreadMessageCount(String roomId, String userEmail) {
         return readStatusRepository.findByUserEmailAndChatRoomId(userEmail, roomId)
                 .flatMap(readStatus -> {
-                    String lastReadMessageId = readStatus.getLastChatLogId();
-                    return messageRepository.countByChatRoomIdAndIdAfter(roomId, lastReadMessageId);
+                    String lastReadId = readStatus.getLastChatLogId();
+                    if (lastReadId == null) {
+                        // 처음 채팅방에 들어온 경우, 모든 메시지를 안 읽은 것으로 처리
+                        return messageRepository.countByChatRoomIdAndSenderEmailNot(roomId, userEmail);
+                    }
+                    // 마지막으로 읽은 메시지 이후의 다른 사람 메시지 개수를 카운트
+                    return messageRepository.countByChatRoomIdAndIdAfterAndSenderEmailNot(
+                            roomId,
+                            lastReadId,
+                            userEmail
+                    );
                 })
                 .defaultIfEmpty(0L);
     }
