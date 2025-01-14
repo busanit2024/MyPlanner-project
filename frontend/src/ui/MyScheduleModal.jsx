@@ -301,8 +301,8 @@ const MyScheduleModal = ({ isOpen, onClose, onScheduleSelect }) => {
                                 onClick={() => handleScheduleClick(schedule)}
                                 isSelected={selectedSchedule?.id === schedule.id}
                             >
-                                <span className="time">{formatTime(schedule.startTime)}</span>
                                 <span className="title">{schedule.title}</span>
+                                <span className="time">{formatTime(schedule.startTime)}</span>
                             </ScheduleItem>
                         ))}
                     </DateSection>
