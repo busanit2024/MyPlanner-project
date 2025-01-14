@@ -51,8 +51,13 @@ public class CommentService {
     comment.setSchedule(schedule);
 
     Comment savedComment = commentRepository.save(comment);
-    //알림 발생
-    savedComment.publishEvent(eventPublisher);
+
+    //본인 일정에 작성한 댓글의 경우 알림 발생 안함
+    if (!savedComment.getUser().getId().equals(userId)) {
+      //알림 발생
+      savedComment.publishEvent(eventPublisher);
+    }
+
     return savedComment;
   }
 
