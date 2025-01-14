@@ -9,6 +9,7 @@ import styled from 'styled-components';
 import Switch from '../../ui/Switch';
 import { useSearch } from '../../context/SearchContext';
 import UserSelectModal from './UserSelectModal';
+import Button from '../../ui/Button';
 
 const defaultProfileImageUrl = '/images/default/defaultProfileImage.png';
 
@@ -162,6 +163,10 @@ const CalendarUpdate = () => {
     const updatedChecklist = [...checklist];
     updatedChecklist[index].isDone = !updatedChecklist[index].isDone; // isDone 토글
     setChecklist(updatedChecklist);
+  };
+
+  const handleParticipate = () => {
+    // 참가하기
   };
 
   const handleImageUpload = async (e) => {
@@ -371,6 +376,11 @@ const CalendarUpdate = () => {
               </div>
             )}
             {!isOwner && participants.length === 0 && <div className='no-participant'>참가자 없음</div>}
+            {!isOwner && 
+            <div className='participate-button'>
+              <Button color="primary" onClick={handleParticipate}>참가하기</Button>
+            </div>
+            }
           </div>
         </Participants>
 
@@ -539,6 +549,13 @@ const ImageContainer = styled.div`
   border-radius: 5px;
   box-sizing: border-box;
   margin-bottom: 20px;
+  overflow: hidden;
+
+  img {
+    height: 100%;
+    width: auto;
+    object-fit: cover;
+  }
 `;
 
 const InputContainer = styled.div`
@@ -611,6 +628,19 @@ const Participants = styled.div`
     display: flex;
     align-items: start;
     gap: 12px;
+  }
+
+  & .no-participant {
+    font-size: 16px;
+    color: var(--mid-gray);
+    align-self: center;
+  }
+
+  & .participate-button {
+    display: flex;
+    justify-self: flex-end;
+    margin-left: auto;
+    align-self: center;
   }
 
   & .participant {
