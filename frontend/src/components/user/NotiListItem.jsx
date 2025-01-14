@@ -179,7 +179,7 @@ const Container = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 12px 0px;
+  padding: 8px 0px;
   box-sizing: border-box;
   cursor: pointer;
 
