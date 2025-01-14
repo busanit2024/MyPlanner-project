@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Slice;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -63,9 +64,9 @@ public class ScheduleDTO {
 
     private List<ParticipantDTO> participants;
 
-    private List<CommentDTO> comments; // 전체 댓글 목록
+    private CommentDTO recentComment; //가장 최신 댓글
 
-    private List<UserDTO> heartUsers; // 좋아요 누른 유저 목록
+    private List<Long> heartUserIds; //좋아요 누른 유저 id 목록
 
     public static Schedule toEntity(ScheduleDTO scheduleDTO, User user) {
         Schedule schedule = new Schedule();
@@ -104,9 +105,17 @@ public class ScheduleDTO {
         }
 
 
-        List<User> heartUsers = new ArrayList<>();
+        //좋아요 누른 유저 id
+        List<Long> heartUsers  = new ArrayList<>();
         if (schedule.getHearts() != null) {
-            heartUsers = schedule.getHearts().stream().map(Heart::getUser).toList();
+            heartUsers = schedule.getHearts().stream().map(heart -> heart.getUser().getId()).toList();
+        }
+
+        //가장 최근 댓글 1개
+        List<Comment> comments = schedule.getComments();
+        Comment recentComment = null;
+        if (comments != null) {
+            recentComment = comments.stream().max(Comparator.comparing(Comment::getCreatedAt)).orElse(null);
         }
 
         ScheduleDTOBuilder builder = ScheduleDTO.builder()
@@ -131,9 +140,12 @@ public class ScheduleDTO {
                 .user(UserDTO.toDTO(schedule.getUser()))
                 .category(schedule.getCategory())
                 .participants(ParticipantDTO.toDTO(schedule.getParticipants()))
-                .comments(CommentDTO.toDTO(schedule.getComments()))
-                .heartUsers(UserDTO.toDTO(heartUsers))
+                .heartUserIds(heartUsers)
                 .checkList(schedule.getCheckList());
+
+        if (recentComment != null) {
+            builder.recentComment(CommentDTO.toDTO(recentComment));
+        }
 
         return builder.build();
     }

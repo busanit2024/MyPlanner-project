@@ -62,13 +62,6 @@ public class ReactionRestController {
     heartService.HeartToggle(scheduleId, userId);
   }
 
-  //내가 좋아요 눌렀는지 확인하기
-  @GetMapping("/like/check")
-  public ResponseEntity<Boolean> checkLike(@RequestParam Long scheduleId, @RequestParam Long userId) {
-    Boolean response = heartService.checkMyLike(scheduleId, userId);
-    return ResponseEntity.ok(response);
-  }
-
   //좋아요 누른 유저 정보 불러오기
   @GetMapping("/like/list")
   public Slice<UserDTO> getLikeList(@RequestParam Long scheduleId, @RequestParam int page, @RequestParam int size) {
@@ -76,9 +69,9 @@ public class ReactionRestController {
     return heartService.getHeartUsers(scheduleId, pageable);
   }
 
-  //전체 좋아요 갯수
-  @GetMapping("/like/count")
-  public int getLikeCount(@RequestParam Long scheduleId) {
-    return heartService.getHeartCount(scheduleId);
-  }
+//  //전체 좋아요 갯수
+//  @GetMapping("/like/count")
+//  public int getLikeCount(@RequestParam Long scheduleId) {
+//    return heartService.getHeartCount(scheduleId);
+//  }
 }

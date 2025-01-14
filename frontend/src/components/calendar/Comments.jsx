@@ -10,7 +10,7 @@ import LikeUserModal from "./LikeUserModal";
 const defaultProfileImage = "/images/default/defaultProfileImage.png";
 export default function Comments(props) {
   const { user, loading } = useAuth();
-  const { scheduleId } = props;
+  const { scheduleId, likeUserIds } = props;
   const [commentList, setCommentList] = useState([]);
   const [commentCount, setCommentCount] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
@@ -18,16 +18,17 @@ export default function Comments(props) {
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [commentLoading, setCommentLoading] = useState(false);
-  const [likeLoading, setLikeLoading] = useState(false);
   const [input, setInput] = useState('');
   const [likeUserModalOpen, setLikeUserModalOpen] = useState(false);
+  const [updateIndex, setUpdateIndex] = useState(-1);
+  const [updateContent, setUpdateContent] = useState('');
 
   useEffect(() => {
-    if (scheduleId) {
-      fetchLikeCount();
+    if (likeUserIds) {
+      getLikeCount();
       checkLiked();
     }
-  }, [scheduleId]);
+  }, [likeUserIds]);
 
   useEffect(() => {
     if (scheduleId) {
@@ -35,40 +36,19 @@ export default function Comments(props) {
     }
   }, [scheduleId, page]);
 
-  const fetchLikeCount = async () => {
-    try {
-      const response = await axios.get(`/api/reaction/like/count`, {
-        params: {
-          scheduleId,
-        }
-      });
-      setLikeCount(response.data);
-    } catch (error) {
-      console.error('Error fetching like count:', error);
-    }
+  const getLikeCount = () => {
+    setLikeCount(likeUserIds.length);
   };
 
-  const checkLiked = async () => {  
-    setLikeLoading(true);
-    if (!user) {
-      setLikeLoading(false);
-      return;
-    }
-    try {
-      const response = await axios.get(`/api/reaction/like/check`, {
-        params: {
-          scheduleId,
-          userId: user.id,
-        }
-      });
-      setLiked(response.data);
-    } catch (error) {
-      console.error('Error checking like:', error);
-    } finally {
-      setLikeLoading(false);
-    }
+  const checkLiked = () => {
+    const myLike = likeUserIds.includes(user.id);
+    setLiked(myLike);
   };
 
+  const handleUpdateButton = (index) => {
+    setUpdateIndex(index);
+    setUpdateContent(commentList[index].content);
+  };
 
 
   const fetchComments = async () => {
@@ -134,7 +114,7 @@ export default function Comments(props) {
   }
 
   const handleLike = async () => {
-    if (!user || likeLoading) {
+    if (!user) {
       return;
     }
 
@@ -152,6 +132,98 @@ export default function Comments(props) {
     }
   }
 
+  const handleUpdateComment = (index) => {
+    Swal.fire({
+      title: "댓글 수정",
+      text: "댓글을 수정하시겠어요?",
+      showCancelButton: true,
+      confirmButtonText: "확인",
+      cancelButtonText: "취소",
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-confirm",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateComment(index);
+      }
+    });
+  }
+
+  const updateComment = async (index) => {
+    if (!user) {
+      return;
+    }
+
+    try {
+      console.log('comment', commentList[index]);
+      await axios.post(`/api/reaction/comment/update`, {
+        ...commentList[index], content: updateContent,
+      });
+
+      const updatedCommentList = [...commentList];
+      updatedCommentList[index].content = updateContent;
+      setCommentList(updatedCommentList);
+      setUpdateIndex(-1);
+    } catch (error) {
+      console.error('Error updating comment:', error);
+    }
+  }
+
+  const handleDeleteComment = (index) => {
+    Swal.fire({
+      title: "댓글 삭제",
+      text: "댓글을 삭제하시겠어요?",
+      showCancelButton: true,
+      confirmButtonText: "확인",
+      cancelButtonText: "취소",
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-confirm",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteComment(index);
+      }
+    });
+  }
+
+  const deleteComment = async (index) => {
+    if (!user) {
+      return;
+    }
+
+    try {
+      await axios.get(`/api/reaction/comment/delete`, {
+        params: {
+          id: commentList[index].id,
+        }
+      });
+      const updatedCommentList = [...commentList];
+      updatedCommentList.splice(index, 1);
+      setCommentList(updatedCommentList);
+      setCommentCount(commentCount - 1);
+
+      Swal.fire({
+        title: "삭제 완료",
+        text: "댓글을 삭제했어요.",
+        confirmButtonText: "확인",
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  }
+
+
   return (
     <Container className="comments">
       <LikeUserModal isOpen={likeUserModalOpen} onClose={() => setLikeUserModalOpen(false)} scheduleId={scheduleId} />
@@ -160,8 +232,9 @@ export default function Comments(props) {
           {liked ? <img src="/images/icon/heartFill.svg" alt="like" /> : <img src="/images/icon/heartEmpty.svg" alt="like" />}
           <span className="count like" onClick={(e) => {
             e.stopPropagation();
-            setLikeUserModalOpen(true)}}>
-          좋아요 {likeCount}</span>
+            setLikeUserModalOpen(true)
+          }}>
+            좋아요 {likeCount}</span>
         </div>
         <div className="button comment">
           <img src="/images/icon/comment.svg" alt="comment" />
@@ -169,27 +242,35 @@ export default function Comments(props) {
         </div>
       </ButtonContainer>
       <CommentList className="comment-list item">
-        {!commentLoading && commentList.map(comment => (
+        {!commentLoading && commentList.map((comment, index) => (
           <CommentListItem key={comment.id}>
             <div className="profile-image">
               <img src={comment.user?.profileImageUrl || defaultProfileImage} alt="profile" onError={(e) => e.target.src = defaultProfileImage} />
             </div>
             <div className="comment-content">
               <div className="info">
-                <span className="username">{comment.user?.username}</span>
+                <span className="username">{comment.user?.username} {updateIndex === index && '(수정 중)'}</span>
                 <span className="date">{calculateDate(comment.createdAt)} 전</span>
               </div>
-              <span className="comment">{comment.content}</span>
+              {updateIndex === index ?
+                <textarea className="update-input" value={updateContent} onChange={(e) => setUpdateContent(e.target.value)} /> :
+                <span className="comment">{comment.content}</span>
+              }
             </div>
-            {checkMyComment(comment) &&
-            <div className="button-wrap">
-              <div className="button">수정</div>
-              <div className="button">삭제</div>
-            </div>}
+            {(checkMyComment(comment) && updateIndex !== index) &&
+              <div className="button-wrap">
+                <div className="button" onClick={() => handleUpdateButton(index)}>수정</div>
+                <div className="button" onClick={() => handleDeleteComment(index)}>삭제</div>
+              </div>}
+            {(checkMyComment(comment) && updateIndex === index) &&
+              <div className="button-wrap">
+                <div className="button" onClick={() => setUpdateIndex(-1)}>취소</div>
+                <div className="button" onClick={() => handleUpdateComment(index)}>확인</div>
+              </div>}
           </CommentListItem>
         ))}
         {commentLoading && <div className="loading">댓글 불러오는 중...</div>}
-        {!commentLoading && !commentList.length && <div className="no-item">댓글이 없습니다.</div>}
+        {!commentLoading && !commentList.length && <div className="loading">댓글이 없습니다.</div>}
         {hasNext &&
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <Button size="small" onClick={() => setPage(page + 1)}>더 불러오기</Button>
@@ -199,7 +280,7 @@ export default function Comments(props) {
         <div className="profile-image">
           <img src={user?.profileImageUrl} alt="profile" />
         </div>
-        <input type="text" placeholder="댓글 작성하기" value={input} onChange={(e) => setInput(e.target.value)} />
+        <textarea className="comment-input" placeholder="댓글 작성하기" value={input} onChange={(e) => setInput(e.target.value)} />
         <div className="send" onClick={handleSendComment}>
           <img src="/images/icon/sendMsg_48.png" alt="send" />
         </div>
@@ -274,11 +355,7 @@ const CommentList = styled.div`
   & .loading {
     text-align: center;
     color: var(--mid-gray);
-  }
-
-  & .no-item {
-    text-align: center;
-    color: var(--mid-gray);
+    margin-bottom: 8px;
   }
 `;
 
@@ -291,6 +368,7 @@ const CommentListItem = styled.div`
     display: flex;
     flex-direction: column;
     gap: 4px;
+    width: 100%;
   }
 
   & .info {
@@ -311,6 +389,18 @@ const CommentListItem = styled.div`
 
   & .comment {
     font-size: 16px;
+  }
+
+  & .update-input {
+    font-size: 16px;
+    border: none;
+    border-bottom: 1px solid var(--light-gray);
+    padding: 4px;
+    width: 100%;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    height: 60px;
   }
 
   & .button-wrap {
@@ -336,14 +426,16 @@ const CommentWrite = styled.div`
   display: flex;
   gap: 12px;
 
-  & input {
+  & .comment-input {
     flex-grow: 1;
-    height: 40px;
+    height: 60px;
     padding: 0 12px;
     border: none;
     border-bottom: 1px solid var(--light-gray);
     outline: none;
     font-size: 16px;
+    font-family: inherit;
+    resize: none;
   }
 
   & .send {

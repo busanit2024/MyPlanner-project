@@ -49,6 +49,7 @@ const CalendarUpdate = () => {
   const [done, setDone] = useState(eventData?.done);  // 일정 완료 여부
   const [isOwner, setIsOwner] = useState(false);  // 작성자 확인
   const [userSelectModalOpen, setUserSelectModalOpen] = useState(false);
+  const [likeUserIds, setLikeUserIds] = useState([]);
   const doneRef = useRef(done);
   const newParticipantsRef = useRef(newParticipants);
 
@@ -122,6 +123,8 @@ const CalendarUpdate = () => {
           setIsOwner(scheduleData.user?.id === user?.id);
 
           setCategoryList(scheduleData.user?.categories);
+
+          setLikeUserIds(scheduleData.heartUserIds);
 
           const today = new Date();
           const formattedDate = today.toISOString().split('T')[0];
@@ -569,7 +572,7 @@ const CalendarUpdate = () => {
       </InputContainer>
 
       {/* 댓글 */}
-      <Comments scheduleId={id} />
+      <Comments scheduleId={id} likeUserIds={likeUserIds} />
     </Container>
   );
 };

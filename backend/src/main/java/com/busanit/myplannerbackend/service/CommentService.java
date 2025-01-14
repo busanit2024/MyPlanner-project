@@ -64,6 +64,9 @@ public class CommentService {
   //댓글 수정
   @Transactional
   public Comment updateComment(CommentDTO commentDTO) {
+    if (commentDTO.getId() == null) {
+      throw new RuntimeException("Comment id not found");
+    }
     Comment comment = commentRepository.findById(commentDTO.getId()).orElse(null);
     if (comment == null) {
       throw new RuntimeException("Comment not found");
