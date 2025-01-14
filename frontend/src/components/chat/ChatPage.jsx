@@ -83,23 +83,19 @@ export default function ChatPage() {
                 fetch(`/api/chat/rooms/user/${user.email}`),
                 fetch(`/api/chat/rooms/unread/${user.email}`)
             ]);
-
+    
             const [rooms, unreadCounts] = await Promise.all([
                 roomsResponse.json(),
                 unreadResponse.json()
             ]);
-
-            // 전체 읽지 않은 메시지 수 계산
+    
             const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
             setUnreadChatCount(totalUnread);
-
-            // 채팅방 목록 업데이트
-            const roomsWithUnread = rooms.map(room => ({
+    
+            setChatRooms(rooms.map(room => ({
                 ...room,
                 unreadCount: unreadCounts[room.id] || 0
-            }));
-            setChatRooms(roomsWithUnread);
-
+            })));
         } catch (error) {
             console.error('Failed to fetch chat rooms and unread counts:', error);
         }
@@ -120,24 +116,7 @@ export default function ChatPage() {
         }
     }, [initialRoom, initialPartner]);
 
-    useEffect(() => {
-        if (!loading) {
-            if (!user) {
-                if (mounted.current) {
-                    disconnect();
-                    setSelectedRoom(null);
-                    setChatRooms([]);
-                    setChatPartner({
-        email: '',
-        name: '',
-        profileImage: null
-    });
-                }
-                navigate("/login", { replace: true });
-            }
-        }
-    }, [user, loading, navigate, disconnect]);
-
+    
     useEffect(() => {
         if (selectedRoom) {
             loadChatHistory();
@@ -152,9 +131,17 @@ export default function ChatPage() {
         }
     }, [user?.email, fetchChatRoomsAndUnreadCount]);
 
-    const handleSelectRoom = useCallback((room, partner) => {
-        if (!mounted.current || !user) return;
-        
+    // 채팅방 선택
+    const handleSelectRoom = useCallback((room, partner) => {   
+        // 채팅방과 대화상대 정보 설정
+        setSelectedRoom(room);
+        setChatPartner({
+            email: partner.email,
+            name: partner.username,
+            profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
+        });    
+
+        // 읽음 상태 업데이트
         fetch(`/api/chat/rooms/${room.id}/messages`)
             .then(response => response.json())
             .then(messages => {
@@ -162,7 +149,7 @@ export default function ChatPage() {
                 
                 return fetch(`/api/chat/rooms/${room.id}/read-status`, {
                     method: 'POST',
-                headers: {
+                    headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
@@ -172,30 +159,17 @@ export default function ChatPage() {
                 });
             })
             .then(() => {
-                if (mounted.current) {
-                    setChatRooms(prevRooms => 
-                        prevRooms.map(r => 
-                            r.id === room.id ? { ...r, unreadCount: 0 } : r
-                        )
-                    );
-                    // 전체 읽지 않은 메시지 수 다시 계산
-                    fetchChatRoomsAndUnreadCount();
-                }
+                setChatRooms(prevRooms => 
+                    prevRooms.map(r => 
+                        r.id === room.id ? { ...r, unreadCount: 0 } : r
+                    )
+                );
+                fetchChatRoomsAndUnreadCount();
             })
-            .catch(error => console.error('읽음 상태 업데이트 실패:', error));
-    
-        setSelectedRoom(null);
-        setChatPartner({
-            email: partner.email,
-            name: partner.username,
-            profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
-        });
-    
-        setTimeout(() => {
-            if (mounted.current) {
-                setSelectedRoom(room);
-            }
-        }, 0);
+            .catch(error => {
+                console.error('읽음 상태 업데이트 실패:', error);
+                // 에러가 발생해도 채팅방은 계속 표시되도록 함
+            });
     }, [user, fetchChatRoomsAndUnreadCount]);
 
     const handleLeaveChat = useCallback(async (roomId) => {
@@ -214,20 +188,16 @@ export default function ChatPage() {
                 throw new Error('채팅방 나가기 실패');
             }
     
-            if (mounted.current) {
-                setChatRooms(prevRooms => prevRooms.filter(room => room.id !== roomId));
-                setSelectedRoom(null);
-                setChatPartner({
-                    email: '',
-                    name: '',
-                    profileImage: null
-                });
-                // 채팅방 나가기 후 읽지 않은 메시지 수 업데이트
-                fetchChatRoomsAndUnreadCount();
-            }
-    
+            setChatRooms(prevRooms => prevRooms.filter(room => room.id !== roomId));
+            setSelectedRoom(null);
+            setChatPartner({
+                email: '',
+                name: '',
+                profileImage: null
+            });
+            fetchChatRoomsAndUnreadCount();
             navigate('/chat', { replace: true });
-    
+
         } catch (error) {
             console.error('채팅방 나가기 실패:', error);
         }
