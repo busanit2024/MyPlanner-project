@@ -9,16 +9,23 @@ import { ChromePicker } from 'react-color';
 const CalendarWrite = () => {
   const { user, loading } = useAuth();
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [label, setLabel] = useState({ color: '' });
-  const [isPickerVisible, setIsPickerVisible] = useState(false);  // 색상 선택기 보이기 여부
 
   const [title, setTitle] = useState('');
   const [categoryList, setCategoryList] = useState([]); // 카테고리 목록
   const [categoryId, setCategoryId] = useState(4); // 카테고리 ID
   const [participants, setParticipants] = useState([]);
   const [date, setDate] = useState(''); // 오늘 날짜 상태
-  const [startDate, setStartDate] = useState(''); // 시작 날짜 상태
-  const [endDate, setEndDate] = useState(''); // 끝 날짜 상태
+
+  // URL로부터 전달된 데이터
+  const { startDate: initialStartDate, endDate: initialEndDate } = location.state || {};
+
+  const [startDate, setStartDate] = useState(initialStartDate || ''); // 시작 날짜 상태
+  const [endDate, setEndDate] = useState(initialEndDate || ''); // 끝 날짜 상태
+
   const [startTime, setStartTime] = useState(''); // 시작 시간 상태
   const [endTime, setEndTime] = useState(''); // 끝 시간 상태
   const [allDay, setAllDay] = useState(false);  // 종일 여부
@@ -33,19 +40,11 @@ const CalendarWrite = () => {
   const [done, setDone] = useState(false);  // 일정 완료 여부
   const [checkDone, setCheckDone] = useState([]);  // 체크리스트 완료 여부
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // URL로부터 전달된 데이터
-  const { startDate: initialStartDate, endDate: initialEndDate } = location.state || {};
-
   // 컴포넌트가 마운트될 때 오늘 날짜로 초기화
   useEffect(() => {
     const today = new Date();
     const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD 형식
     setDate(formattedDate);
-    setStartDate(''); // 시작 날짜 초기화
-    setEndDate(''); // 끝 날짜 초기화
   }, []);
 
   useEffect(() => {
@@ -62,16 +61,6 @@ const CalendarWrite = () => {
       // setCategoryId(user.categories[4].id); // 첫 번째 카테고리 ID로 초기화
     }
   }, [loading, user]);
-
-  const handleColorChange = useCallback(
-    (color) => {
-      setColor(color);
-    }, [color]
-  );
-
-  const togglePicker = () => {
-    setIsPickerVisible(!isPickerVisible); // 색상 선택기 토글
-  };
 
   const handleAddParticipant = () => {
     setParticipants(user?.follows.map(follow => follow.id) || []);
@@ -160,11 +149,31 @@ const CalendarWrite = () => {
     }
   };
 
+  // 날짜 유효성 검사 함수
+  const isEndDateVaild = (newEndDate) => {
+    if (newEndDate < startDate) {
+      alert('끝 날짜는 시작 날짜보다 이전일 수 없습니다.');
+      setEndDate(startDate);
+      return false;
+    }
+    return true;
+  };
+
+  // 시간 유효성 검사 함수
+  const isEndTimeValid = (newEndTime) => {
+    if (startDate === endDate && newEndTime < startTime) {
+      alert('끝 시간은 시간 시간보다 이전일 수 없습니다.');
+      setEndTime(startTime);
+      return false;
+    }
+    return true;
+  };
+
   return (
     <div className="calendar-write">
       <div className='header' style={{ position: 'relative' }}>
         <h2>일정 입력</h2>
-        <input
+        {/* <input
           value={color}
           onClick={togglePicker}  // 클릭 시 색상 선택기 열기
           style={{ marginLeft: "10px" }}
@@ -183,7 +192,7 @@ const CalendarWrite = () => {
               onChange={color => handleColorChange(color.hex)}
             />
           </div>
-        )}
+        )} */}
         <button className="submit-button"
           onClick={handleSubmit}>
           완료
@@ -259,6 +268,7 @@ const CalendarWrite = () => {
               setStartTime(''); // 날짜 변경 시 시간 초기화
             }}
           />
+          {/* 시작 시간 */}
           {startDate && !allDay && (
             <input 
               type="time" 
@@ -275,16 +285,31 @@ const CalendarWrite = () => {
             disabled={allDay}
             value={endDate}
             onChange={(e) => {
-              setEndDate(e.target.value);
-              setEndTime(''); // 날짜 변경 시 시간 초기화
+              const newEndDate = e.target.value;
+              if (isEndDateVaild(newEndDate)) {
+                setEndDate(newEndDate);
+                setEndTime(''); // 날짜 변경 시 시간 초기화
+              }
             }}
           />
+          {/* 끝 시간 */}
           {endDate && !allDay && (
             <input 
               type="time" 
               className="input-field" 
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
+              onChange={(e) => {
+                const newEndTime = e.target.value;
+                // 시작 시간이 설정되었을 때 유효성 검사
+                if (startTime) {
+                  if (isEndTimeValid(newEndTime)) {
+                    setEndTime(e.target.value);
+                  }
+                } else {
+                  alert("끝 시간을 설정하기 전에 시작 시간부터 입력하세요.");
+                }
+              }}
+              disabled={!startTime} // 시작 시간이 설정되어 있지 않을 경우 비활성화
             />
           )}
         </div>
