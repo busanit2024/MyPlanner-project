@@ -248,9 +248,15 @@ const CalendarUpdate = () => {
     console.log("새로운 참가자 목록: ", newParticipantList);
     console.log("기존 참가자 목록: ", participants);
 
-    const usersToInvite = newParticipantList.filter((participant) =>
+    const newUsers = newParticipantList.filter((participant) =>
       !participants.some((p) => p.user.id === participant.id)
     );
+
+    const usersDeclined = newParticipantList.filter((participant) =>
+      participants.some((p) => p.user.id === participant.id && p.status === 'DECLINED')
+    );
+
+    const usersToInvite = [...newUsers, ...usersDeclined];
 
     const usersToDelete = participants.filter((participant) =>
       !newParticipantList.some((p) => p.id === participant.user.id)

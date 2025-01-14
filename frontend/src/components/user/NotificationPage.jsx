@@ -187,7 +187,6 @@ export default function NotificationPage() {
   };
 
 
-
   return (
     <Container>
       <InnerContainer>
@@ -195,7 +194,7 @@ export default function NotificationPage() {
         {isloading.invite && <p>로딩중...</p>}
         {notiList.invite.length === 0 && !isloading.invite && <p>받은 초대가 없어요.</p>}
         {notiList.invite.map((invite) => (
-          <NotiListItem key={invite.id} data={invite} onClick={() => handleClick(invite)} />
+          <NotiListItem key={invite.id} data={invite} onClick={() => handleClick(invite)} onReaction={() => readNoti(invite)} />
         ))}
 
         <div className="button-wrap">

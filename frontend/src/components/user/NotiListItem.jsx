@@ -4,12 +4,14 @@ import { calculateDate } from "../../util/calculateDate";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
+import { useState } from "react";
 
 const defaultProfileImage = "/images/default/defaultProfileImage.png";
 
 export default function NotiListItem(props) {
-  const { data, onClick } = props;
+  const { data, onClick, onReaction } = props;
   const { user, loading } = useAuth();
+  const [inviteStatus, setInviteStatus] = useState(data.inviteStatus);
 
   const makeText = () => {
     if (!data) return "";
@@ -28,6 +30,13 @@ export default function NotiListItem(props) {
           <>
             <span>{fromUser.username}</span> 님이
             <span>{data.targetName}</span> 일정에 회원님을 초대했습니다.
+          </>
+        )
+      case "PARTICIPATE":
+        return (
+          <>
+            <span>{fromUser.username}</span> 님이
+            <span>{data.targetName}</span> 일정에 참여했습니다.
           </>
         )
       default:
@@ -96,7 +105,8 @@ export default function NotiListItem(props) {
             confirmButton: "swal-button swal-button-confirm",
           },
         });
-        data.inviteStatus = 'ACCEPTED';
+        setInviteStatus('ACCEPTED');
+        onReaction();
       }
     } catch (error) {
       console.error("초대 수락 에러", error);
@@ -123,7 +133,8 @@ export default function NotiListItem(props) {
             confirmButton: "swal-button swal-button-confirm",
           },
         });
-        data.inviteStatus = 'DECLINED';
+        setInviteStatus('DECLINED');
+        onReaction();
       } 
     } catch (error) {
       console.error("초대 거절 에러", error);
@@ -146,14 +157,14 @@ export default function NotiListItem(props) {
       </div>
 
       {data?.type === "INVITE" && <div className="button-group">
-        {data.inviteStatus === 'PENDING' && <>
+        {inviteStatus === 'PENDING' && <>
           <Button onClick={handleDeclineButton} >거절</Button>
           <Button color="primary" onClick={handleAccepButton}>수락</Button>
         </>}
-        {data.inviteStatus === 'ACCEPTED' &&
+        {inviteStatus === 'ACCEPTED' &&
           <Button color="gray" disabled>수락됨</Button>
         }
-        {data.inviteStatus === 'DECLINED' &&
+        {inviteStatus === 'DECLINED' &&
           <Button color="gray" disabled>거절됨</Button>
         }
       </div>}

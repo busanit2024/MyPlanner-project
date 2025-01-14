@@ -261,9 +261,9 @@ public class ScheduleService {
         }
       }
 
-      participantRepository.save(newParticipant);
+      Participant savedParticipant = participantRepository.save(newParticipant);
       //일정 작성자에게 알림 보내기
-      newParticipant.publishParticipateEvent(eventPublisher);
+      savedParticipant.publishParticipateEvent(eventPublisher);
 
       // 수락하지 않은 초대 알림이 있을 시 상태를 수락으로 바꿈
       Notification notification = notificationRepository.findByUserAndTargetIdAndType(user, scheduleId, Notification.NotiType.INVITE ).orElse(null);
