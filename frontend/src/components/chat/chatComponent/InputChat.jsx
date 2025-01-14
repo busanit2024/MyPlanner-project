@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useState } from "react";
 import ImageUploadModal from '../../../ui/ImageUploadModal';
+import MyScheduleModal from '../../../ui/MyScheduleModal';
 import { imageFileUpload } from "../../../firebase";
 
 const InputChatBox = styled.div`
@@ -87,6 +88,7 @@ const DropdownItem = styled.div`
 export default function InputChat({ onSendMessage, isLeft }) {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isImageModalOpen, setImageModalOpen] = useState(false);
+    const [isScheduleModalOpen, setScheduleModalOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [uploadedImages, setUploadedImages] = useState([]);
 
@@ -98,6 +100,11 @@ export default function InputChat({ onSendMessage, isLeft }) {
 
     const attachImg = () => {
         setImageModalOpen(true);
+        setDropdownOpen(false);
+    };
+
+    const attachSchedule = () => {
+        setScheduleModalOpen(true);
         setDropdownOpen(false);
     };
 
@@ -170,7 +177,7 @@ export default function InputChat({ onSendMessage, isLeft }) {
                             <img src="images/icon/chatImage.png" alt="이미지 추가" />
                             <p>이미지 추가</p>
                         </DropdownItem>
-                        <DropdownItem>
+                        <DropdownItem onClick={attachSchedule}>
                             <img src="images/icon/chatCal.png" alt="일정 공유" />
                             <p>일정 공유</p>
                         </DropdownItem>
@@ -182,6 +189,10 @@ export default function InputChat({ onSendMessage, isLeft }) {
                 isOpen={isImageModalOpen}
                 onClose={() => setImageModalOpen(false)}
                 onUpload={handleImageUpload}
+            />
+            <MyScheduleModal
+                isOpen={isScheduleModalOpen}
+                onClose={() => setScheduleModalOpen(false)}
             />
         </>
     );
