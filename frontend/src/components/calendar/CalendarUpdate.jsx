@@ -10,6 +10,7 @@ import Switch from '../../ui/Switch';
 import { useSearch } from '../../context/SearchContext';
 import UserSelectModal from './UserSelectModal';
 import Button from '../../ui/Button';
+import Comments from './Comments';
 
 const defaultProfileImageUrl = '/images/default/defaultProfileImage.png';
 
@@ -354,7 +355,9 @@ const CalendarUpdate = () => {
 
         {/* 참가자 목록 */}
         <Participants className='input-field participant'>
-          <span style={{ fontSize: "18px", marginBottom: "8px" }}>참가자</span>
+          <span style={{ fontSize: "18px", marginBottom: "8px" }}>
+            {`${participants.filter((participant) => participant.status === 'ACCEPTED').length}명 참가중`}
+          </span>
           <div className='participant-list'>
             {newParticipants.map((participant, index) => (
               <div key={index} className="participant">
@@ -367,7 +370,9 @@ const CalendarUpdate = () => {
                     {participant.status === 'PENDING' ? '초대중' : participant.status === 'DECLINED' ? '거절됨' : '추가됨'}
                   </div>
                 </div>
-                <div className='username'>{participant?.username}</div>
+                <div className='username' onClick={() => navigate(`/user/${participant.id}`)}>
+                  {participant?.username}
+                  </div>
               </div>
             ))}
             {isOwner && (
@@ -496,8 +501,11 @@ const CalendarUpdate = () => {
             disabled={!isOwner || done}
           />
         </DescSection>
-
+      
       </InputContainer>
+
+      {/* 댓글 */}
+      <Comments scheduleId={id} />
     </Container>
   );
 };
@@ -646,14 +654,23 @@ const Participants = styled.div`
   & .participant {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     align-items: center;
+
+    & .username {
+      font-size: 14px;
+      cursor: pointer;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
 
     & .profile-image {
       position: relative;
       flex-shrink: 0;
-      width: 58px;
-      height: 58px;
+      width: 50px;
+      height: 50px;
       background-color: var(--light-gray);
       border-radius: 50%;
       display: flex;
@@ -677,6 +694,7 @@ const Participants = styled.div`
       align-items: center;
       cursor: pointer;
       display: none;
+      z-index: 2;
     }
 
     & .status-overlay {
@@ -692,6 +710,7 @@ const Participants = styled.div`
       justify-content: center;
       align-items: center;
       display: none;
+      cursor: default;
 
       &.visible {
         display: flex;
@@ -708,8 +727,8 @@ const Participants = styled.div`
 
     &.add {
       flex-shrink: 0;
-      width: 58px;
-      height: 58px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       align-self: flex-start;
       border: 1px solid var(--light-gray);
@@ -870,7 +889,7 @@ const DescSection = styled.div`
 
   & textarea {
     width: 100%;
-    height: 120px;
+    min-height: 64px;
     font-size: 16px;
     border: none;
     padding: 8px;
