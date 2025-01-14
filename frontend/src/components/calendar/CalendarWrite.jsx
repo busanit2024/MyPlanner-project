@@ -9,18 +9,25 @@ import Button from '../../ui/Button';
 import { useSearch } from '../../context/SearchContext';
 import Modal from '../../ui/Modal';
 import UserSelectModal from './UserSelectModal';
+import Swal from 'sweetalert2';
 
 const CalendarWrite = () => {
   const { user, loading } = useAuth();
   const { setOnWriteSchedule } = useSearch();
-
+  const navigate = useNavigate();
+  const location = useLocation();
   const [title, setTitle] = useState('');
   const [categoryList, setCategoryList] = useState([]); // 카테고리 목록
   const [categoryId, setCategoryId] = useState(null); // 카테고리 ID
   const [participants, setParticipants] = useState([]);
   const [date, setDate] = useState(''); // 오늘 날짜 상태
-  const [startDate, setStartDate] = useState(''); // 시작 날짜 상태
-  const [endDate, setEndDate] = useState(''); // 끝 날짜 상태
+
+  // URL로부터 전달된 데이터
+  const { startDate: initialStartDate, endDate: initialEndDate } = location.state || {};
+
+  const [startDate, setStartDate] = useState(initialStartDate || ''); // 시작 날짜 상태
+  const [endDate, setEndDate] = useState(initialEndDate || ''); // 끝 날짜 상태
+
   const [startTime, setStartTime] = useState(''); // 시작 시간 상태
   const [endTime, setEndTime] = useState(''); // 끝 시간 상태
   const [allDay, setAllDay] = useState(false);  // 종일 여부
@@ -36,19 +43,11 @@ const CalendarWrite = () => {
   const [checkDone, setCheckDone] = useState([]);  // 체크리스트 완료 여부
   const [userSelectModalOpen, setUserSelectModalOpen] = useState(false); // 유저 선택 모달 오픈 여부
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // URL로부터 전달된 데이터
-  const { startDate: initialStartDate, endDate: initialEndDate } = location.state || {};
-
   // 컴포넌트가 마운트될 때 오늘 날짜로 초기화
   useEffect(() => {
     const today = new Date();
     const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD 형식
     setDate(formattedDate);
-    setStartDate(''); // 시작 날짜 초기화
-    setEndDate(''); // 끝 날짜 초기화
   }, []);
 
 
@@ -59,7 +58,6 @@ const CalendarWrite = () => {
       setCategoryId(null);
     }
   }, [loading, user]);
-
 
   useEffect(() => {
     // 탑바에 일정 작성 버튼 표시하기 위해 context 사용
@@ -164,6 +162,44 @@ const CalendarWrite = () => {
     }
   };
 
+  // 날짜 유효성 검사 함수
+  const isEndDateVaild = (newEndDate) => {
+    if (newEndDate < startDate) {
+      Swal.fire({
+        title: "날짜 오류",
+        text: "끝 날짜는 시작 날짜보다 이전일 수 없습니다.",
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+          cancelButton: "swal-button swal-button-cancel",
+        },
+      });
+      setEndDate(startDate);
+      return false;
+    }
+    return true;
+  };
+
+  // 시간 유효성 검사 함수
+  const isEndTimeValid = (newEndTime) => {
+    if (startDate === endDate && newEndTime < startTime) {
+      Swal.fire({
+        title: "시간 오류",
+        text: "끝 시간은 시작 시간보다 이전일 수 없습니다.",
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+          cancelButton: "swal-button swal-button-cancel",
+        },
+      });
+      setEndTime(startTime);
+      return false;
+    }
+    return true;
+  };
+
   return (
     <Container>
       <UserSelectModal title={"일정 참가자 추가"} onClose={() => setUserSelectModalOpen(false)} isOpen={userSelectModalOpen} participants={participants} setParticipants={setParticipants}>
@@ -219,7 +255,6 @@ const CalendarWrite = () => {
               <img src="/images/icon/plusLine.svg" alt="Add" />
             </div>
           </div>
-
         </Participants>
 
         {/* 일정 날짜 입력 */}
@@ -257,15 +292,28 @@ const CalendarWrite = () => {
                     type="date"
                     value={endDate}
                     onChange={(e) => {
-                      setEndDate(e.target.value);
-                      setEndTime(''); // 날짜 변경 시 시간 초기화
+                      const newEndDate = e.target.value;
+                      if (isEndDateVaild(newEndDate)) {
+                        setEndDate(newEndDate);
+                        setEndTime(''); // 날짜 변경 시 시간 초기화
+                      }
                     }}
                   />
                   <input className='date-time-input'
                     type="time"
                     value={endTime}
                     disabled={allDay}
-                    onChange={(e) => setEndTime(e.target.value)}
+                    onChange={(e) => {
+                      const newEndTime = e.target.value;
+                      // 시작 시간이 설정되었을 때 유효성 검사
+                      if (startTime) {
+                        if (isEndTimeValid(newEndTime)) {
+                          setEndTime(e.target.value);
+                        }
+                      } else {
+                        alert("끝 시간을 설정하기 전에 시작 시간부터 입력하세요.");
+                      }
+                    }}
                   />
                 </div>
               </div>

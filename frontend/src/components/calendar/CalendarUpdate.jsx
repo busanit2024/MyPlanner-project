@@ -22,7 +22,6 @@ const CalendarUpdate = () => {
   const eventData = location.state?.eventData;
 
   const [label, setLabel] = useState({ color: '' });
-  const [isPickerVisible, setIsPickerVisible] = useState(false);
 
   const [title, setTitle] = useState(eventData?.title || '');
   const [categoryList, setCategoryList] = useState([]);
@@ -137,7 +136,6 @@ const CalendarUpdate = () => {
       fetchSchedule();
     }
   }, [id, user, loading]);
-
 
   const handleAddParticipant = () => {
     setUserSelectModalOpen(true);
