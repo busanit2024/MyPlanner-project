@@ -33,26 +33,31 @@ public class ChatController {
     private final SimpMessageSendingOperations messagingTemplate;
     private final ChatRoomService chatRoomService;
 
+    // 채팅방 목록 불러오기
     @GetMapping("/rooms/{roomId}")
     public Mono<ChatRoom> getChatRoom(@PathVariable String roomId) {
         return chatRoomService.findById(roomId);
     }
 
+    //채팅방 만들기
     @PostMapping("/rooms")
     public Mono<ChatRoom> createChatRoom(@RequestBody ChatRoomRequest request) {
         return chatRoomService.createChatRoom(request);
     }
 
+    // 참여자 정보 불러오기
     @GetMapping("/rooms/user/{email}")
     public Flux<ChatRoom> getUserChatRooms(@PathVariable String email) {
         return chatRoomService.findByParticipantEmail(email);
     }
 
+    // 채팅 내역 불러오기
     @GetMapping("/rooms/{chatRoomId}/messages")
     public Flux<Message> getChatHistory(@PathVariable String chatRoomId) {
         return messageService.getChatHistory(chatRoomId);
     }
 
+    // 채팅 보내기
     @MessageMapping("/chat/rooms/{chatRoomId}/send")
     public Mono<Void> sendMessage(@DestinationVariable String chatRoomId,
                                   @Payload Message message) {
@@ -83,6 +88,19 @@ public class ChatController {
                                         .sendTime(savedMessage.getSendTime())
                                         .build();
                                 messagingTemplate.convertAndSend("/sub/chat/rooms/" + chatRoomId, response);
+
+                                // 읽지 않은 메시지 수 업데이트 및 전송
+                                chatRoom.getParticipants().stream()
+                                        .filter(p -> !p.getEmail().equals(message.getSenderEmail()))
+                                        .forEach(participant -> {
+                                            getUnreadCounts(participant.getEmail())
+                                                    .subscribe(unreadCounts -> {
+                                                        messagingTemplate.convertAndSend(
+                                                                "/sub/chat/unread/" + participant.getEmail(),
+                                                                unreadCounts
+                                                        );
+                                                    });
+                                        });
                             })
                             .then();
                 });
@@ -139,6 +157,7 @@ public class ChatController {
                 });
     }
 
+    // 읽지 않은 메시지 수
     @GetMapping("/rooms/unread/{email}")
     public Mono<Map<String, Long>> getUnreadCounts(@PathVariable String email) {
         return chatRoomService.findByParticipantEmail(email)
@@ -147,22 +166,24 @@ public class ChatController {
                 .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
+    // 마지막으로 읽은 메시지 변경
     @PostMapping("/rooms/{roomId}/read-status")
     public Mono<Void> updateReadStatus(
             @PathVariable String roomId,
             @RequestBody ReadStatusDTO readStatusDTO) {
-        System.out.println("Updating read status for room: " + roomId
-                + ", user: " + readStatusDTO.getUserEmail()
-                + ", messageId: " + readStatusDTO.getLastChatLogId());
-
         return messageService.markAsRead(
                 roomId,
                 readStatusDTO.getUserEmail(),
                 readStatusDTO.getLastChatLogId()
         ).doOnSuccess(v -> {
-            System.out.println("Read status updated successfully");
-        }).doOnError(e -> {
-            System.err.println("Error updating read status: " + e.getMessage());
+            // 읽음 상태 업데이트 후 해당 사용자의 읽지 않은 메시지 수 전송
+            getUnreadCounts(readStatusDTO.getUserEmail())
+                    .subscribe(unreadCounts -> {
+                        messagingTemplate.convertAndSend(
+                                "/sub/chat/unread/" + readStatusDTO.getUserEmail(),
+                                unreadCounts
+                        );
+                    });
         });
     }
 

@@ -68,14 +68,25 @@ export default function ChatPage() {
     const { setUnreadChatCount } = useNoti();
     const mounted = useRef(true);
 
-    const { messages, sendMessage, isConnected, loadChatHistory, disconnect } = useChat(
-        selectedRoom?.id || roomId,
-        user?.email || '',
-        mounted
-    );
+    const handleChatRoomUpdate = useCallback((unreadCounts) => {
+        // 채팅방 목록 업데이트
+        setChatRooms(prevRooms => 
+            prevRooms.map(room => ({
+                ...room,
+                unreadCount: unreadCounts[room.id] || 0
+            }))
+        );
+    
+        if (selectedRoom) {
+            setSelectedRoom(prev => ({
+                ...prev,
+                unreadCount: unreadCounts[prev.id] || 0
+            }));
+        }
+    }, [selectedRoom]);
 
-    // 채팅방 목록과 읽지 않은 메시지 수를 가져오는 함수
-    const fetchChatRoomsAndUnreadCount = useCallback(async () => {
+     // 채팅방 목록과 읽지 않은 메시지 수를 가져오는 함수
+     const fetchChatRoomsAndUnreadCount = useCallback(async () => {
         if (!user?.email) return;
         
         try {
@@ -101,6 +112,22 @@ export default function ChatPage() {
         }
     }, [user?.email, setUnreadChatCount]);
 
+    const { messages, sendMessage, isConnected, loadChatHistory, disconnect } = useChat(
+        selectedRoom?.id || roomId,
+        user?.email || '',
+        mounted,
+        handleChatRoomUpdate
+    );
+
+    // 초기 데이터 로드
+    useEffect(() => {
+        if (user?.email) {
+            fetchChatRoomsAndUnreadCount();
+        }
+    }, [user?.email, fetchChatRoomsAndUnreadCount]);
+
+   
+
     useEffect(() => {
         mounted.current = true;
         return () => {
@@ -123,13 +150,7 @@ export default function ChatPage() {
         }
     }, [selectedRoom, loadChatHistory]);
 
-    useEffect(() => {
-        if (user?.email) {
-            fetchChatRoomsAndUnreadCount();
-            const interval = setInterval(fetchChatRoomsAndUnreadCount, 5000);
-            return () => clearInterval(interval);
-        }
-    }, [user?.email, fetchChatRoomsAndUnreadCount]);
+    
 
     // 채팅방 선택
     const handleSelectRoom = useCallback((room, partner) => {   
@@ -236,21 +257,6 @@ export default function ChatPage() {
             });
         }
     }, [user?.email]);
-
-    const handleChatRoomUpdate = useCallback((updatedRoom) => {
-        setChatRooms(prevRooms => 
-            prevRooms.map(room => 
-                room.id === updatedRoom.id ? updatedRoom : room
-            )
-        );
-
-        if (selectedRoom?.id === updatedRoom.id) {
-            setSelectedRoom(updatedRoom);
-        }
-        
-        // 채팅방 업데이트 시 읽지 않은 메시지 수 업데이트
-        fetchChatRoomsAndUnreadCount();
-    }, [selectedRoom?.id, fetchChatRoomsAndUnreadCount]);
 
     const handleSendMessage = useCallback((content) => {
         sendMessage(content);
