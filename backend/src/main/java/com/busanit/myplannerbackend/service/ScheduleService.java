@@ -28,8 +28,9 @@ public class ScheduleService {
     private final CategoryRepository categoryRepository;
     private final ParticipantRepository participantRepository;
     private final ApplicationEventPublisher eventPublisher;
+  private final NotificationRepository notificationRepository;
 
-    @Transactional
+  @Transactional
     // 일정 등록
     public Schedule createSchedule(ScheduleDTO scheduleDTO) {
       //userId에 해당하는 User 객체를 찾아서 엔티티로 변환시 사용
@@ -230,6 +231,8 @@ public class ScheduleService {
         return;
       }
       participantRepository.delete(existingParticipant);
+
+      notificationRepository.findByUserAndTargetIdAndType(targetUser, scheduleId, Notification.NotiType.INVITE).ifPresent(notificationRepository::delete);
     }
 
     //일정 참여하기
@@ -261,6 +264,14 @@ public class ScheduleService {
       participantRepository.save(newParticipant);
       //일정 작성자에게 알림 보내기
       newParticipant.publishParticipateEvent(eventPublisher);
+
+      // 수락하지 않은 초대 알림이 있을 시 상태를 수락으로 바꿈
+      Notification notification = notificationRepository.findByUserAndTargetIdAndType(user, scheduleId, Notification.NotiType.INVITE ).orElse(null);
+      if (notification != null) {
+        notification.setInviteStatus(Participant.Status.ACCEPTED);
+        notificationRepository.save(notification);
+      }
+
     }
 
     //일정 초대 거절하기
@@ -282,6 +293,13 @@ public class ScheduleService {
 
       existingParticipant.setStatus(Participant.Status.DECLINED);
       participantRepository.save(existingParticipant);
+
+      Notification notification = notificationRepository.findByUserAndTargetIdAndType(user, scheduleId, Notification.NotiType.INVITE).orElse(null);
+      if (notification == null) {
+        return;
+      }
+      notification.setInviteStatus(Participant.Status.DECLINED);
+      notificationRepository.save(notification);
     }
 
 }

@@ -179,6 +179,18 @@ public class ScheduleController {
         return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
+    @GetMapping("/invite/{scheduleId}/accept")
+    public ResponseEntity<String> inviteAccept(@RequestParam Long userId, @PathVariable Long scheduleId) {
+        scheduleService.participate(scheduleId, userId);
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    @GetMapping("/invite/{scheduleId}/decline")
+    public ResponseEntity<String> inviteDecline(@PathVariable Long scheduleId, @RequestParam Long userId) {
+        scheduleService.declineInvite(scheduleId, userId);
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
 }
 
 

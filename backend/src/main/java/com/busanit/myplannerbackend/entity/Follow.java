@@ -18,7 +18,7 @@ public class Follow {
   //팔로우 알림 이벤트 발행
   public void publishEvent(ApplicationEventPublisher eventPublisher) {
     if (eventPublisher != null) {
-      eventPublisher.publishEvent(Notification.of(followTo, Notification.NotiType.FOLLOW, followFrom, followFrom.getId()));
+      eventPublisher.publishEvent(Notification.of(followTo, Notification.NotiType.FOLLOW, followFrom, followFrom));
     }
   }
 

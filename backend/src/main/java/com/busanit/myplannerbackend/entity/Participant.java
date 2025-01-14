@@ -14,13 +14,13 @@ public class Participant {
   //초대 알림 보내기
   public void publishInviteEvent(ApplicationEventPublisher eventPublisher) {
     if(eventPublisher != null) {
-      eventPublisher.publishEvent(Notification.of(user, Notification.NotiType.INVITE, schedule.getUser(), schedule.getId()));
+      eventPublisher.publishEvent(Notification.of(user, Notification.NotiType.INVITE, schedule.getUser(), schedule));
     }
   }
 
   public void publishParticipateEvent(ApplicationEventPublisher eventPublisher) {
     if(eventPublisher != null) {
-      eventPublisher.publishEvent(Notification.of(schedule.getUser(), Notification.NotiType.PARTICIPATE, user, schedule.getId() ));
+      eventPublisher.publishEvent(Notification.of(schedule.getUser(), Notification.NotiType.PARTICIPATE, user, schedule ));
     }
   }
 

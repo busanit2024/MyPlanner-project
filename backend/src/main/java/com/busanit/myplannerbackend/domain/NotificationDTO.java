@@ -1,6 +1,7 @@
 package com.busanit.myplannerbackend.domain;
 
 import com.busanit.myplannerbackend.entity.Notification;
+import com.busanit.myplannerbackend.entity.Participant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,10 +20,12 @@ public class NotificationDTO {
   private Notification.NotiType type;
   private UserDTO fromUser;
   private Long targetId;
+  private String targetName;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private LocalDateTime deletedAt;
   private boolean isRead;
+  private Participant.Status inviteStatus;
 
   public static NotificationDTO toDTO(Notification notification) {
     NotificationDTOBuilder builder = NotificationDTO.builder()
@@ -31,6 +34,8 @@ public class NotificationDTO {
             .type(notification.getType())
             .fromUser(UserDTO.toDTO(notification.getFromUser()))
             .targetId(notification.getTargetId())
+            .targetName(notification.getTargetName())
+            .inviteStatus(notification.getInviteStatus())
             .createdAt(notification.getCreatedAt())
             .updatedAt(notification.getUpdatedAt())
             .deletedAt(notification.getDeletedAt())

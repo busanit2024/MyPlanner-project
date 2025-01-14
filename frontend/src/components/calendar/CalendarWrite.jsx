@@ -34,7 +34,7 @@ const CalendarWrite = () => {
   const [color, setColor] = useState(''); // 색깔
   const [done, setDone] = useState(false);  // 일정 완료 여부
   const [checkDone, setCheckDone] = useState([]);  // 체크리스트 완료 여부
-  const [userSelectModalOpen, setUserSelectModalOpen] = useState(true); // 유저 선택 모달 오픈 여부
+  const [userSelectModalOpen, setUserSelectModalOpen] = useState(false); // 유저 선택 모달 오픈 여부
 
   const navigate = useNavigate();
   const location = useLocation();
