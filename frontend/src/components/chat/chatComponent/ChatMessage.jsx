@@ -1,10 +1,11 @@
 import styled from 'styled-components';
+import React from 'react';
 
 const MessageContainer = styled.div`
   display: flex;
   flex-direction: ${props => props.isMine ? 'row-reverse' : 'row'};
-  align-items: flex-start;
-  margin: 16px 0;
+  align-items: center;
+  margin: ${props => props.isNewSender ? '5px 0' : '2px 0'};
   gap: 8px;
 `;
 
@@ -13,12 +14,22 @@ const ProfileImage = styled.img`
   height: 32px;
   border-radius: 50%;
   display: ${props => props.isMine ? 'none' : 'block'};  // 내 메시지는 프로필 숨김
+  flex-shrink: 0;
 `;
 
 const MessageContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: ${props => props.isMine ? 'flex-end' : 'flex-start'};
+  max-width: 70%;
+  align-self: flex-start;
+`;
+
+const MessageRow = styled.div`
+  display : flex;
+  flex-direction: ${props => props.isMine ? 'row' : 'row-reverse'};
+  align-items : flex-end;
+  gap : 8px;
 `;
 
 const SenderName = styled.span`
@@ -73,14 +84,13 @@ const MessageBubble = styled.div`
   `}
 `;
 
-
 const TimeStamp = styled.span`
-  font-size: 10px;
-  color: #999;
-  margin-top: 4px;
+  font-size: 12px;
+  color: var(--gray);
+  ${props => !props.show && `display : none; `}
 `;
 
-const ChatMessage = ({ message, displayMessage, time, isMine, senderName, senderProfile }) => {
+const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderProfile , showTime}) => {
   // 메시지가 이미지 URL인지 확인
   const isImageMessage = (msg) => {
     if (!msg) return false;
@@ -105,7 +115,7 @@ const ChatMessage = ({ message, displayMessage, time, isMine, senderName, sender
   };
 
   return (
-    <MessageContainer isMine={isMine}>
+    <MessageContainer isMine={isMine} isNewSender={showTime}> 
       <ProfileImage 
         src={senderProfile || '/images/default/defaultProfileImage.png'} 
         alt="프로필" 
@@ -116,37 +126,39 @@ const ChatMessage = ({ message, displayMessage, time, isMine, senderName, sender
       />
       <MessageContent isMine={isMine}>
         <SenderName isMine={isMine}>{senderName}</SenderName>
-        <MessageBubble 
+        <MessageRow isMine={isMine}>
+          <TimeStamp show={showTime}>
+            {new Date(time).toLocaleTimeString('ko-KR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            })}
+          </TimeStamp>
+          <MessageBubble 
           isMine={isMine} 
           message={message} 
           isImage={isImageMessage(message)}
           imageCount={isImageMessage(message) ? getImageUrls(message).length : 0}
         >
-          {isImageMessage(message) ? (
-            <div className="image-grid">
+            {isImageMessage(message) ? (
+              <div className="image-grid">
               {getImageUrls(message).map((url, index) => (
                 <img 
-                  key={index}
+                    key={index}
                   src={url} 
-                  alt="첨부 이미지"
-                  onError={(e) => {
-                    console.error('이미지 로드 실패:', url);
-                    e.target.style.display = 'none';
-                  }} 
-                />
-              ))}
+                    alt="첨부 이미지"
+                    onError={(e) => {
+                      console.error('이미지 로드 실패:', url);
+                      e.target.style.display = 'none';
+                    }} 
+                  />
+                ))}
             </div>
           ) : (
-            message
-          )}
-        </MessageBubble>
-        <TimeStamp>
-          {new Date(time).toLocaleTimeString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          })}
-        </TimeStamp>
+              message
+            )}
+          </MessageBubble>
+        </MessageRow>
       </MessageContent>
     </MessageContainer>
   );

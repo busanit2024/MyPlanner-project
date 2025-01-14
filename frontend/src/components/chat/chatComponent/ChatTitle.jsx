@@ -100,8 +100,16 @@ const ChatTitle = ({ profileImage, userName, userEmail, isTeam, participants, cu
       )}
       <UserInfo>
         <Name>{userName}</Name>
-        {!isTeam && userEmail && (
-          <SubText>{userEmail}</SubText>
+        {isTeam ? (
+          <SubText>
+            <img 
+              src="/images/icon/Users.svg" 
+              style={{width:'16px', height:'16px', marginRight:'4px', transform: 'translateY(+2px)'}}
+            />
+            {participants?.length}
+          </SubText>
+        ) : (
+          userEmail && <SubText>{userEmail}</SubText>
         )}
       </UserInfo>
       <MenuContainer>
