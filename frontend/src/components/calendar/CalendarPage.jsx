@@ -178,8 +178,20 @@ const handleFollowingUserClick = (userId) => {
 
   // 일정 작성 페이지 이동
   function handleDateSelect(selectInfo) {
+    const { startStr, endStr } = selectInfo;
+
+    const endDateAdjusted = new Date(endStr);
+    // endStr를 강제로 하루 전으로 설정(FullCalendar의 특성상 endDate가 무조건 startDate의 하루 뒤가 되어버림)
+    endDateAdjusted.setDate(endDateAdjusted.getDate() - 1);
+    const adjustedEndDate = endDateAdjusted.toISOString().split('T')[0];  // YYYY-MM-DD 형식으로 조정
+
     // 날짜를 선택하면 일정 작성 페이지로 이동하고 선택된 날짜 전달
-    navigate('/calendarWrite', { state: { startDate: selectInfo.startStr, endDate: selectInfo.endStr } });
+    navigate('/calendarWrite', {
+      state: {
+        startDate: startStr, 
+        endDate: adjustedEndDate
+      } 
+    });
   }
 
   // 일정 클릭 시 업데이트 페이지 이동
