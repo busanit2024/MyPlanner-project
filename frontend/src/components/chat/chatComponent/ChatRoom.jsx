@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import ChatTitle from './ChatTitle';
 import ChatMessage from './ChatMessage';
 import InputChat from './InputChat';
 import EditTeamChatTitle from './EditTeamChatTitle';
+import SystemMessage from '../../../ui/SystemMessage';
 
 const ChatRoomContainer = styled.div`
     flex-grow: 1;
@@ -35,7 +36,6 @@ const ChatMessagesScroll = styled.div`
 const ChatMessages = styled.div`
     display: flex;
     flex-direction: column;
-    
 `;
 
 const ChatInput = styled.div`
@@ -45,8 +45,8 @@ const ChatInput = styled.div`
 
 const ChatDate = styled.div`
     text-align: center;
-    font-weight:600;
-    font-size:14px;
+    font-weight: 600;
+    font-size: 14px;
     color: var(--black);
     width: 100%;
     margin: 20px 0;
@@ -73,10 +73,9 @@ const NewMessageAlert = styled.div`
     &:hover {
         opacity: 0.9;
     }
-    `;
+`;
 
-
-const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected, onSendMessage, onLeaveChat }) => {
+const ChatRoom = ({ selectedRoom, onChatRoomUpdate, messages, user, isConnected, onSendMessage, onLeaveChat }) => {
     const scrollRef = useRef(null);
     const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
     const [isUserNearBottom, setIsUserNearBottom] = useState(true);
@@ -86,15 +85,8 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
 
     const otherParticipant = selectedRoom.participants.find(p => p.email !== user.email);
 
-    useEffect(() => {
-        const { scrollWidth, clientWidth } = scrollRef.current || {};
-        if (scrollWidth > clientWidth) {
-            console.error('메시지 버블이 부모를 초과하고 있습니다.');
-        }
-    }, [messages]);
-
     // 스크롤 위치 확인
-    const handleScroll = () => {
+    const handleScroll = useCallback(() => {
         if (scrollRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
             const isNear = scrollHeight - scrollTop - clientHeight < 100;
@@ -103,7 +95,16 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                 setShowNewMessageAlert(false);
             }
         }
-    };
+    }, []);
+
+    // 스크롤 하단으로 이동
+    const scrollToBottom = useCallback(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            setShowNewMessageAlert(false);
+            setIsUserNearBottom(true);
+        }
+    }, []);
 
     // 스크롤 이벤트 리스너
     useEffect(() => {
@@ -121,35 +122,20 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
     // 메시지 전송 핸들러
     const handleSendMessage = async (content) => {
         try {
-            // 사용자가 채팅방에 있는지 먼저 확인
-            const isUserInRoom = selectedRoom.participants.some(p => p.email === user.email);
-            
             if (!isUserInRoom) {
                 console.error('퇴장한 채팅방입니다.');
                 return;
             }
-
-            // 채팅방 정보 재확인
-            const roomResponse = await fetch(`/api/chat/rooms/${selectedRoom.id}`);
-            if (!roomResponse.ok) {
-                console.error('채팅방 정보 확인 실패');
-                return;
-            }
-
-            const currentRoom = await roomResponse.json();
-            const isStillParticipant = currentRoom.participants.some(p => p.email === user.email);
-            
-            if (!isStillParticipant) {
-                console.error('퇴장한 채팅방입니다.');
-                return;
-            }
-
-            // 참여 확인 후 메시지 전송
+    
             await onSendMessage(content);
             lastMessageWasMine.current = true;
             scrollToBottom();
         } catch (error) {
             console.error('메시지 전송 실패:', error);
+            // 에러가 권한 관련이면 채팅방 상태 업데이트
+            if (error.status === 403) {
+                onLeaveChat(selectedRoom.id);
+            }
         }
     };
 
@@ -162,37 +148,16 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
 
         if (scrollRef.current) {
             if (lastMessageWasMine.current) {
-                // 내가 방금 메시지를 보냈을 때만 스크롤
                 scrollToBottom();
                 lastMessageWasMine.current = false;
             } else if (!isMyMessage && !isUserNearBottom) {
-                // 상대방 메시지이고 스크롤이 위에 있을 때
                 setShowNewMessageAlert(true);
             } else if (isUserNearBottom) {
-                // 사용자가 하단에 있을 때는 스크롤
                 scrollToBottom();
             }
         }
-    }, [messages, user?.email]);
+    }, [messages, user?.email, isUserNearBottom, scrollToBottom]);
 
-    // 채팅방 변경 시 초기화
-    useEffect(() => {
-        if (selectedRoom?.id) {
-            setShowNewMessageAlert(false);
-            setIsUserNearBottom(true);
-            lastMessageWasMine.current = false;
-            setTimeout(scrollToBottom, 100);
-        }
-    }, [selectedRoom?.id]);
-
-    // 스크롤 하단으로 이동
-    const scrollToBottom = () => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-            setShowNewMessageAlert(false);
-            setIsUserNearBottom(true);
-        }
-    };
 
     // 메시지 그룹화(날짜별로)
     const groupedMessages = messages?.reduce((groups, msg) => {
@@ -209,7 +174,7 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
         return groups;
     }, {});
 
-    //단체채팅 채팅방 이름 변경
+    // 단체채팅 채팅방 이름 변경
     const handleUpdateTitle = async (newTitle) => {
         try {
             const response = await fetch(`/api/chat/rooms/${selectedRoom.id}/title`, {
@@ -224,17 +189,13 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                 })
             });
 
-            if(!response.ok){
-                throw new Error('채팅방 이름 수정에 실패했습닌다.');
+            if(!response.ok) {
+                throw new Error('채팅방 이름 수정에 실패했습니다.');
             }
 
             const updatedRoom = await response.json();
-
-            // 현재 선택된 채팅방 정보 업데이트
             onChatRoomUpdate(updatedRoom);
-
-            // 수정 모드 종료
-            setIsEditingTitle(false); 
+            setIsEditingTitle(false);
 
         } catch (error) {
             console.error('채팅방 이름 수정 중 오류:', error);
@@ -290,13 +251,27 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                     {groupedMessages && Object.entries(groupedMessages).map(([date, msgs]) => (
                         <React.Fragment key={date}>
                             <ChatDate>{date}</ChatDate>
-                            {msgs.map(msg => {
+                            {msgs.map((msg, index) => {
+                                if(msg.messageType === "LEAVE"){
+                                    return <SystemMessage key={msg.id} content={msg.contents}
+                                            margin="8px 0" backgroundColor="var(--light-gray)" color="var(--dark-gray)" padding="4px 10px" />;
+                                }
                                 const isMyMessage = msg.senderEmail === user?.email;
                                 const sender = selectedRoom.participants.find(p => p.email === msg.senderEmail);
+
+                                // 같은 시간대의 메시지인지 확인
+                                const currentMessageTime = new Date(msg.sendTime).getTime();
+                                const nextMessage = msgs[index + 1];
+                                const nextMessageTime = nextMessage ? new Date(nextMessage.sendTime).getTime() : null;
+
+                                // 다음 메시지가 같은 사람이고 1분 이내의 메시지면 시간 표시하지 않음
+                                const showTime = !nextMessage || nextMessage.senderEmail !== msg.senderEmail || 
+                                    Math.abs(currentMessageTime - nextMessageTime) > 60000;
 
                                 return (
                                     <ChatMessage
                                         key={msg.id}
+                                        messageId={msg.id}
                                         message={msg.contents}
                                         displayMessage={getDisplayMessage(msg.contents)}
                                         time={msg.sendTime}
@@ -306,6 +281,7 @@ const ChatRoom = ({ selectedRoom,  onChatRoomUpdate, messages, user, isConnected
                                             ? user.profileImageUrl 
                                             : sender?.profileImageUrl || '/images/default/defaultProfileImage.png'}
                                         showSenderInfo={isTeamChat && !isMyMessage} 
+                                        showTime={showTime}
                                     />
                                 );
                             })}

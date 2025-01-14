@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useAuth } from '../../../context/AuthContext';
 import { useEffect, useState } from 'react';
 import TeamChatProfileImage from './TeamChatProfileImage';
 
@@ -21,6 +20,7 @@ const ProfileImage = styled.img`
 
 const ChatInfo = styled.div`
   flex: 1;
+  position: relative;
 `;
 
 const ChatHeader = styled.div`
@@ -44,7 +44,18 @@ const Message = styled.div`
   color: #333;
 `;
 
-// 날짜 포맷팅
+const UnreadBadge = styled.span`
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  position: absolute;
+  right: 10px;
+  top: 80%;
+  transform: translateY(-60%);
+`;
+
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
   
@@ -59,56 +70,23 @@ const formatDate = (timestamp) => {
   }
 };
 
-const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }) => {
-  const { user } = useAuth();
+const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, user }) => {
   const [localChatRooms, setLocalChatRooms] = useState([]);
 
-  // 채팅방 목록 로딩
-  const fetchChatRooms = async () => {
-    try {
-      const response = await fetch(`/api/chat/rooms/user/${user.email}`);
-      if (!response.ok) {
-        throw new Error('채팅방 목록을 불러오는데 실패했습니다.');
-      }
-      const data = await response.json();
-
-      setLocalChatRooms(prevRooms => {
-        const updatedRooms = data.map(newRoom => {
-          const existingRoom = prevRooms.find(room => room.id === newRoom.id);
-          if (existingRoom) {
-            return {
-              ...newRoom,
-              participants: existingRoom.participants || newRoom.participants
-            };
-          }
-          return newRoom;
-        });
-        return updatedRooms;
-      });
-    } catch (error) {
-      console.error('채팅방 목록 로딩 에러: ', error);
+  useEffect(() => {
+    if (propsChatRooms) {
+      setLocalChatRooms(propsChatRooms);
     }
+  }, [propsChatRooms]);
+
+  const handleRoomSelect = (chatRoom, chatInfo) => {
+    setLocalChatRooms(prevRooms => 
+      prevRooms.map(room => 
+        room.id === chatRoom.id ? { ...room, unreadCount: 0 } : room
+      )
+    );
+    onSelectRoom(chatRoom, chatInfo);
   };
-
-  useEffect(() => {
-    if (deletedRoomId) {
-      setLocalChatRooms(prevRooms => 
-        prevRooms.filter(room => room.id !== deletedRoomId)
-      );
-    }
-  }, [deletedRoomId]);
-
-  useEffect(() => {
-    if (user?.email) {
-      fetchChatRooms();
-
-      const interval = setInterval(() => {
-        fetchChatRooms();
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [user]);
 
   const allChatRooms = [...(propsChatRooms || []), ...localChatRooms]
     .reduce((unique, room) => {
@@ -134,53 +112,49 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }
       return dateB.localeCompare(dateA);
     });
 
-  // 채팅방 정보 가져오기
   const getChatRoomInfo = (chatRoom) => {
-    if (!Array.isArray(chatRoom.participants) || chatRoom.participants.length === 0) {
-        return {
-            isTeam: false,
-            name: "알 수 없는 사용자",
-            email: "",
-            profileImageUrl: "/images/default/defaultProfileImage.png"
-        };
+    if (!Array.isArray(chatRoom.participants) || chatRoom.participants.length === 0 || !user?.email) {
+      return {
+        isTeam: false,
+        name: "알 수 없는 사용자",
+        email: "",
+        profileImageUrl: "/images/default/defaultProfileImage.png"
+      };
     }
     
     const isTeamChat = chatRoom.chatRoomType === "TEAM";
     const otherParticipants = chatRoom.participants.filter(
-        participant => participant.email !== user.email
+      participant => participant.email !== user?.email
     );
 
     if (isTeamChat) {
-        return {
-            isTeam: true,
-            name: chatRoom.chatroomTitle || otherParticipants.map(p => p.username).join(', '),
-            participants: chatRoom.participants
-        };
+      return {
+        isTeam: true,
+        name: chatRoom.chatroomTitle || otherParticipants.map(p => p.username).join(', '),
+        participants: chatRoom.participants
+      };
     } else {
-        // 개인 채팅의 경우 상대방이 없을 때도 처리
-        const otherUser = otherParticipants[0] || {
-            username: "알 수 없는 사용자",
-            email: "",
-            profileImageUrl: "/images/default/defaultProfileImage.png"
-        };
-        
-        return {
-            isTeam: false,
-            name: otherUser.username,
-            email: otherUser.email,
-            profileImageUrl: otherUser.profileImageUrl,
-            ...otherUser
-        };
+      const otherUser = otherParticipants[0] || {
+        username: "알 수 없는 사용자",
+        email: "",
+        profileImageUrl: "/images/default/defaultProfileImage.png"
+      };
+      
+      return {
+        isTeam: false,
+        name: otherUser.username,
+        email: otherUser.email,
+        profileImageUrl: otherUser.profileImageUrl,
+        ...otherUser
+      };
     }
   };
 
-  // 이미지 메시지 감지
   const isImageMessage = (msg) => {
     return msg?.includes('firebasestorage.googleapis.com') || 
            msg?.match(/\.(jpeg|jpg|gif|png)$/i) != null;
   };
 
-  // lastMessage 표시 처리
   const getDisplayMessage = (msg) => {
     if (!msg) return "새로운 채팅방이 생성되었습니다.";
     return isImageMessage(msg) ? "사진을 보냈습니다." : msg;
@@ -195,13 +169,13 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }
         return (
           <Container 
             key={chatRoom.id}
-            onClick={() => onSelectRoom(chatRoom, chatInfo)}
+            onClick={() => handleRoomSelect(chatRoom, chatInfo)}
             style={{ cursor: 'pointer' }}
           >
             {chatInfo.isTeam ? (
               <TeamChatProfileImage 
                 participants={chatRoom.participants}
-                currentUserEmail={user.email}
+                currentUserEmail={user?.email}
               />
             ) : (
               <ProfileImage
@@ -217,10 +191,10 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, deletedRoomId }
                 <Name>{chatInfo.name || "알 수 없음"}</Name>
                 <Date>{lastMessageDate}</Date>
               </ChatHeader>
-              <Message>
-                {/* {chatRoom.lastMessage || "새로운 채팅방이 생성되었습니다."} */}
-                {getDisplayMessage(chatRoom.lastMessage)}
-              </Message>
+              <Message>{getDisplayMessage(chatRoom.lastMessage)}</Message>
+              {chatRoom.unreadCount > 0 && (
+                <UnreadBadge>{chatRoom.unreadCount}</UnreadBadge>
+              )}
             </ChatInfo>
           </Container>
         );
