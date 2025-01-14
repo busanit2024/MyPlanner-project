@@ -47,13 +47,13 @@ public class User {
     ADMIN, USER
   }
 
-  @OneToMany(mappedBy = "followFrom")
+  @OneToMany(mappedBy = "followFrom", fetch = FetchType.EAGER)
   private List<Follow> follows;
 
-  @OneToMany(mappedBy = "followTo")
+  @OneToMany(mappedBy = "followTo", fetch = FetchType.EAGER)
   private List<Follow> followers;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
   private List<Category> categories;
 
   public static User toEntity(UserJoinDTO dto) {

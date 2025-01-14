@@ -75,7 +75,7 @@ public class NotificationService {
   //실제로 알림 발생 & 서버에 전송
   public void send(Notification sendedNotification) {
     if (sendedNotification.getType().equals(Notification.NotiType.FOLLOW)) {
-      notificationRepository.findByUserAndFromUser(sendedNotification.getUser(), sendedNotification.getFromUser()).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
+      notificationRepository.findByUserAndTargetIdAndType(sendedNotification.getUser(), sendedNotification.getFromUser().getId(), Notification.NotiType.FOLLOW).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
     }
     if (sendedNotification.getType().equals(Notification.NotiType.INVITE)) {
       notificationRepository.findByUserAndTargetIdAndType(sendedNotification.getUser(), sendedNotification.getTargetId(), Notification.NotiType.INVITE ).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
