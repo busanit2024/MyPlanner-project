@@ -113,7 +113,7 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, user }) => {
     });
 
   const getChatRoomInfo = (chatRoom) => {
-    if (!Array.isArray(chatRoom.participants) || chatRoom.participants.length === 0) {
+    if (!Array.isArray(chatRoom.participants) || chatRoom.participants.length === 0 || !user?.email) {
       return {
         isTeam: false,
         name: "알 수 없는 사용자",
@@ -124,7 +124,7 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, user }) => {
     
     const isTeamChat = chatRoom.chatRoomType === "TEAM";
     const otherParticipants = chatRoom.participants.filter(
-      participant => participant.email !== user.email
+      participant => participant.email !== user?.email
     );
 
     if (isTeamChat) {
@@ -175,7 +175,7 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, user }) => {
             {chatInfo.isTeam ? (
               <TeamChatProfileImage 
                 participants={chatRoom.participants}
-                currentUserEmail={user.email}
+                currentUserEmail={user?.email}
               />
             ) : (
               <ProfileImage
