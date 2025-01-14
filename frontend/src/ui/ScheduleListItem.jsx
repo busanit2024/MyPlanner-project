@@ -10,7 +10,7 @@ export default function ScheduleListItem(props) {
   const navigate = useNavigate();
 
   return (
-    <Container className="schedule-list-item">
+    <Container className="schedule-list-item" onClick={() => navigate(`/schedule/${data?.id}`)}>
       <UserInfo className="user-info" onClick={() => navigate(`/user/${data?.user.id}`)}>
         <div className="profileImage">
           <img src={data?.user.profileImageUrl || defaultProfileImageUrl}  onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />

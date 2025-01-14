@@ -2,13 +2,10 @@ package com.busanit.myplannerbackend.service;
 
 import com.busanit.myplannerbackend.domain.NotificationDTO;
 import com.busanit.myplannerbackend.entity.Notification;
-import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.repository.EmitterRepository;
-import com.busanit.myplannerbackend.repository.EmitterRepositoryImpl;
 import com.busanit.myplannerbackend.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.aspectj.weaver.ast.Not;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -78,12 +75,15 @@ public class NotificationService {
   //실제로 알림 발생 & 서버에 전송
   public void send(Notification sendedNotification) {
     if (sendedNotification.getType().equals(Notification.NotiType.FOLLOW)) {
-      notificationRepository.findByUserAndFromUser(sendedNotification.getUser(), sendedNotification.getFromUser()).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
+      notificationRepository.findByUserAndTargetIdAndType(sendedNotification.getUser(), sendedNotification.getFromUser().getId(), Notification.NotiType.FOLLOW).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
+    }
+    if (sendedNotification.getType().equals(Notification.NotiType.INVITE)) {
+      notificationRepository.findByUserAndTargetIdAndType(sendedNotification.getUser(), sendedNotification.getTargetId(), Notification.NotiType.INVITE ).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
     }
     Notification notification = notificationRepository.save(sendedNotification);
-    String recieverId = String.valueOf(notification.getUser().getId());
+    String receiverId = String.valueOf(notification.getUser().getId());
     String eventId = makeTimeIncludeId(notification.getUser().getId());
-    Map<String, SseEmitter> emitters = emitterRepository.findAllEmitterStartWithByUserId(recieverId);
+    Map<String, SseEmitter> emitters = emitterRepository.findAllEmitterStartWithByUserId(receiverId);
     emitters.forEach(
             (key, emitter) -> {
               emitterRepository.saveEventCache(key, notification);

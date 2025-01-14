@@ -11,7 +11,7 @@ import org.springframework.context.ApplicationEventPublisher;
 public class Heart { //좋아요 like는 예약어와 겹쳐서 대신 heart로 바꿈
   public void publishEvent(ApplicationEventPublisher eventPublisher) {
     if (eventPublisher != null) {
-      eventPublisher.publishEvent(Notification.of(schedule.getUser(), Notification.NotiType.HEART, user, schedule.getId()));
+      eventPublisher.publishEvent(Notification.of(schedule.getUser(), Notification.NotiType.HEART, user, schedule));
     }
   }
 
