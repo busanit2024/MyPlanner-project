@@ -144,6 +144,9 @@ export default function NotificationPage() {
       case "COMMENT":
         navigate(`/schedule/${targetId}`);
         break;
+      case "PARTICIPATE":
+        navigate(`/schedule/${targetId}`);
+        break;
       default:
         break;
     }

@@ -99,7 +99,7 @@ export default function RightSidebar({ open, setOpen }) {
           <ScheduleItem key={schedule.id}>
             <div className="color-dot" style={{ backgroundColor: getCategoryColor(schedule) }}></div>
             <div className="content">
-              <span className="title">{schedule.title}</span>
+              <span className="title" onClick={() => navigate(`/schedule/${schedule.id}`)}>{schedule.title}</span>
               <span className="date">{generateDateFormat(schedule.startDate, schedule.startTime, schedule.endDate, schedule.endTime)}</span>
 
               {schedule.checkList && (

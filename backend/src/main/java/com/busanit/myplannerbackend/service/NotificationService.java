@@ -81,9 +81,9 @@ public class NotificationService {
       notificationRepository.findByUserAndTargetIdAndType(sendedNotification.getUser(), sendedNotification.getTargetId(), Notification.NotiType.INVITE ).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
     }
     Notification notification = notificationRepository.save(sendedNotification);
-    String recieverId = String.valueOf(notification.getUser().getId());
+    String receiverId = String.valueOf(notification.getUser().getId());
     String eventId = makeTimeIncludeId(notification.getUser().getId());
-    Map<String, SseEmitter> emitters = emitterRepository.findAllEmitterStartWithByUserId(recieverId);
+    Map<String, SseEmitter> emitters = emitterRepository.findAllEmitterStartWithByUserId(receiverId);
     emitters.forEach(
             (key, emitter) -> {
               emitterRepository.saveEventCache(key, notification);

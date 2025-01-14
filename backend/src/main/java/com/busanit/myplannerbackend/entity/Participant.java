@@ -9,7 +9,6 @@ import org.springframework.context.ApplicationEventPublisher;
 @Entity
 @Getter
 @Setter
-@Data
 public class Participant {
   //초대 알림 보내기
   public void publishInviteEvent(ApplicationEventPublisher eventPublisher) {

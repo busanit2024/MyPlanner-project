@@ -4,16 +4,14 @@ package com.busanit.myplannerbackend.entity;
 import com.busanit.myplannerbackend.domain.UserEditDTO;
 import com.busanit.myplannerbackend.domain.UserJoinDTO;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -260,17 +260,21 @@ public class ScheduleService {
           newParticipant.setStatus(Participant.Status.ACCEPTED);
         }
       }
-
       Participant savedParticipant = participantRepository.save(newParticipant);
+
+      try {
+        // 수락하지 않은 초대 알림이 있을 시 상태를 수락으로 바꿈
+        Notification notification = notificationRepository.findByUserAndTargetIdAndType(user, scheduleId, Notification.NotiType.INVITE ).orElse(null);
+        if (notification != null) {
+          notification.setInviteStatus(Participant.Status.ACCEPTED);
+          notificationRepository.save(notification);
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("Failed to save notification", e);
+      }
+
       //일정 작성자에게 알림 보내기
       savedParticipant.publishParticipateEvent(eventPublisher);
-
-      // 수락하지 않은 초대 알림이 있을 시 상태를 수락으로 바꿈
-      Notification notification = notificationRepository.findByUserAndTargetIdAndType(user, scheduleId, Notification.NotiType.INVITE ).orElse(null);
-      if (notification != null) {
-        notification.setInviteStatus(Participant.Status.ACCEPTED);
-        notificationRepository.save(notification);
-      }
 
     }
 

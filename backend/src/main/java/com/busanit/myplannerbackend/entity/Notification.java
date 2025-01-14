@@ -22,6 +22,7 @@ public class Notification {
   private User user;
 
   @Enumerated(EnumType.STRING)
+  @Column(length = 50)
   private NotiType type;
 
   @CreationTimestamp
