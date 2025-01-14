@@ -4,16 +4,14 @@ package com.busanit.myplannerbackend.entity;
 import com.busanit.myplannerbackend.domain.UserEditDTO;
 import com.busanit.myplannerbackend.domain.UserJoinDTO;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -47,13 +45,13 @@ public class User {
     ADMIN, USER
   }
 
-  @OneToMany(mappedBy = "followFrom")
+  @OneToMany(mappedBy = "followFrom", fetch = FetchType.EAGER)
   private List<Follow> follows;
 
-  @OneToMany(mappedBy = "followTo")
+  @OneToMany(mappedBy = "followTo", fetch = FetchType.EAGER)
   private List<Follow> followers;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
   private List<Category> categories;
 
   public static User toEntity(UserJoinDTO dto) {

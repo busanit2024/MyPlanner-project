@@ -9,7 +9,7 @@ const ChipContainer = styled.div`
     border: solid 1px #e0e0e0;
     padding: 5px 8px;
     margin: 5px;
-    width: fit-content
+    width: fit-content;
     overflow: hidden;
 `;
 
@@ -45,7 +45,7 @@ const UserChip = ({ user, onRemove }) => {
             <RemoveButton onClick={() => {
                 onRemove();
             }}>
-                <img src="images/icon/cancel.svg" alt="cancel" />
+                <img src="/images/icon/cancel.svg" alt="cancel" />
             </RemoveButton>
         </ChipContainer>
     );

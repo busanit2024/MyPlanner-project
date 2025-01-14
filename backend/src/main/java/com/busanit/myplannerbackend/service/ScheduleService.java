@@ -28,10 +28,11 @@ public class ScheduleService {
     private final CategoryRepository categoryRepository;
     private final ParticipantRepository participantRepository;
     private final ApplicationEventPublisher eventPublisher;
+  private final NotificationRepository notificationRepository;
 
-    @Transactional
+  @Transactional
     // 일정 등록
-    public void createSchedule(ScheduleDTO scheduleDTO) {
+    public Schedule createSchedule(ScheduleDTO scheduleDTO) {
       //userId에 해당하는 User 객체를 찾아서 엔티티로 변환시 사용
       Long userId = scheduleDTO.getUserId();
       User user = userRepository.findById(userId).orElse(null);
@@ -44,8 +45,6 @@ public class ScheduleService {
       schedule.setCategory(category);
       schedule.setCheckList(scheduleDTO.getCheckList() != null ? scheduleDTO.getCheckList() : new ArrayList<>());
 
-      scheduleRepository.save(schedule);
-
       for (CheckListDTO checkListDTO : scheduleDTO.getCheckListItem()) {
         CheckList checkList_entity = new CheckList();
         checkList_entity.setContent(checkListDTO.getContent());
@@ -53,6 +52,8 @@ public class ScheduleService {
         checkList_entity.setSchedule(schedule);
         checkListRepository.save(checkList_entity);
       }
+
+      return scheduleRepository.save(schedule);
     }
 
     // 모든 일정 조회
@@ -180,9 +181,9 @@ public class ScheduleService {
       checkListRepository.save(checkList);
     }
 
-
     //일정 초대
     //targetUser를 participant 리스트에 추가한다
+    @Transactional
     public void inviteUser(Long scheduleId, Long targetUserId) {
       Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
       if (schedule == null) {
@@ -209,9 +210,9 @@ public class ScheduleService {
         newParticipant = Participant.of(schedule, targetUser);
       }
 
-      participantRepository.save(newParticipant);
+      Participant savedParticipant =  participantRepository.save(newParticipant);
       //일정 초대 시 notification 이벤트 발행
-      newParticipant.publishInviteEvent(eventPublisher);
+      savedParticipant.publishInviteEvent(eventPublisher);
     }
 
     // 초대 삭제
@@ -230,9 +231,12 @@ public class ScheduleService {
         return;
       }
       participantRepository.delete(existingParticipant);
+
+      notificationRepository.findByUserAndTargetIdAndType(targetUser, scheduleId, Notification.NotiType.INVITE).ifPresent(notificationRepository::delete);
     }
 
     //일정 참여하기
+    @Transactional
     public void participate(Long scheduleId, Long userId) {
       Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
       if (schedule == null) {
@@ -256,13 +260,26 @@ public class ScheduleService {
           newParticipant.setStatus(Participant.Status.ACCEPTED);
         }
       }
+      Participant savedParticipant = participantRepository.save(newParticipant);
 
-      participantRepository.save(newParticipant);
+      try {
+        // 수락하지 않은 초대 알림이 있을 시 상태를 수락으로 바꿈
+        Notification notification = notificationRepository.findByUserAndTargetIdAndType(user, scheduleId, Notification.NotiType.INVITE ).orElse(null);
+        if (notification != null) {
+          notification.setInviteStatus(Participant.Status.ACCEPTED);
+          notificationRepository.save(notification);
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("Failed to save notification", e);
+      }
+
       //일정 작성자에게 알림 보내기
-      newParticipant.publishParticipateEvent(eventPublisher);
+      savedParticipant.publishParticipateEvent(eventPublisher);
+
     }
 
     //일정 초대 거절하기
+    @Transactional
     public void declineInvite(Long scheduleId, Long userId) {
       Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
       if (schedule == null) {
@@ -280,6 +297,13 @@ public class ScheduleService {
 
       existingParticipant.setStatus(Participant.Status.DECLINED);
       participantRepository.save(existingParticipant);
+
+      Notification notification = notificationRepository.findByUserAndTargetIdAndType(user, scheduleId, Notification.NotiType.INVITE).orElse(null);
+      if (notification == null) {
+        return;
+      }
+      notification.setInviteStatus(Participant.Status.DECLINED);
+      notificationRepository.save(notification);
     }
 
 }

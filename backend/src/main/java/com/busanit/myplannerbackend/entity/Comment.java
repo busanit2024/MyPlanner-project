@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class Comment {
   public void publishEvent(ApplicationEventPublisher eventPublisher) {
     if (eventPublisher != null) {
-      eventPublisher.publishEvent(Notification.of(schedule.getUser(), Notification.NotiType.COMMENT, user, schedule.getId()));
+      eventPublisher.publishEvent(Notification.of(schedule.getUser(), Notification.NotiType.COMMENT, user, schedule));
     }
   }
 

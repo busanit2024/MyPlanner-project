@@ -103,7 +103,11 @@ public class ScheduleDTO {
             checkListDTOS.add(checkListDTO);
         }
 
-        List<User> heartUsers = schedule.getHearts().stream().map(Heart::getUser).toList();
+
+        List<User> heartUsers = new ArrayList<>();
+        if (schedule.getHearts() != null) {
+            heartUsers = schedule.getHearts().stream().map(Heart::getUser).toList();
+        }
 
         ScheduleDTOBuilder builder = ScheduleDTO.builder()
                 .id(schedule.getId())

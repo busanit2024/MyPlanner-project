@@ -9,6 +9,37 @@ export const SearchProvider = ({ children }) => {
   const [onSearch, setOnSearch] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [onWriteSchedule, setOnWriteSchedule] = useState(null);
+  const [onEditSchedule, setOnEditSchedule] = useState(null);
+  const [onDeleteSchedule, setOnDeleteSchedule] = useState(null);
+  const [onCompleteSchedule, setOnCompleteSchedule] = useState(null);
+  const [isOwner, setIsOwnerContext] = useState(false);
+  const [isDone, setIsDone] = useState(false);
+
+  const handleWriteSchedule = () => {
+    if (onWriteSchedule) {
+      onWriteSchedule();
+    }
+  }
+
+  const handleEditSchedule = () => {
+    if (onEditSchedule) {
+      onEditSchedule();
+    }
+  }
+
+  const handleDeleteSchedule = () => {
+    if (onDeleteSchedule) {
+      onDeleteSchedule();
+    }
+  }
+
+  const handleCompleteSchedule = () => {
+    if (onCompleteSchedule) {
+      onCompleteSchedule();
+    }
+  }
+
 
   useEffect(() => {
     if (!location.pathname.includes(`/search`)) {
@@ -28,11 +59,11 @@ export const SearchProvider = ({ children }) => {
   };
 
   return (
-    <SearchContext.Provider value={{searchText, setSearchText, handleSearch, setOnSearch, searchType, setSearchType}}>
+    <SearchContext.Provider value={{searchText, setSearchText, handleSearch, setOnSearch, searchType, setSearchType, handleWriteSchedule, handleEditSchedule, handleDeleteSchedule, setOnWriteSchedule, setOnEditSchedule, setOnDeleteSchedule, handleCompleteSchedule, setOnCompleteSchedule, isOwner, setIsOwnerContext, isDone, setIsDone}}>
       {children}
     </SearchContext.Provider>
   );
-}
+};
 
 export const useSearch = () => {
   return useContext(SearchContext);
