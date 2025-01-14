@@ -310,6 +310,7 @@ const Container = styled.div`
     height: 40px;
     border-radius: 50%;
     background-color: var(--light-gray);
+    flex-shrink: 0;
 
     & img {
       width: 100%;
