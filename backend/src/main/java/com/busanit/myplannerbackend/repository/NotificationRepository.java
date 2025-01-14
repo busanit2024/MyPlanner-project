@@ -20,6 +20,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
   Optional<Notification> findByUserAndFromUser(User user, User fromUser);
 
+  Optional<Notification> findByUserAndTargetIdAndType(User user, Long targetId, Notification.NotiType type);
+
   Integer countByUserAndIsRead(User user, boolean isRead);
 
 }

@@ -3,52 +3,53 @@ import ChatListItem from "./chatComponent/ChatListItem";
 import ChatRoom from "./chatComponent/ChatRoom";
 import NewChatButton from "./chatComponent/NewChatButton";
 import { useChat } from '../../hooks/useChat';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
+import { useNoti } from "../../context/NotiContext";
 
 const ChatContainer = styled.div`
-    display: flex;
-    width: 100%;
-    height: calc(100vh - 84px);
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 84px);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 `;
 
 const ChatList = styled.div`
-    width: 40%;  
-    border-right: 1px solid var(--light-gray);
-    padding: 24px 23px 24px 24px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
+  width: 40%;  
+  border-right: 1px solid var(--light-gray);
+  padding: 24px 23px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 `;
 
 const ChatListScroll = styled.div`
-    overflow-y: auto;
-    flex-grow: 1;
+  overflow-y: auto;
+  flex-grow: 1;
 `;
 
 const NewChatButtonContainer = styled.span`
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    bottom: 100px;
-    right: 24px;
-    z-index: 2;
-    background: var(--primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    
-    &:hover {
-        opacity: 0.9;
-    }
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  bottom: 100px;
+  right: 24px;
+  z-index: 2;
+  background: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  
+  &:hover {
+    opacity: 0.9;
+  }
 `;
 
 export default function ChatPage() {
@@ -64,33 +65,147 @@ export default function ChatPage() {
         name: '',
         profileImage: null
     });
+    const { setUnreadChatCount } = useNoti();
+    const mounted = useRef(true);
 
     const { messages, sendMessage, isConnected, loadChatHistory, disconnect } = useChat(
         selectedRoom?.id || roomId,
-        user?.email  
+        user?.email || '',
+        mounted
     );
+
+    // 채팅방 목록과 읽지 않은 메시지 수를 가져오는 함수
+    const fetchChatRoomsAndUnreadCount = useCallback(async () => {
+        if (!user?.email) return;
+        
+        try {
+            const [roomsResponse, unreadResponse] = await Promise.all([
+                fetch(`/api/chat/rooms/user/${user.email}`),
+                fetch(`/api/chat/rooms/unread/${user.email}`)
+            ]);
+    
+            const [rooms, unreadCounts] = await Promise.all([
+                roomsResponse.json(),
+                unreadResponse.json()
+            ]);
+    
+            const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+            setUnreadChatCount(totalUnread);
+    
+            setChatRooms(rooms.map(room => ({
+                ...room,
+                unreadCount: unreadCounts[room.id] || 0
+            })));
+        } catch (error) {
+            console.error('Failed to fetch chat rooms and unread counts:', error);
+        }
+    }, [user?.email, setUnreadChatCount]);
+
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+            disconnect();
+        };
+    }, [disconnect]);
 
     useEffect(() => {
         if (initialRoom && initialPartner) {
-          // 초기 채팅방과 상대방 정보가 있으면 바로 채팅방 열기
-          setSelectedRoom(initialRoom);
-          setChatPartner(initialPartner);
+            setSelectedRoom(initialRoom);
+            setChatPartner(initialPartner);
         }
-      }, []);
+    }, [initialRoom, initialPartner]);
 
-    // 현재 사용자 정보 가져오기
+    
     useEffect(() => {
-        if (!loading && !user) {
-            navigate("/login");
+        if (selectedRoom) {
+            loadChatHistory();
         }
-    }, [user, loading]);
+    }, [selectedRoom, loadChatHistory]);
 
-    const handleNewChat = (newChatRoom, selectedUsers) => {
-        //인원수에 따른 채팅방 타입 결정
+    useEffect(() => {
+        if (user?.email) {
+            fetchChatRoomsAndUnreadCount();
+            const interval = setInterval(fetchChatRoomsAndUnreadCount, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [user?.email, fetchChatRoomsAndUnreadCount]);
+
+    // 채팅방 선택
+    const handleSelectRoom = useCallback((room, partner) => {   
+        // 채팅방과 대화상대 정보 설정
+        setSelectedRoom(room);
+        setChatPartner({
+            email: partner.email,
+            name: partner.username,
+            profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
+        });    
+
+        // 읽음 상태 업데이트
+        fetch(`/api/chat/rooms/${room.id}/messages`)
+            .then(response => response.json())
+            .then(messages => {
+                const lastMessage = messages[messages.length - 1];
+                
+                return fetch(`/api/chat/rooms/${room.id}/read-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userEmail: user.email,
+                        lastChatLogId: lastMessage?.id || null
+                    })
+                });
+            })
+            .then(() => {
+                setChatRooms(prevRooms => 
+                    prevRooms.map(r => 
+                        r.id === room.id ? { ...r, unreadCount: 0 } : r
+                    )
+                );
+                fetchChatRoomsAndUnreadCount();
+            })
+            .catch(error => {
+                console.error('읽음 상태 업데이트 실패:', error);
+                // 에러가 발생해도 채팅방은 계속 표시되도록 함
+            });
+    }, [user, fetchChatRoomsAndUnreadCount]);
+
+    const handleLeaveChat = useCallback(async (roomId) => {
+        try {
+            disconnect();
+            
+            const response = await fetch(`/api/chat/rooms/${roomId}/leave`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userEmail: user?.email })
+            });
+    
+            if (!response.ok) {
+                throw new Error('채팅방 나가기 실패');
+            }
+    
+            setChatRooms(prevRooms => prevRooms.filter(room => room.id !== roomId));
+            setSelectedRoom(null);
+            setChatPartner({
+                email: '',
+                name: '',
+                profileImage: null
+            });
+            fetchChatRoomsAndUnreadCount();
+            navigate('/chat', { replace: true });
+
+        } catch (error) {
+            console.error('채팅방 나가기 실패:', error);
+        }
+    }, [user?.email, navigate, disconnect, fetchChatRoomsAndUnreadCount]);
+
+    const handleNewChat = useCallback((newChatRoom, selectedUsers) => {
         const isTeamChat = selectedUsers.length > 1;
         const chatRoomType = isTeamChat ? "TEAM" : "INDIVIDUAL";
-
-        //채팅방 정보 설정
         const updatedChatRoom = {
             ...newChatRoom,
             chatRoomType: chatRoomType
@@ -100,9 +215,8 @@ export default function ChatPage() {
         setChatRooms(prevChatRooms => [...prevChatRooms, updatedChatRoom]);
 
         if (newChatRoom.chatRoomType === "INDIVIDUAL") {
-            // 현재 로그인한 사용자와 다른 참여자 찾기
             const partner = newChatRoom.participants.find(
-                p => p.email !== user.email  
+                p => p.email !== user?.email
             );
 
             if (partner) {
@@ -110,106 +224,51 @@ export default function ChatPage() {
                     email: partner.email,
                     name: partner.username,
                     profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
-                });               
+                });
             }
         } else {
-            const otherParticipants = newChatRoom.participants.filter(p => p.email !== user.email);
+            const otherParticipants = newChatRoom.participants.filter(p => p.email !== user?.email);
             setChatPartner({
                 email: null,
-                name: otherParticipants.map(p => p.username).join(', '), 
+                name: otherParticipants.map(p => p.username).join(', '),
                 participants: otherParticipants,
                 isTeam: true
             });
         }
-    };
+    }, [user?.email]);
 
-    const handleSendMessage = (content) => {
-        sendMessage(content);
-    };
-
-    const handleSelectRoom = (room, partner) => {
-        // 기존 선택된 방을 초기화하고 새로운 방 설정
-        setSelectedRoom(null);  // 추가: 먼저 선택 초기화
-        setChatPartner({
-            email: partner.email,
-            name: partner.username,
-            profileImage: partner.profileImageUrl || '/images/default/defaultProfileImage.png'
-        });
-        
-        // 약간의 지연 후 새로운 방 설정
-        setTimeout(() => {
-            setSelectedRoom(room);
-        }, 0);
-    };
-
-    const handleLeaveChat = async (roomId) => {
-        try {
-            // 웹소켓 연결 해제
-            disconnect();
-            
-            const response = await fetch(`/api/chat/rooms/${roomId}/leave`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userEmail: user.email })
-            });
-    
-            if (!response.ok) {
-                throw new Error('채팅방 나가기 실패');
-            }
-    
-            // 채팅방 목록에서 해당 채팅방 제거
-            setChatRooms(prevRooms => prevRooms.filter(room => room.id !== roomId));
-            setSelectedRoom(null);
-            setChatPartner({
-                email: '',
-                name: '',
-                profileImage: null
-            });
-    
-            // 채팅 목록 페이지로 이동
-            navigate('/chat');
-    
-        } catch (error) {
-            console.error('채팅방 나가기 실패:', error);
-            throw error; // 에러를 상위로 전파하여 하위 컴포넌트에서 처리할 수 있도록 함
-        }
-    };
-    
-    // useChat 훅 의존성에 selectedRoom 추가
-    useEffect(() => {
-        if (selectedRoom) {
-            const fetchMessages = async () => {
-                try {
-                    loadChatHistory();
-                } catch (error) {
-                    console.error('메시지 로드 실패:', error);
-                }
-            };
-            fetchMessages();
-        }
-    }, [selectedRoom]);
-
-    // 채팅방 제목 설정 후 업데이트
-    const handleChatRoomUpdate = (updatedRoom) => {
+    const handleChatRoomUpdate = useCallback((updatedRoom) => {
         setChatRooms(prevRooms => 
             prevRooms.map(room => 
                 room.id === updatedRoom.id ? updatedRoom : room
             )
         );
 
-         // 현재 선택된 방이 업데이트된 방이라면 selectedRoom도 업데이트
         if (selectedRoom?.id === updatedRoom.id) {
             setSelectedRoom(updatedRoom);
         }
-    };
+        
+        // 채팅방 업데이트 시 읽지 않은 메시지 수 업데이트
+        fetchChatRoomsAndUnreadCount();
+    }, [selectedRoom?.id, fetchChatRoomsAndUnreadCount]);
+
+    const handleSendMessage = useCallback((content) => {
+        sendMessage(content);
+    }, [sendMessage]);
+
+    if (loading) {
+        return <div>로딩중...</div>;
+    }
 
     return (
         <ChatContainer>
             <ChatList>
                 <ChatListScroll>
-                    <ChatListItem chatRooms={chatRooms} onSelectRoom={handleSelectRoom}/> 
+                    <ChatListItem 
+                        chatRooms={chatRooms} 
+                        onSelectRoom={handleSelectRoom} 
+                        user={user}
+                    /> 
                 </ChatListScroll>
                 <NewChatButtonContainer>
                     <NewChatButton 
@@ -218,7 +277,7 @@ export default function ChatPage() {
                     /> 
                 </NewChatButtonContainer>
             </ChatList>
-    
+
             {selectedRoom ? (
                 <ChatRoom
                     selectedRoom={selectedRoom}

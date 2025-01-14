@@ -22,6 +22,7 @@ public class Notification {
   private User user;
 
   @Enumerated(EnumType.STRING)
+  @Column(length = 50)
   private NotiType type;
 
   @CreationTimestamp
@@ -42,18 +43,37 @@ public class Notification {
   //알림 클릭 시 해당 페이지로 이동을 위해 필요
   private Long targetId;
 
+  private String targetName;
+
   private boolean isRead;
+
+  @Enumerated(EnumType.STRING)
+  private Participant.Status inviteStatus;
 
   public enum NotiType {
     INVITE, FOLLOW, PARTICIPATE, HEART, COMMENT
   }
 
-  public static Notification of(User user, NotiType type, User fromUser, Long targetId) {
+  public static Notification of(User user, NotiType type, User fromUser, Object target) {
     Notification notification = new Notification();
     notification.user = user;
     notification.type = type;
     notification.fromUser = fromUser;
-    notification.targetId = targetId;
+
+    if (target.getClass().equals(User.class)) {
+      notification.targetId = ((User) target).getId();
+      notification.targetName = ((User) target).getUsername();
+    }
+
+    if (target.getClass().equals(Schedule.class)) {
+      notification.targetId = ((Schedule) target).getId();
+      notification.targetName = ((Schedule) target).getTitle();
+    }
+
+    if (type.equals(NotiType.INVITE)) {
+      notification.inviteStatus = Participant.Status.PENDING;
+    }
+
     notification.isRead = false;
     return notification;
   }

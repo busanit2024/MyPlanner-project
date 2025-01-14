@@ -5,11 +5,12 @@ import RightSidebar from "./RightSidebar";
 import { useState } from "react";
 import { FaChevronLeft, FaCircleXmark } from "react-icons/fa6";
 import { useSearch } from "../context/SearchContext";
+import Button from "./Button";
 
 
 export default function Layout() {
   const [open, setOpen] = useState(true);
-  const { searchText, setSearchText, handleSearch } = useSearch();
+  const { searchText, setSearchText, handleSearch, handleWriteSchedule, handleEditSchedule, handleDeleteSchedule, handleCompleteSchedule, isOwner, isDone } = useSearch();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -53,6 +54,22 @@ export default function Layout() {
     }
   };
 
+  const checkWriteButton = () => {
+    if (location.pathname.includes("/calendarWrite")) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const checkEditButton = () => {
+    if (location.pathname.includes("/schedule")) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   return (
     <Container className="layout">
       <SideNavbar />
@@ -65,15 +82,34 @@ export default function Layout() {
               </div>}
             <span>{setPageName()}</span>
           </div>
-          <SearchForm onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}>
-            <SearchInputWrap value={searchText}>
-              <input id="search" underline grow placeholder="검색어를 입력하세요" value={searchText} onChange={(e) => setSearchText(e.target.value)} onInput={(e) => setSearchText(e.target.value)} />
-              <FaCircleXmark className="delete-icon" onClick={() => setSearchText("")} />
-            </SearchInputWrap>
-            <div className="search-icon">
-              <img src="/images/icon/search.svg" alt="search" onClick={handleSearch} />
+          {!checkWriteButton() && !checkEditButton() &&
+            <SearchForm onSubmit={(e) => e.preventDefault()} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}>
+              <SearchInputWrap value={searchText}>
+                <input id="search" underline grow placeholder="검색어를 입력하세요" value={searchText} onChange={(e) => setSearchText(e.target.value)} onInput={(e) => setSearchText(e.target.value)} />
+                <FaCircleXmark className="delete-icon" onClick={() => setSearchText("")} />
+              </SearchInputWrap>
+              <div className="search-icon">
+                <img src="/images/icon/search.svg" alt="search" onClick={handleSearch} />
+              </div>
+            </SearchForm>
+          }
+
+          {checkWriteButton() &&
+            <Button color="primary" onClick={handleWriteSchedule}>작성하기</Button>
+          }
+
+          {checkEditButton() &&
+            <div className="edit-button-wrap" style={{ display: "flex", gap: "8px" }}>
+              {isOwner && (
+                <>
+                  <Button color="" onClick={handleCompleteSchedule}>{isDone ? "완료 취소" : "완료"}</Button>
+                  <Button color="danger" onClick={handleDeleteSchedule}>삭제</Button>
+                  <Button color="primary" onClick={handleEditSchedule}>수정</Button>
+                </>
+              )}
+
             </div>
-          </SearchForm>
+          }
           <div className="sidebar-icon" onClick={() => setOpen(!open)}>
             <img src="/images/icon/menu.svg" alt="sidebar open" />
           </div>

@@ -3,9 +3,12 @@ package com.busanit.myplannerbackend.service;
 import com.busanit.myplannerbackend.domain.ChatRoomRequest;
 import com.busanit.myplannerbackend.domain.Participant;
 import com.busanit.myplannerbackend.entity.ChatRoom;
+import com.busanit.myplannerbackend.entity.Message;
+import com.busanit.myplannerbackend.entity.ReadStatus;
 import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.repository.ChatRoomRepository;
 import com.busanit.myplannerbackend.repository.MessageRepository;
+import com.busanit.myplannerbackend.repository.ReadStatusRepository;
 import com.busanit.myplannerbackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,7 +17,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +29,7 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
+    private final ReadStatusRepository readStatusRepository;
 
     public Mono<ChatRoom> findById(String roomId) {
         return chatRoomRepository.findById(roomId)
@@ -32,10 +39,8 @@ public class ChatRoomService {
     public Flux<ChatRoom> findByParticipantEmail(String email) {
         return chatRoomRepository.findByParticipantsEmailContaining(email);
     }
-
-    public Mono<ChatRoom> getChatRoom(String chatRoomId) {
-        return chatRoomRepository.findById(chatRoomId)
-                .switchIfEmpty(Mono.error(new RuntimeException("채팅방을 찾을 수 없습니다.")));
+    public Mono<ChatRoom> save(ChatRoom chatRoom) {
+        return chatRoomRepository.save(chatRoom);
     }
 
     @Transactional
@@ -61,15 +66,6 @@ public class ChatRoomService {
         chatRoom.setCreatedAt(LocalDateTime.now());
 
         return chatRoomRepository.save(chatRoom);
-    }
-
-    public Mono<ChatRoom> save(ChatRoom chatRoom) {
-        return chatRoomRepository.save(chatRoom);
-    }
-
-    public Mono<Void> deleteChatRoom(String roomId) {
-        return messageRepository.deleteByChatRoomId(roomId)
-                .then(chatRoomRepository.deleteById(roomId));
     }
 
     public Mono<ChatRoom> updateLastMessage(String roomId, String message, LocalDateTime time) {
@@ -133,4 +129,5 @@ public class ChatRoomService {
                     return Mono.error(e);
                 });
     }
+
 }

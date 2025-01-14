@@ -84,6 +84,7 @@ public class Schedule {
 //    private Group group;  // 그룹 (Group 엔티티와의 관계)
 
     //참여자
+    @JsonIgnore
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants;
 

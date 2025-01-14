@@ -204,7 +204,7 @@ const handleFollowingUserClick = (userId) => {
       start: clickInfo.event.start,
       end: clickInfo.event.end,
     };
-    navigate(`/calendarUpdate/${eventId}`, {
+    navigate(`/schedule/${eventId}`, {
       state: { eventData }
     });
   }

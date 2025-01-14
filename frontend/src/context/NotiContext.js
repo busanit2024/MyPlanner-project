@@ -11,12 +11,15 @@ export const NotiProvider = ({ children }) => {
     noti: [],
   });
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0); // 채팅 알림
   const unreadCountRef = useRef(unreadCount);
+
 
   useEffect(() => {
     if (user && !loading) {
       subscribeToNotifications();
       fetchUnreadCount();
+      fetchUnreadChatCount();
     }
   }, [user, loading]);
 
@@ -44,6 +47,28 @@ export const NotiProvider = ({ children }) => {
           console.error(err);
         });
   }
+
+  // 채팅 알림
+  const fetchUnreadChatCount = async () => {
+    try {
+        // user가 없거나 loading 중일 때는 실행하지 않음
+        if (!user?.email) return;
+
+        const response = await axios.get(`/api/chat/rooms/unread/${user.email}`);
+        if (response.status === 200) {
+            const totalUnread = Object.values(response.data).reduce((a, b) => a + b, 0);
+            setUnreadChatCount(totalUnread);
+        }
+    } catch (error) {
+        // 400 에러 발생 시 조용히 처리
+        if (error.response?.status === 400) {
+            console.warn('채팅 알림 카운트 가져오기 실패');
+            setUnreadChatCount(0);
+        } else {
+            console.error('채팅 알림 에러:', error);
+        }
+    }
+  };
 
   const clearNotiList = () => {
     setNotifications({
@@ -110,7 +135,7 @@ export const NotiProvider = ({ children }) => {
   };
 
   return (
-    <NotiContext.Provider value={{ notifications, unreadCount, setUnreadCount, clearNotiList }}>
+    <NotiContext.Provider value={{ notifications, unreadCount, setUnreadCount, clearNotiList, unreadChatCount, setUnreadChatCount }}>
       {children}
     </NotiContext.Provider>
   )
