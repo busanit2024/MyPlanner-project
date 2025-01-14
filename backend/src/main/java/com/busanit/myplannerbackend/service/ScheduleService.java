@@ -253,13 +253,9 @@ public class ScheduleService {
 
       if (existingParticipant.isPresent()) {
         newParticipant = existingParticipant.get();
-        //수락하지 않은 초대가 이미 존재할 시 상태를 수락으로 바꿈
-        if (newParticipant.getStatus().equals(Participant.Status.ACCEPTED)) {
-          return;
-        } else {
-          newParticipant.setStatus(Participant.Status.ACCEPTED);
-        }
       }
+
+      newParticipant.setStatus(Participant.Status.ACCEPTED);
       Participant savedParticipant = participantRepository.save(newParticipant);
 
       try {

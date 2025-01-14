@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../../css/CalendarWrite.css';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { imageFileUpload } from '../../firebase';
-import { ChromePicker } from 'react-color';
 import styled from 'styled-components';
 import Switch from '../../ui/Switch';
 import { useSearch } from '../../context/SearchContext';
 import UserSelectModal from './UserSelectModal';
 import Button from '../../ui/Button';
 import Comments from './Comments';
+import Swal from 'sweetalert2';
+
 
 const defaultProfileImageUrl = '/images/default/defaultProfileImage.png';
 
@@ -92,12 +93,13 @@ const CalendarUpdate = () => {
           setTitle(scheduleData.title);
           setCategoryId(scheduleData.category?.id);
           setParticipants(scheduleData.participants);
-          setNewParticipants(scheduleData.participants.map((participant) => ({ 
-            id: participant.user.id, 
-            username: participant.user.username, 
-            profileImageUrl: participant.user.profileImageUrl, 
-            email: participant.user.email, 
-            status: participant.status })));
+          setNewParticipants(scheduleData.participants.map((participant) => ({
+            id: participant.user.id,
+            username: participant.user.username,
+            profileImageUrl: participant.user.profileImageUrl,
+            email: participant.user.email,
+            status: participant.status
+          })));
           setStartDate(scheduleData.startDate.split('T')[0]);
           setEndDate(scheduleData.endDate.split('T')[0]);
           setStartTime(scheduleData.startTime);
@@ -166,9 +168,65 @@ const CalendarUpdate = () => {
     setChecklist(updatedChecklist);
   };
 
-  const handleParticipate = () => {
-    // 참가하기
+  // 참가 여부 체크
+  const checkParticipation = () => {
+    if (!user) {
+      return false;
+    }
+
+    return participants.some((participant) => participant.user.id === user.id && participant.status === 'ACCEPTED');
   };
+
+  // 참가 버튼 클릭
+  const handleParticipate = () => {
+    Swal.fire({
+      title: '일정 참가하기',
+      text: '이 일정에 참가하시겠습니까?',
+      showCancelButton: true,
+      confirmButtonText: '참가',
+      cancelButtonText: '취소',
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-confirm",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        participate();
+      }
+    });
+  };
+
+  const participate = async () => {
+    if (!user) {
+      return;
+    }
+    try {
+      const response = await axios.get(`/api/schedules/participate/${id}`, {
+        params: {
+          userId: user.id,
+        }
+      });
+      if (response.data === 'success') {
+        setParticipants([...participants, {  id: user.id, username: user.username, profileImageUrl: user.profileImageUrl, status: 'ACCEPTED' }]);
+        Swal.fire({
+          title: '참가 요청 완료',
+          text: '일정에 참가했습니다.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
+      }
+    } catch (error) {
+      console.error("참가 요청 중 오류 발생: ", error.response.data);
+      alert("참가 요청에 실패했습니다. 다시 시도해 주세요.");
+    };
+  };
+
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -363,9 +421,11 @@ const CalendarUpdate = () => {
               <div key={index} className="participant">
                 <div className='profile-image'>
                   <img src={participant?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src = defaultProfileImageUrl} alt="profile" />
+                  {isOwner && (
                   <div className='delete-overlay' onClick={() => setNewParticipants(newParticipants.filter((_, i) => i !== index))}>
                     <img src="/images/icon/cancelWhite.svg" alt="Delete" />
                   </div>
+                )}
                   <div className={`status-overlay ${participant.status !== 'ACCEPTED' && 'visible'}`} >
                     {participant.status === 'PENDING' ? '초대중' : participant.status === 'DECLINED' ? '거절됨' : '추가됨'}
                   </div>
@@ -381,10 +441,14 @@ const CalendarUpdate = () => {
               </div>
             )}
             {!isOwner && participants.length === 0 && <div className='no-participant'>참가자 없음</div>}
-            {!isOwner && 
-            <div className='participate-button'>
-              <Button color="primary" onClick={handleParticipate}>참가하기</Button>
-            </div>
+            {!isOwner &&
+              <div className='participate-button'>
+                {checkParticipation() ? (
+                  <Button color="gray" onClick={handleParticipate} disabled>참가중</Button>
+                ) : (
+                  <Button color="primary" onClick={handleParticipate}>참가하기</Button>
+                )}
+              </div>
             }
           </div>
         </Participants>

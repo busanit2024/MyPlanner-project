@@ -191,6 +191,12 @@ public class ScheduleController {
         return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
+    @GetMapping("/participate/{scheduleId}")
+    public ResponseEntity<String> participate(@PathVariable Long scheduleId, @RequestParam Long userId) {
+        scheduleService.participate(scheduleId, userId);
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
 }
 
 
