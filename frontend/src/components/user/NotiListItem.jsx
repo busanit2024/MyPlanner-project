@@ -25,6 +25,12 @@ export default function NotiListItem(props) {
         )
       case "LIKE_POST":
       case "COMMENT":
+        return (
+          <>
+            <span>{fromUser.username}</span>님이
+            <span>{data.targetName}</span> 일정에 댓글을 남겼습니다.
+          </>
+        )
       case "INVITE":
         return (
           <>

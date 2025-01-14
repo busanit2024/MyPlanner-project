@@ -42,6 +42,18 @@ public class HeartService {
     }
   }
 
+  public Boolean checkMyLike(Long scheduleId, Long userId) {
+    Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+    if (schedule == null) {
+      throw new RuntimeException("Schedule not found");
+    }
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+    return heartRepository.findByScheduleIdAndUserId(scheduleId, userId).isPresent();
+  }
+
   // 좋아요 누른 유저 정보만 슬라이스
   public Slice<UserDTO> getHeartUsers(Long scheduleId, Pageable pageable) {
     Slice<Heart> hearts = heartRepository.findByScheduleId(scheduleId, pageable);

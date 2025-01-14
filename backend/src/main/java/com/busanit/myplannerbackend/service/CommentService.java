@@ -7,10 +7,9 @@ import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.repository.CommentRepository;
 import com.busanit.myplannerbackend.repository.ScheduleRepository;
 import com.busanit.myplannerbackend.repository.UserRepository;
-import com.google.api.gax.rpc.NotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -25,12 +24,18 @@ public class CommentService {
 
   //scheduleId에 해당하는 댓글 목록 슬라이스
   public Slice<CommentDTO> getComment(Long scheduleId, Pageable pageable) {
-    Slice<Comment> slice = commentRepository.getCommentByScheduleId(scheduleId, pageable);
+    Slice<Comment> slice = commentRepository.getCommentByScheduleIdOrderByCreatedAtDesc(scheduleId, pageable);
     return slice.map(CommentDTO::toDTO);
   }
 
+  //scheduleId에 해당하는 전체 댓글 갯수
+  public int getCommentCount(Long scheduleId) {
+    return commentRepository.countByScheduleId(scheduleId);
+  }
+
   //댓글 쓰기
-  public void writeComment(CommentDTO commentDTO, Long userId) {
+  @Transactional
+  public Comment writeComment(CommentDTO commentDTO, Long userId) {
     User user = userRepository.findById(userId).orElse(null);
     if (user == null) {
       throw new RuntimeException("User not found");
@@ -45,21 +50,23 @@ public class CommentService {
     comment.setUser(user);
     comment.setSchedule(schedule);
 
-    commentRepository.save(comment);
+    Comment savedComment = commentRepository.save(comment);
     //알림 발생
-    comment.publishEvent(eventPublisher);
+    savedComment.publishEvent(eventPublisher);
+    return savedComment;
   }
 
   //댓글 수정
-  public void updateComment(CommentDTO commentDTO) {
+  @Transactional
+  public Comment updateComment(CommentDTO commentDTO) {
     Comment comment = commentRepository.findById(commentDTO.getId()).orElse(null);
     if (comment == null) {
       throw new RuntimeException("Comment not found");
     }
 
     comment.setContent(commentDTO.getContent());
-    commentRepository.save(comment);
     //알림 발생 안함
+    return commentRepository.save(comment);
   }
 
   //댓글 삭제

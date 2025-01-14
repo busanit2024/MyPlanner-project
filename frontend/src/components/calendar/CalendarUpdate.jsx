@@ -174,7 +174,7 @@ const CalendarUpdate = () => {
       return false;
     }
 
-    return participants.some((participant) => participant.user.id === user.id && participant.status === 'ACCEPTED');
+    return newParticipants.some((participant) => participant.id === user.id && participant.status === 'ACCEPTED');
   };
 
   // 참가 버튼 클릭
@@ -414,7 +414,7 @@ const CalendarUpdate = () => {
         {/* 참가자 목록 */}
         <Participants className='input-field participant'>
           <span style={{ fontSize: "18px", marginBottom: "8px" }}>
-            {`${participants.filter((participant) => participant.status === 'ACCEPTED').length}명 참가중`}
+            {`${newParticipants.filter((participant) => participant.status === 'ACCEPTED').length}명 참가중`}
           </span>
           <div className='participant-list'>
             {newParticipants.map((participant, index) => (
@@ -557,11 +557,11 @@ const CalendarUpdate = () => {
         }
 
         {/* 상세 내용 */}
-        <DescSection className='input-field'>
+        <DescSection className='input-field' visible={isOwner || detail}>
           <textarea
             value={detail}
             onChange={(e) => setDetail(e.target.value)}
-            placeholder="일정 상세내용 입력..."
+            placeholder={`${isOwner ? "일정 상세 내용을 입력해 보세요." : ""}`}
             disabled={!isOwner || done}
           />
         </DescSection>
@@ -945,7 +945,7 @@ const ChecklistSection = styled.div`
 `;
 
 const DescSection = styled.div` 
-  display: flex;
+  display: ${(props) => (props.visible ? 'flex' : 'none')};
   flex-direction: column;
   gap: 12px;
   width: 100%;
@@ -953,7 +953,7 @@ const DescSection = styled.div`
 
   & textarea {
     width: 100%;
-    min-height: 64px;
+    min-height: 32px;
     font-size: 16px;
     border: none;
     padding: 8px;

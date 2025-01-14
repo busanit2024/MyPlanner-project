@@ -6,5 +6,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
-  Slice<Comment> getCommentByScheduleId(Long scheduleId, Pageable pageable);
+  Slice<Comment> getCommentByScheduleIdOrderByCreatedAtDesc(Long scheduleId, Pageable pageable);
+
+  int countByScheduleId(Long scheduleId);
 }

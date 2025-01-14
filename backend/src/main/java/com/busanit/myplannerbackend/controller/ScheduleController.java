@@ -163,6 +163,7 @@ public class ScheduleController {
         return ResponseEntity.noContent().build();
     }
 
+    //일정초대
     @PostMapping("/invite/{scheduleId}")
     public ResponseEntity<String> inviteUsers(@RequestBody List<Long> userIds, @PathVariable Long scheduleId) {
         for (Long userId : userIds) {
@@ -171,6 +172,7 @@ public class ScheduleController {
         return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
+    //초대 취소
     @PostMapping("/invite/{scheduleId}/cancel")
     public ResponseEntity<String> inviteCancel(@RequestBody List<Long> userIds, @PathVariable Long scheduleId) {
         for (Long userId : userIds) {
@@ -179,18 +181,21 @@ public class ScheduleController {
         return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
+    //일정 초대 수락
     @GetMapping("/invite/{scheduleId}/accept")
     public ResponseEntity<String> inviteAccept(@RequestParam Long userId, @PathVariable Long scheduleId) {
         scheduleService.participate(scheduleId, userId);
         return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
+    //일정 초대 거절
     @GetMapping("/invite/{scheduleId}/decline")
     public ResponseEntity<String> inviteDecline(@PathVariable Long scheduleId, @RequestParam Long userId) {
         scheduleService.declineInvite(scheduleId, userId);
         return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
+    //일정 참가
     @GetMapping("/participate/{scheduleId}")
     public ResponseEntity<String> participate(@PathVariable Long scheduleId, @RequestParam Long userId) {
         scheduleService.participate(scheduleId, userId);
