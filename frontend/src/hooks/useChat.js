@@ -64,7 +64,7 @@ export const useChat = (roomId, userEmail, mounted, onChatRoomUpdate) => {
             }
 
             // 읽지 않은 메시지 수 구독
-            client.current.subscribe(`/sub/chat/rooms/unread/${userEmail}`, 
+            client.current.subscribe(`/sub/chat/unread/${userEmail}`, 
                 (payload) => {
                     if(!mounted.current) return;
 
@@ -79,7 +79,7 @@ export const useChat = (roomId, userEmail, mounted, onChatRoomUpdate) => {
                             onChatRoomUpdate(unreadCounts);
                         }
                     } catch (error) {
-                        console.log('읽지 않은 메시지 수 처리 실패', error);
+                        console.error('읽지 않은 메시지 수 처리 실패', error);
                     }
                 }
             );
@@ -95,6 +95,7 @@ export const useChat = (roomId, userEmail, mounted, onChatRoomUpdate) => {
         }
 
         return () => {
+            
             if (client.current?.connected) {
                 client.current.disconnect();
                 client.current = null;
@@ -105,7 +106,6 @@ export const useChat = (roomId, userEmail, mounted, onChatRoomUpdate) => {
     // 메시지 전송 함수
     const sendMessage = useCallback((content) => {
         if (!client.current?.connected || !mounted.current) {
-            console.log('연결되지 않음, 재연결 시도');
             connect();
             return;
         }
