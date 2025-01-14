@@ -300,10 +300,16 @@ const CalendarWrite = () => {
               value={endTime}
               onChange={(e) => {
                 const newEndTime = e.target.value;
-                if (isEndTimeValid(newEndTime)) {
-                  setEndTime(e.target.value);
+                // 시작 시간이 설정되었을 때 유효성 검사
+                if (startTime) {
+                  if (isEndTimeValid(newEndTime)) {
+                    setEndTime(e.target.value);
+                  }
+                } else {
+                  alert("끝 시간을 설정하기 전에 시작 시간부터 입력하세요.");
                 }
               }}
+              disabled={!startTime} // 시작 시간이 설정되어 있지 않을 경우 비활성화
             />
           )}
         </div>
