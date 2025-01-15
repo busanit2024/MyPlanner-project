@@ -23,8 +23,20 @@ export default function NotiListItem(props) {
             <span>{fromUser.username}</span>님이 회원님을 팔로우했습니다.
           </>
         )
-      case "LIKE_POST":
+      case "HEART":
+        return (
+          <>
+            <span>{fromUser.username}</span>님이
+            <span>{data.targetName}</span> 일정에 좋아요를 눌렀습니다.
+          </>
+        )
       case "COMMENT":
+        return (
+          <>
+            <span>{fromUser.username}</span>님이
+            <span>{data.targetName}</span> 일정에 댓글을 남겼습니다.
+          </>
+        )
       case "INVITE":
         return (
           <>

@@ -7,6 +7,7 @@ import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.repository.HeartRepository;
 import com.busanit.myplannerbackend.repository.ScheduleRepository;
 import com.busanit.myplannerbackend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +23,7 @@ public class HeartService {
   private final ApplicationEventPublisher eventPublisher;
 
   //좋아요가 없으면 좋아요 보내기, 좋아요가 있으면 취소
+  @Transactional
   public void HeartToggle(Long scheduleId, Long userId) {
     Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
     if (schedule == null) {
@@ -35,11 +37,26 @@ public class HeartService {
 
     if (heart == null) {
       heart = Heart.of(schedule, user);
-      heartRepository.save(heart);
-      heart.publishEvent(eventPublisher);
+      Heart savedHeart = heartRepository.save(heart);
+      if(!schedule.getUser().getId().equals(userId)) {
+        // 자기 일정에 좋아요 누른 경우를 제외하고 알림 발생
+        heart.publishEvent(eventPublisher);
+      }
     } else {
       heartRepository.delete(heart);
     }
+  }
+
+  public Boolean checkMyLike(Long scheduleId, Long userId) {
+    Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+    if (schedule == null) {
+      throw new RuntimeException("Schedule not found");
+    }
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+    return heartRepository.findByScheduleIdAndUserId(scheduleId, userId).isPresent();
   }
 
   // 좋아요 누른 유저 정보만 슬라이스

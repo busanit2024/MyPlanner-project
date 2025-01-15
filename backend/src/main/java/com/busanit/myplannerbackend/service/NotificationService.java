@@ -74,12 +74,12 @@ public class NotificationService {
 
   //실제로 알림 발생 & 서버에 전송
   public void send(Notification sendedNotification) {
-    if (sendedNotification.getType().equals(Notification.NotiType.FOLLOW)) {
-      notificationRepository.findByUserAndTargetIdAndType(sendedNotification.getUser(), sendedNotification.getFromUser().getId(), Notification.NotiType.FOLLOW).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
+    //팔로우, 초대, 좋아요 알림의 경우 중복 저장 대신 새 알림으로 덮어쓰기
+    Notification.NotiType sendedNotiType = sendedNotification.getType();
+    if(sendedNotiType.equals(Notification.NotiType.FOLLOW) || sendedNotiType.equals(Notification.NotiType.INVITE) || sendedNotiType.equals(Notification.NotiType.HEART)) {
+      notificationRepository.findByUserAndTargetIdAndType(sendedNotification.getUser(), sendedNotification.getTargetId(), sendedNotiType).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
     }
-    if (sendedNotification.getType().equals(Notification.NotiType.INVITE)) {
-      notificationRepository.findByUserAndTargetIdAndType(sendedNotification.getUser(), sendedNotification.getTargetId(), Notification.NotiType.INVITE ).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
-    }
+
     Notification notification = notificationRepository.save(sendedNotification);
     String receiverId = String.valueOf(notification.getUser().getId());
     String eventId = makeTimeIncludeId(notification.getUser().getId());
