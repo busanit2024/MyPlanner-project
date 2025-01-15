@@ -202,6 +202,13 @@ public class ScheduleController {
         return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
+    //일정 참가 취소
+    @GetMapping("/participate/{scheduleId}/cancel")
+    public ResponseEntity<String> participateCancel(@PathVariable Long scheduleId, @RequestParam Long userId) {
+        scheduleService.participateCancel(scheduleId, userId);
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
 }
 
 

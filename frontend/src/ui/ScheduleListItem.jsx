@@ -92,7 +92,16 @@ export default function ScheduleListItem(props) {
       }
     } catch (error) {
       console.error("참가 요청 중 오류 발생: ", error.response.data);
-      alert("참가 요청에 실패했습니다. 다시 시도해 주세요.");
+      Swal.fire({
+        title: '참가 요청 실패',
+        text: '오류가 발생했습니다. 다시 시도해주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     };
   };
 

@@ -43,6 +43,9 @@ const CalendarWrite = () => {
   const [checkDone, setCheckDone] = useState([]);  // 체크리스트 완료 여부
   const [userSelectModalOpen, setUserSelectModalOpen] = useState(false); // 유저 선택 모달 오픈 여부
 
+  const [previousStartTime, setPreviousStartTime] = useState(''); // 이전에 설정한 시작 시간
+  const [previousEndTime, setpreviousEndTime] = useState(''); // 이전에 설정한 끝 시간
+
   // 컴포넌트가 마운트될 때 오늘 날짜로 초기화
   useEffect(() => {
     const today = new Date();
@@ -115,7 +118,7 @@ const CalendarWrite = () => {
     // 전송할 데이터 객체 생성
     const scheduleData = {
       title: title, // 제목
-      categoryId: categoryId,
+      categoryId: categoryId !== null ? categoryId : -1,
       startDate: startDate || date,
       endDate: endDate || date,
       startTime: startTime,
@@ -154,11 +157,31 @@ const CalendarWrite = () => {
         );
       }
 
+      console.log('서버 응답:', response);
       console.log('일정이 저장되었습니다:', response.data);
+      Swal.fire({
+        title: '일정 저장 완료',
+        text: '일정이 저장되었습니다.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
       navigate('/calendar');
     } catch (error) {
       console.error('일정 저장 중 오류 발생:', error.response.data);
-      alert('일정 저장에 실패했습니다. 다시 시도해 주세요.');
+      Swal.fire({
+        title: '일정 저장 실패',
+        text: '오류가 발생했습니다. 다시 시도해주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     }
   };
 
@@ -198,6 +221,24 @@ const CalendarWrite = () => {
       return false;
     }
     return true;
+  };
+
+  // 하루 종일 여부 변화 감지 함수
+  const handleAllDayChange = () => {
+    if (allDay) {
+      // 하루 종일 여부 꺼졌을 때
+      setAllDay(false);
+      setStartTime(previousStartTime);
+      setEndTime(previousEndTime);
+    } else {
+      // 하루 종일 여부 켜졌을 때
+      setPreviousStartTime(startTime);
+      setpreviousEndTime(endTime);
+      setAllDay(true);
+      // 시간 초기화
+      setStartTime('');
+      setEndTime('');
+    }
   };
 
   return (
@@ -264,7 +305,7 @@ const CalendarWrite = () => {
             <div className='date'>
               <div className='input-item'>
                 <span>하루 종일</span>
-                <Switch size="small" value={allDay} onChange={() => setAllDay(!allDay)} />
+                <Switch size="small" value={allDay} onChange={handleAllDayChange} />
               </div>
               <div className='input-item'>
                 <span>시작 날짜</span>
@@ -302,7 +343,7 @@ const CalendarWrite = () => {
                   <input className='date-time-input'
                     type="time"
                     value={endTime}
-                    disabled={allDay}
+                    disabled={allDay || !startTime}
                     onChange={(e) => {
                       const newEndTime = e.target.value;
                       // 시작 시간이 설정되었을 때 유효성 검사
@@ -311,7 +352,16 @@ const CalendarWrite = () => {
                           setEndTime(e.target.value);
                         }
                       } else {
-                        alert("끝 시간을 설정하기 전에 시작 시간부터 입력하세요.");
+                        Swal.fire({
+                          title: "시간 오류",
+                          text: "시작 시간을 먼저 설정해주세요.",
+                          customClass: {
+                            title: "swal-title",
+                            htmlContainer: "swal-text-container",
+                            confirmButton: "swal-button swal-button-confirm",
+                            cancelButton: "swal-button swal-button-cancel",
+                          },
+                        });
                       }
                     }}
                   />
@@ -406,6 +456,7 @@ const ImageInput = styled.div`
   font-size: 20px;
   color: #ccc;
   margin-bottom: 20px;
+  flex-shrink: 0;
 
   .uploaded-image {
     width: auto;

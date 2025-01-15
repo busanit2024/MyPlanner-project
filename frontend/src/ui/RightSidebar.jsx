@@ -129,7 +129,7 @@ export default function RightSidebar({ open, setOpen }) {
 
 
 const SidebarContainer = styled.aside`
-  --sidebar-width: 260px;
+  --sidebar-width: 300px;
   display: flex;
   position: fixed;
   top: 0;
@@ -137,7 +137,7 @@ const SidebarContainer = styled.aside`
   flex-direction: column;
   gap: 24px;
   width: ${props => props.open ? 'var(--sidebar-width)' : '0'};
-  padding: 20px ${props => props.open ? '24px' : '0'};
+  padding-top: 20px;
   border-left: 1px solid;
   border-color: var(--light-gray);
   position: relative;
@@ -149,6 +149,7 @@ const SidebarHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0 24px;
 
   & h2 {
     font-weight: normal;
@@ -175,11 +176,14 @@ const SidebarHeader = styled.div`
 
 const ScheduleList = styled.ul`
   list-style: none;
-  padding: 0;
+  padding: 0 24px;
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-bottom: 36px;
 `;
 
 const ScheduleItem = styled.li`
