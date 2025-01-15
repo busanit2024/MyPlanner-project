@@ -83,9 +83,9 @@ const StyledButton = styled.button`
 `;
 
 
-export default function Button({ children, onClick, ...props }) {
+export default function Button({ children, onClick, onMouseEnter, onMouseLeave, ...props }) {
   const { rect, color, size, grow, disabled } = props;
-  return <StyledButton onClick={onClick}
+  return <StyledButton onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}
     rect={rect}
     color={color}
     size={size}

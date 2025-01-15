@@ -25,6 +25,7 @@ const CalendarUpdate = () => {
   const eventData = location.state?.eventData;
 
   const [label, setLabel] = useState({ color: '' });
+  const [cancelButtonHover, setCancelButtonHover] = useState(false);
 
   const [title, setTitle] = useState(eventData?.title || '');
   const [categoryList, setCategoryList] = useState([]);
@@ -212,7 +213,7 @@ const CalendarUpdate = () => {
         }
       });
       if (response.data === 'success') {
-        setParticipants([...participants, {  id: user.id, username: user.username, profileImageUrl: user.profileImageUrl, status: 'ACCEPTED' }]);
+        setNewParticipants([...newParticipants, { id: user.id, username: user.username, profileImageUrl: user.profileImageUrl, email: user.email, status: 'ACCEPTED' }]);
         Swal.fire({
           title: '참가 요청 완료',
           text: '일정에 참가했습니다.',
@@ -358,6 +359,64 @@ const CalendarUpdate = () => {
     return <div>로딩 중...</div>;
   }
 
+  const handleMouseEnter = () => {
+    setCancelButtonHover(true);
+  };
+
+  const handleMouseLeave = () => {
+    setCancelButtonHover(false);
+  };
+
+  const handleParticipateCancel = () => {
+    Swal.fire({
+      title: '참가 취소',
+      text: '일정 참가를 취소하시겠습니까?',
+      showCancelButton: true,
+      confirmButtonText: '참가 취소',
+      cancelButtonText: '돌아가기',
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-danger",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        participateCancel();
+      }
+    });
+  }
+
+  const participateCancel = async () => {
+    if (!user) {
+      return;
+    }
+    try {
+      const response = await axios.get(`/api/schedules/participate/${id}/cancel`, {
+        params: {
+          userId: user.id,
+        }
+      });
+      if (response.data === 'success') {
+        setNewParticipants(newParticipants.filter((participant) => participant.id !== user.id));
+        Swal.fire({
+          title: '참가 취소 완료',
+          text: '일정 참가를 취소했습니다.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
+      }
+    } catch (error) {
+      console.error("참가 취소 요청 중 오류 발생: ", error.response.data);
+      alert("참가 취소 요청에 실패했습니다. 다시 시도해 주세요.");
+    };
+  }
+
+
   return (
     <Container>
       <UserSelectModal title={"일정 참가자 추가"} onClose={() => setUserSelectModalOpen(false)} isOpen={userSelectModalOpen} participants={newParticipants} setParticipants={setNewParticipants}>
@@ -425,17 +484,17 @@ const CalendarUpdate = () => {
                 <div className='profile-image'>
                   <img src={participant?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src = defaultProfileImageUrl} alt="profile" />
                   {isOwner && (
-                  <div className='delete-overlay' onClick={() => setNewParticipants(newParticipants.filter((_, i) => i !== index))}>
-                    <img src="/images/icon/cancelWhite.svg" alt="Delete" />
-                  </div>
-                )}
+                    <div className='delete-overlay' onClick={() => setNewParticipants(newParticipants.filter((_, i) => i !== index))}>
+                      <img src="/images/icon/cancelWhite.svg" alt="Delete" />
+                    </div>
+                  )}
                   <div className={`status-overlay ${participant.status !== 'ACCEPTED' && 'visible'}`} >
                     {participant.status === 'PENDING' ? '초대중' : participant.status === 'DECLINED' ? '거절됨' : '추가됨'}
                   </div>
                 </div>
                 <div className='username' onClick={() => navigate(`/user/${participant.id}`)}>
                   {participant?.username}
-                  </div>
+                </div>
               </div>
             ))}
             {isOwner && (
@@ -443,11 +502,17 @@ const CalendarUpdate = () => {
                 <img src="/images/icon/plusLine.svg" alt="Add" />
               </div>
             )}
-            {!isOwner && participants.length === 0 && <div className='no-participant'>참가자 없음</div>}
+            {!isOwner && newParticipants.length === 0 && <div className='no-participant'>참가자 없음</div>}
             {!isOwner &&
               <div className='participate-button'>
                 {checkParticipation() ? (
-                  <Button color="gray" onClick={handleParticipate} disabled>참가중</Button>
+                  <Button color={cancelButtonHover ? 'danger' : 'gray'}
+                    onClick={handleParticipateCancel}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    {cancelButtonHover ? '참가 취소' : '참가중'}
+                    </Button>
                 ) : (
                   <Button color="primary" onClick={handleParticipate}>참가하기</Button>
                 )}
@@ -568,7 +633,7 @@ const CalendarUpdate = () => {
             disabled={!isOwner || done}
           />
         </DescSection>
-      
+
       </InputContainer>
 
       {/* 댓글 */}

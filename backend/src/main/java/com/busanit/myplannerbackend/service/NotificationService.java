@@ -76,7 +76,7 @@ public class NotificationService {
   public void send(Notification sendedNotification) {
     //팔로우, 초대, 좋아요 알림의 경우 중복 저장 대신 새 알림으로 덮어쓰기
     Notification.NotiType sendedNotiType = sendedNotification.getType();
-    if(sendedNotiType.equals(Notification.NotiType.FOLLOW) || sendedNotiType.equals(Notification.NotiType.INVITE) || sendedNotiType.equals(Notification.NotiType.HEART)) {
+    if(sendedNotiType.equals(Notification.NotiType.FOLLOW) || sendedNotiType.equals(Notification.NotiType.INVITE) || sendedNotiType.equals(Notification.NotiType.HEART) || sendedNotiType.equals(Notification.NotiType.PARTICIPATE)) {
       notificationRepository.findByUserAndTargetIdAndType(sendedNotification.getUser(), sendedNotification.getTargetId(), sendedNotiType).ifPresent(existingNoti -> sendedNotification.setId(existingNoti.getId()));
     }
 
