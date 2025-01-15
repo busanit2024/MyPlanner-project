@@ -45,15 +45,17 @@ public class ScheduleService {
       schedule.setCategory(category);
       schedule.setCheckList(scheduleDTO.getCheckList() != null ? scheduleDTO.getCheckList() : new ArrayList<>());
 
+      Schedule savedSchedule = scheduleRepository.save(schedule);
+
       for (CheckListDTO checkListDTO : scheduleDTO.getCheckListItem()) {
         CheckList checkList_entity = new CheckList();
         checkList_entity.setContent(checkListDTO.getContent());
         checkList_entity.setIsDone(checkListDTO.getIsDone());
-        checkList_entity.setSchedule(schedule);
+        checkList_entity.setSchedule(savedSchedule);
         checkListRepository.save(checkList_entity);
       }
 
-      return scheduleRepository.save(schedule);
+      return savedSchedule;
     }
 
     // 모든 일정 조회
@@ -271,6 +273,28 @@ public class ScheduleService {
 
       //일정 작성자에게 알림 보내기
       savedParticipant.publishParticipateEvent(eventPublisher);
+
+    }
+
+    //일정 참여 취소하기
+    @Transactional
+    public void participateCancel(Long scheduleId, Long userId) {
+    Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+    if (schedule == null) {
+      throw new RuntimeException("Schedule not found");
+    }
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+    Participant participant = participantRepository.findByScheduleIdAndUserId(scheduleId, userId).orElse(null);
+    if (participant == null) {
+      throw new RuntimeException("Participant not found");
+    }
+
+    if (participant.getStatus().equals(Participant.Status.ACCEPTED)) {
+      participantRepository.delete(participant);
+    }
 
     }
 
