@@ -3,6 +3,7 @@ import { useState } from "react";
 import ImageUploadModal from '../../../ui/ImageUploadModal';
 import MyScheduleModal from '../../../ui/MyScheduleModal';
 import { imageFileUpload } from "../../../firebase";
+import ScheduleChat from '../../../ui/ScheduleChat';
 
 const InputChatBox = styled.div`
     display: flex;
