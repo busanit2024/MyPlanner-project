@@ -204,6 +204,23 @@ const Main = styled.main`
   padding: 0;
   flex-grow: 1;
   overflow-y: auto;
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--light-gray);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: white;
+  }
+
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
 `;
 
 const SearchForm = styled.form` 

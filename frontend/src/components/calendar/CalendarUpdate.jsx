@@ -25,6 +25,7 @@ const CalendarUpdate = () => {
   const eventData = location.state?.eventData;
 
   const [label, setLabel] = useState({ color: '' });
+  const [cancelButtonHover, setCancelButtonHover] = useState(false);
 
   const [title, setTitle] = useState(eventData?.title || '');
   const [categoryList, setCategoryList] = useState([]);
@@ -134,7 +135,16 @@ const CalendarUpdate = () => {
         }
       } catch (error) {
         console.error('일정 데이터 불러오기 실패:', error.response ? error.response.data : error.message);
-        alert('일정 데이터를 불러오는데 실패했습니다.');
+        Swal.fire({
+          title: '일정 불러오기 실패',
+          text: '일정을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
         navigate('/calendar');
       }
     };
@@ -212,7 +222,7 @@ const CalendarUpdate = () => {
         }
       });
       if (response.data === 'success') {
-        setParticipants([...participants, {  id: user.id, username: user.username, profileImageUrl: user.profileImageUrl, status: 'ACCEPTED' }]);
+        setNewParticipants([...newParticipants, { id: user.id, username: user.username, profileImageUrl: user.profileImageUrl, email: user.email, status: 'ACCEPTED' }]);
         Swal.fire({
           title: '참가 요청 완료',
           text: '일정에 참가했습니다.',
@@ -226,7 +236,16 @@ const CalendarUpdate = () => {
       }
     } catch (error) {
       console.error("참가 요청 중 오류 발생: ", error.response.data);
-      alert("참가 요청에 실패했습니다. 다시 시도해 주세요.");
+      Swal.fire({
+        title: '참가 요청 실패',
+        text: '일정 참가 요청에 실패했습니다. 다시 시도해 주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     };
   };
 
@@ -243,31 +262,79 @@ const CalendarUpdate = () => {
     }
   };
 
-  const handleDelete = async () => {
-    const confirmed = window.confirm("정말로 이 일정을 삭제하시겠습니까?");
-
-    if (confirmed) {
-      try {
-        await axios.delete(`/api/schedules/${id}`);
-        alert("일정이 삭제되었습니다.");
-        navigate('/calendar');  // 삭제 후 캘린더 페이지로 이동
-      } catch (error) {
-        console.error("일정 삭제 중 오류 발생: ", error.message.data);
-        alert("일정 삭제에 실패했습니다. 다시 시도해 주세요.");
+  const handleDelete = () => {
+    Swal.fire({
+      title: '일정 삭제',
+      text: '일정을 삭제하시겠습니까?',
+      showCancelButton: true,
+      confirmButtonText: '삭제',
+      cancelButtonText: '취소',
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-danger",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteSchedule();
       }
+    });
+  };
+
+  const deleteSchedule = async () => {
+    try {
+      await axios.delete(`/api/schedules/${id}`);
+      Swal.fire({
+        title: '일정 삭제 완료',
+        text: '일정을 삭제했습니다.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
+      navigate('/calendar');
+    } catch (error) {
+      console.error("일정 삭제 중 오류 발생: ", error.response.data);
+      Swal.fire({
+        title: '일정 삭제 실패',
+        text: '일정 삭제에 실패했습니다. 다시 시도해 주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     }
   };
+
 
   const handleComplete = async () => {
     let confirmed = false;
     let checkDone = false;
-    if (doneRef.current) {
-      confirmed = window.confirm("일정을 완료되지 않은 상태로 변경하시겠습니까?");
-      checkDone = false;
-    } else {
-      confirmed = window.confirm("일정을 완료된 상태로 변경하시겠습니까?");
-      checkDone = true;
-    }
+
+
+    await Swal.fire({
+      title: '일정 완료 상태 변경',
+      text: `${doneRef.current ? '완료되지 않은' : '완료된'} 일정으로 변경하시겠습니까?`,
+      showCancelButton: true,
+      confirmButtonText: '변경',
+      cancelButtonText: '취소',
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-confirm",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      checkDone = !doneRef.current;
+      if (result.isConfirmed) {
+        confirmed = true;
+      }
+    });
 
     if (confirmed) {
       try {
@@ -278,10 +345,39 @@ const CalendarUpdate = () => {
           }
         });  // 일정 완료 처리
         setDone(checkDone);
-        checkDone ? alert("일정이 완료되었습니다.") : alert("일정이 완료되지 않은 상태로 변경되었습니다.");
+        checkDone
+        ? Swal.fire({
+          title: '일정 완료 상태 변경',
+          text: '일정이 완료된 상태로 변경되었습니다.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        }) 
+        : Swal.fire({
+          title: '일정 완료 상태 변경',
+          text: '일정이 완료되지 않은 상태로 변경되었습니다.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
       } catch (error) {
         console.error("일정 완료 상태 변경 중 오류 발생: ", error.response.data);
-        alert("일정 완료 상태 변경에 실패했습니다. 다시 시도해 주세요.");
+        Swal.fire({
+          title: '일정 완료 상태 변경 실패',
+          text: '일정 완료 상태 변경에 실패했습니다. 다시 시도해 주세요.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
       }
     }
   };
@@ -345,11 +441,32 @@ const CalendarUpdate = () => {
         await axios.post(`/api/schedules/invite/${id}/cancel`, usersToDelete.map((user) => user.user.id));
       }
 
-      console.log('일정이 수정되었습니다:', response.data);
+      Swal.fire({
+        title: '일정 수정 완료',
+        text: '일정이 수정되었습니다.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
+
       navigate('/calendar');
+
+      
     } catch (error) {
       console.error('일정 수정 중 오류 발생:', error.response.data);
-      alert('일정 수정에 실패했습니다. 다시 시도해 주세요.');
+      Swal.fire({
+        title: '일정 수정 실패',
+        text: '일정 수정에 실패했습니다. 다시 시도해 주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     }
   };
 
@@ -357,6 +474,73 @@ const CalendarUpdate = () => {
   if (loading) {
     return <div>로딩 중...</div>;
   }
+
+  const handleMouseEnter = () => {
+    setCancelButtonHover(true);
+  };
+
+  const handleMouseLeave = () => {
+    setCancelButtonHover(false);
+  };
+
+  const handleParticipateCancel = () => {
+    Swal.fire({
+      title: '참가 취소',
+      text: '일정 참가를 취소하시겠습니까?',
+      showCancelButton: true,
+      confirmButtonText: '참가 취소',
+      cancelButtonText: '돌아가기',
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-danger",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        participateCancel();
+      }
+    });
+  }
+
+  const participateCancel = async () => {
+    if (!user) {
+      return;
+    }
+    try {
+      const response = await axios.get(`/api/schedules/participate/${id}/cancel`, {
+        params: {
+          userId: user.id,
+        }
+      });
+      if (response.data === 'success') {
+        setNewParticipants(newParticipants.filter((participant) => participant.id !== user.id));
+        Swal.fire({
+          title: '참가 취소 완료',
+          text: '일정 참가를 취소했습니다.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
+      }
+    } catch (error) {
+      console.error("참가 취소 요청 중 오류 발생: ", error.response.data);
+      Swal.fire({
+        title: '참가 취소 실패',
+        text: '일정 참가 취소에 실패했습니다. 다시 시도해 주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
+    };
+  }
+
 
   return (
     <Container>
@@ -425,17 +609,17 @@ const CalendarUpdate = () => {
                 <div className='profile-image'>
                   <img src={participant?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src = defaultProfileImageUrl} alt="profile" />
                   {isOwner && (
-                  <div className='delete-overlay' onClick={() => setNewParticipants(newParticipants.filter((_, i) => i !== index))}>
-                    <img src="/images/icon/cancelWhite.svg" alt="Delete" />
-                  </div>
-                )}
+                    <div className='delete-overlay' onClick={() => setNewParticipants(newParticipants.filter((_, i) => i !== index))}>
+                      <img src="/images/icon/cancelWhite.svg" alt="Delete" />
+                    </div>
+                  )}
                   <div className={`status-overlay ${participant.status !== 'ACCEPTED' && 'visible'}`} >
                     {participant.status === 'PENDING' ? '초대중' : participant.status === 'DECLINED' ? '거절됨' : '추가됨'}
                   </div>
                 </div>
                 <div className='username' onClick={() => navigate(`/user/${participant.id}`)}>
                   {participant?.username}
-                  </div>
+                </div>
               </div>
             ))}
             {isOwner && (
@@ -443,11 +627,17 @@ const CalendarUpdate = () => {
                 <img src="/images/icon/plusLine.svg" alt="Add" />
               </div>
             )}
-            {!isOwner && participants.length === 0 && <div className='no-participant'>참가자 없음</div>}
+            {!isOwner && newParticipants.length === 0 && <div className='no-participant'>참가자 없음</div>}
             {!isOwner &&
               <div className='participate-button'>
                 {checkParticipation() ? (
-                  <Button color="gray" onClick={handleParticipate} disabled>참가중</Button>
+                  <Button color={cancelButtonHover ? 'danger' : 'gray'}
+                    onClick={handleParticipateCancel}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    {cancelButtonHover ? '참가 취소' : '참가중'}
+                    </Button>
                 ) : (
                   <Button color="primary" onClick={handleParticipate}>참가하기</Button>
                 )}
@@ -568,7 +758,7 @@ const CalendarUpdate = () => {
             disabled={!isOwner || done}
           />
         </DescSection>
-      
+
       </InputContainer>
 
       {/* 댓글 */}
