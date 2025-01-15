@@ -99,13 +99,16 @@ export default function CalendarPage() {
   const fetchSchedules = (userId) => {
     axios.get(`/api/schedules/user/${userId}`)
       .then((response) => {
+      
         const events = response.data.map(schedule => ({
           id: schedule.id,
           title: schedule.title,
           start: schedule.startDate,
           end: schedule.endDate,
+          color: schedule.color
         }));
         setEventList(events);
+        
       })
       .catch((error) => console.error('Error fetching schedules:', error));
   };
@@ -331,7 +334,7 @@ const handleFollowingUserClick = (userId) => {
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수
           displayEventTime={false} // 이벤트 시간 표시 비활성화
-          eventColor='#6699FF' // 이벤트 기본 색상
+          eventColor={(eventInfo) => eventInfo.event.extendedProps.color}// 색상 적용
           weekends={weekendsVisible} // 주말 표시 여부
           select={handleDateSelect} // 날짜 선택 이벤트 핸들러
           eventContent={renderEventContent} // 사용자 정의 이벤트 내용 렌더링
