@@ -1,15 +1,13 @@
 .calendar-page {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
+    padding: 12px 48px;
+    box-sizing: border-box;
+}
 
   .calendar-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 24px;
   }
 
   .category-select {
