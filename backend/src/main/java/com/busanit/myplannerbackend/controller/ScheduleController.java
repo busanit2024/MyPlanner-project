@@ -74,9 +74,9 @@ public class ScheduleController {
 //    }
 
     @GetMapping // 모든 일정 가져오기
-    public ResponseEntity<List<Schedule>> getAllSchedules() {
+    public ResponseEntity<List<ScheduleDTO>> getAllSchedules() {
         List<Schedule> schedules = scheduleService.getAllSchedules();
-        return ResponseEntity.ok(schedules);
+        return ResponseEntity.ok(ScheduleDTO.toDTO(schedules));
     }
 
 
@@ -139,9 +139,9 @@ public class ScheduleController {
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<List<Schedule>> getSchedulesByUserId(@PathVariable Long id) {
+    public ResponseEntity<List<ScheduleDTO>> getSchedulesByUserId(@PathVariable Long id) {
         List<Schedule> schedules = scheduleService.getSchedulesByUserId(id);
-        return ResponseEntity.ok(schedules);
+        return ResponseEntity.ok(ScheduleDTO.toDTO(schedules));
     }
 
     // 일정 수정
