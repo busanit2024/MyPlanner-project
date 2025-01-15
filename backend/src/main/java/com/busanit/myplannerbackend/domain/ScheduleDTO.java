@@ -150,6 +150,10 @@ public class ScheduleDTO {
         return builder.build();
     }
 
+    public static List<ScheduleDTO> toDTO(List<Schedule> list) {
+        return list.stream().map(ScheduleDTO::toDTO).toList();
+    }
+
     public static Slice<ScheduleDTO> toDTO(Slice<Schedule> slice) {
         return slice.map(ScheduleDTO::toDTO);
     }
