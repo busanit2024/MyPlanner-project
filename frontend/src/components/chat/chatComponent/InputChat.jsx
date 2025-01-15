@@ -91,6 +91,7 @@ export default function InputChat({ onSendMessage, isLeft }) {
     const [isScheduleModalOpen, setScheduleModalOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [uploadedImages, setUploadedImages] = useState([]);
+    const [selectedSchedule, setSelectedSchedule] = useState(null);
 
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -122,6 +123,10 @@ export default function InputChat({ onSendMessage, isLeft }) {
         } catch (error) {
             console.error('이미지 업로드 실패:', error);
         }
+    };
+
+    const handleScheduleSelect = (schedule) => {
+        setSelectedSchedule(schedule);
     };
 
     const handleSend = async () => {
@@ -193,7 +198,9 @@ export default function InputChat({ onSendMessage, isLeft }) {
             <MyScheduleModal
                 isOpen={isScheduleModalOpen}
                 onClose={() => setScheduleModalOpen(false)}
+                onScheduleSelect={handleScheduleSelect}
             />
+            {selectedSchedule && <ScheduleChat schedule={selectedSchedule} />}
         </>
     );
 }
