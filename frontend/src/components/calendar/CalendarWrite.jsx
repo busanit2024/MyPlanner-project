@@ -114,7 +114,7 @@ const CalendarWrite = () => {
 
     // 전송할 데이터 객체 생성
     const scheduleData = {
-      title: title, // 제목
+      title: title || '제목 없는 일정',
       categoryId: categoryId,
       startDate: startDate || date,
       endDate: endDate || date,

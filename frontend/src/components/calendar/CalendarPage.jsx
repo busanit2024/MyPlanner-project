@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { formatDate } from '@fullcalendar/core';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
 import Radio from '../../ui/Radio';
 import CategoryEditModal from './CategoryEditModal';
+import { getTextColor } from '../../util/getTextColor';
 
 export default function CalendarPage() {
   const [weekendsVisible, setWeekendsVisible] = useState(true); // 주말 표시 여부 상태
@@ -23,7 +24,12 @@ export default function CalendarPage() {
   const { user, loading } = useAuth(); // 인증된 사용자 정보 및 로딩 상태 가져오기
   const { id: calendarUserId } = useParams(); // URL의 사용자 ID
   const { state } = useLocation();
+  const [selectedUserId, setSelectedUserId] = useState(null);
   const eventData = state?.eventData;
+  const calendarContainerRef = useRef(null); // 캘린더 컨테이너 ref
+  const calendarRef = useRef(null); // 캘린더 ref
+  const [isResizing, setIsResizing] = useState(false); // 크기 변경 중인지 여부
+  const resizeTimeout = useRef(null); // 크기 변경 타임아웃 ref
 
   // 팔로잉 유저 리스트 상태
   const [followingList, setFollowingList] = useState([]);
@@ -33,7 +39,6 @@ export default function CalendarPage() {
   });
 
   const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
-  const defaultProfileImage = "/images/default/defaultProfileImage.png"; // 기본 프로필 이미지 URL
 
   const ProfileImage = styled.div`
     width: 72px;
@@ -48,46 +53,14 @@ export default function CalendarPage() {
     }
   `;
 
-
-  // useEffect(() => {
-  //   // 인증되지 않은 사용자는 로그인 페이지로 이동
-  //   if (!loading && !user) {
-  //     navigate("/login");
-  //   }
-  //   console.log("user", user);
-
-  //   // 인증된 사용자가 있다면 일정 데이터를 불러오기
-  //   if (!loading && user) {
-  //     setSelectedCategory(new Set(user.categories.map((category) => category.id))); // 초기 상태: 전체 카테고리 선택
-
-  //     axios
-  //       .get('/api/schedules?id=' + user.id) // 사용자 ID 기반으로 일정 데이터 요청
-  //       .then((response) => {
-  //         if (response.data) {
-  //           console.log("response.data", response.data);
-
-  //           // 서버에서 받은 데이터를 FullCalendar 이벤트 형식으로 변환
-  //           const newEvents = response.data.map((item) => ({
-  //             id: item.id,
-  //             title: item.title,
-  //             start: item.startDate,
-  //             end: item.endDate,
-  //           }));
-
-  //           setEventList(newEvents); // 이벤트 목록 상태 업데이트
-  //         }
-  //       })
-  //       .catch((error) => {
-  //         console.error('Error fetching user schedules:', error); // 에러 처리
-  //       });
-  //   }
-  // }, [user, loading]); // user와 loading 상태가 변경될 때 실행
   useEffect(() => {
     // 인증되지 않은 사용자는 로그인 페이지로 이동
     if (!loading && !user) {
       navigate("/login");
     }
     if (!loading && user) {
+      // 선택된 유저 ID를 로그인 유저로 초기화
+      setSelectedUserId(user.id);
       // 초기값: 로그인 유저의 스케줄 정보 가져오기
       fetchSchedules(user.id);
       // 팔로잉 유저 리스트 가져오기
@@ -101,15 +74,16 @@ export default function CalendarPage() {
       .then((response) => {
         const events = response.data.map(schedule => ({
           id: schedule.id,
-          title: schedule.title,
+          title: schedule.title || '제목 없는 일정',
           start: schedule.startDate,
           end: schedule.endDate,
+          color: schedule.category?.color || 'var(--light-gray)',
         }));
         setEventList(events);
       })
       .catch((error) => console.error('Error fetching schedules:', error));
   };
-  
+
   useEffect(() => {
     // 캘린더 데이터 가져오기
     if (user && (calendarUserId || user.id)) {
@@ -120,57 +94,92 @@ export default function CalendarPage() {
 
 
   // 팔로잉 유저 리스트 불러오기
-const fetchFollowingList = () => {
-  axios.get(`/api/user/following`, {
-    params: {
-      userId: user?.id,
-      page: followingListState.page,
-      size: 10,
-    },
-  })
-    .then((res) => {
-      console.log("Following List:", res.data.content); // 확인용 로그
-      setFollowingList(res.data.content); // 팔로잉 유저 리스트 저장
-      setFollowingListState((prev) => ({
-        ...prev,
-        hasNext: res.data.hasNext,
-      }));
+  const fetchFollowingList = () => {
+    axios.get(`/api/user/following`, {
+      params: {
+        userId: user?.id,
+        page: followingListState.page,
+        size: 10,
+      },
     })
-    .catch((err) => {
-      console.error(err);
-    });
-};
+      .then((res) => {
+        console.log("Following List:", res.data.content); // 확인용 로그
+        setFollowingList(res.data.content); // 팔로잉 유저 리스트 저장
+        setFollowingListState((prev) => ({
+          ...prev,
+          hasNext: res.data.hasNext,
+        }));
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
 
-// useEffect에 추가
-useEffect(() => {
-  if (user) {
-    fetchFollowingList();
-  }
-}, [user]);
+  // useEffect에 추가
+  useEffect(() => {
+    if (user) {
+      fetchFollowingList();
+    }
+  }, [user]);
 
- // 캘린더 데이터 가져오기
- const fetchCalendarData = (targetUserId) => {
-  axios.get(`/api/schedules/user/${targetUserId}`) // 적절한 엔드포인트 호출
-    .then((response) => {
-      const newEvents = response.data.map((item) => ({
-        id: item.id,
-        title: item.title,
-        start: item.startDate,
-        end: item.endDate,
-      }));
-      console.log('Fetched events:', newEvents); // 디버깅 로그
-      setEventList(newEvents);
-    })
-    .catch((error) => {
-      console.error('Error fetching user schedules:', error);
-    });
-};
+  useEffect(() => {
+    //컨테이너 사이즈 변경 시 캘린더 크기 업데이트
+    if (!calendarContainerRef.current || !calendarRef.current) return;
+
+    const calendarApi = calendarRef.current.getApi();
+
+    const handleResize = () => {
+      if (!isResizing) {
+        setIsResizing(true);
+      }
+
+      if (resizeTimeout.current) {
+        clearTimeout(resizeTimeout.current);
+      }
+
+      resizeTimeout.current = setTimeout(() => {
+        setIsResizing(false);
+        calendarApi.updateSize();
+      }, 100);
+    };
+
+    const resizeObserver = new ResizeObserver(() => { handleResize(); });
+    resizeObserver.observe(calendarContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+      if (resizeTimeout.current) {
+        clearTimeout(resizeTimeout.current);
+      };
+    };
+    }, [calendarContainerRef, calendarRef, isResizing]);
 
 
-// 팔로잉 유저 클릭 핸들러
-const handleFollowingUserClick = (userId) => {
-  fetchSchedules(userId); // 선택한 유저의 캘린더 데이터 불러오기
-};
+  // 캘린더 데이터 가져오기
+  const fetchCalendarData = (targetUserId) => {
+    axios.get(`/api/schedules/user/${targetUserId}`) // 적절한 엔드포인트 호출
+      .then((response) => {
+        const newEvents = response.data.map((item) => ({
+          id: item.id,
+          title: item.title || '제목 없는 일정',
+          start: item.startDate,
+          end: item.endDate,
+          color: item.category?.color || 'var(--light-gray)',
+        }));
+        console.log('Fetched events:', newEvents); // 디버깅 로그
+        setEventList(newEvents);
+      })
+      .catch((error) => {
+        console.error('Error fetching user schedules:', error);
+      });
+  };
+
+
+  // 팔로잉 유저 클릭 핸들러
+  const handleFollowingUserClick = (userId) => {
+    setSelectedUserId(userId); // 선택한 유저 ID 상태 업데이트
+    fetchSchedules(userId); // 선택한 유저의 캘린더 데이터 불러오기
+  };
   // 주말 표시 토글
   function handleWeekendsToggle() {
     setWeekendsVisible(!weekendsVisible);
@@ -188,9 +197,9 @@ const handleFollowingUserClick = (userId) => {
     // 날짜를 선택하면 일정 작성 페이지로 이동하고 선택된 날짜 전달
     navigate('/calendarWrite', {
       state: {
-        startDate: startStr, 
+        startDate: startStr,
         endDate: adjustedEndDate
-      } 
+      }
     });
   }
 
@@ -246,26 +255,34 @@ const handleFollowingUserClick = (userId) => {
   };
 
   return (
-    <div className="demo-app-main">
+    <div className="demo-app-main calendar-page">
       <div className='calendar-header'>
-      <div className="calendar-page">
-      <ProfileContainer>
-      {followingList.map((followingUser) => (
-          <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)}>
+        <ProfileContainer>
+          <UserCard onClick={() => handleFollowingUserClick(user?.id)} selected={user?.id === selectedUserId}>
             <img
-              src={followingUser.profileImageUrl || defaultProfileImageUrl}
+              src={user?.profileImageUrl || defaultProfileImageUrl}
               alt="profile"
               onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
             />
-            <span>{followingUser.username}</span>
+            <span>나</span>
           </UserCard>
-        ))}
-      </ProfileContainer>
-    </div>
+          {followingList.map((followingUser) => (
+            <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)} selected={followingUser.id === selectedUserId}>
+              <img
+                src={followingUser.profileImageUrl || defaultProfileImageUrl}
+                alt="profile"
+                onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
+              />
+              <span>{followingUser.username}</span>
+            </UserCard>
+          ))}
+        </ProfileContainer>
+      </div>
+      <CalendarWrap ref={calendarContainerRef}>
         <CategoryWrap>
           {/* 카테고리 필터 */}
           <div className="filter-icon" onClick={() => setCategoryBoxOpen(!categoryBoxOpen)}>
-            카테고리 필터 버튼 (임시로 배치함, 나중에 위치 변경해 주세요)
+            카테고리
             <img src="/images/icon/filter.svg" alt="filter" />
           </div>
           {categoryBoxOpen && <div className="category-box">
@@ -295,14 +312,19 @@ const handleFollowingUserClick = (userId) => {
           </div>}
         </CategoryWrap>
 
-      </div>
-      <div>
         <FullCalendar
+          ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]} // 플러그인 설정
           headerToolbar={{
             left: 'prev,next today', // 헤더 왼쪽 버튼
             center: 'title', // 헤더 중앙 제목
             right: 'dayGridMonth,timeGridWeek,timeGridDay', // 헤더 오른쪽 버튼
+          }}
+          buttonText={{
+            today: '오늘', // 오늘 버튼
+            month: '월간', // 월간 버튼
+            week: '주간', // 주간 버튼
+            day: '일간', // 일간 버튼
           }}
           initialView="dayGridMonth" // 초기 뷰 설정 (월간 뷰)
           editable={true} // 이벤트 편집 가능
@@ -310,7 +332,6 @@ const handleFollowingUserClick = (userId) => {
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수
           displayEventTime={false} // 이벤트 시간 표시 비활성화
-          eventColor='#374983' // 이벤트 기본 색상
           weekends={weekendsVisible} // 주말 표시 여부
           select={handleDateSelect} // 날짜 선택 이벤트 핸들러
           eventContent={renderEventContent} // 사용자 정의 이벤트 내용 렌더링
@@ -319,28 +340,14 @@ const handleFollowingUserClick = (userId) => {
           events={eventList} // 이벤트 데이터
           locale="ko" // 한국어 로케일
           dayCellContent={handleDayCellContent} // 달력 셀 내용 핸들러
+          eventDisplay='block'
         />
-      </div>
-      <div className="demo-app">
-        <Sidebar
-          weekendsVisible={weekendsVisible} // 주말 표시 여부 전달
-          handleWeekendsToggle={handleWeekendsToggle} // 주말 표시 토글 핸들러 전달
-          currentEvents={currentEvents} // 현재 이벤트 목록 전달
-        />
-      </div>
+      </CalendarWrap>
       {categoryModalOpen && <CategoryEditModal categories={user.categories} onClose={() => setCategoryModalOpen(false)} />}
     </div>
   );
 }
 
-function SidebarEvent({ event }) {
-  return (
-    <li>
-      <b>{formatDate(event.start, { year: 'numeric', month: 'short', day: 'numeric' })}</b>
-      <i>{event.title}</i>
-    </li>
-  );
-}
 
 function renderEventContent(eventInfo) {
   return (
@@ -351,48 +358,27 @@ function renderEventContent(eventInfo) {
   );
 }
 
-function Sidebar({ weekendsVisible, handleWeekendsToggle, currentEvents }) {
-  return (
-    <div className="demo-app-sidebar">
-      <div className="demo-app-sidebar-section">
-        <h2>안내</h2>
-        <ul>
-          <li>클릭해서 작성</li>
-          <li>드래그 앤 드롭</li>
-          <li></li>
-        </ul>
-      </div>
-      <div className="demo-app-sidebar-section">
-        <label>
-          <input
-            type="checkbox"
-            checked={weekendsVisible} // 주말 표시 여부 체크박스
-            onChange={handleWeekendsToggle} // 체크박스 변경 핸들러
-          />
-          주말 추가/제거 토글
-        </label>
-      </div>
-      <div className="demo-app-sidebar-section">
-        <h2>일정 ({currentEvents.length})</h2>
-        <ul>
-          {currentEvents.map((event) => (
-            <SidebarEvent key={event.id} event={event} />
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-};
+
+const CalendarWrap = styled.div`
+  position: relative;
+  margin-bottom: 24px;
+`;
 
 const CategoryWrap = styled.div`
-position: relative;
+position: absolute;
+
+top: 4px;
+right: 168px;
+
+
 flex-shrink: 0;
 & .filter-icon {
-  font-size: 12px;
+  font-size: 16px;
   white-space: nowrap;
-  height: 24px;
+  height: 36px;
   display: flex;
   align-items: center;
+  cursor: pointer;
 
   & img {
     width: auto;
@@ -487,7 +473,9 @@ const ProfileContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  margin: 24px;
+  padding: 16px;
+  justify-content: flex-start;
+  width: 100%;
 
   & .item {
     display: flex;
@@ -536,6 +524,7 @@ const UserCard = styled.div`
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 8px;
+    outline: 2px solid ${(props) => (props.selected ? 'var(--primary-color)' : 'transparent')};
   }
 
   span {
