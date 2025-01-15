@@ -2,6 +2,7 @@ package com.busanit.myplannerbackend.controller;
 
 import com.busanit.myplannerbackend.domain.CommentDTO;
 import com.busanit.myplannerbackend.domain.UserDTO;
+import com.busanit.myplannerbackend.entity.Comment;
 import com.busanit.myplannerbackend.entity.User;
 import com.busanit.myplannerbackend.service.CommentService;
 import com.busanit.myplannerbackend.service.HeartService;
@@ -14,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/reaction")
 public class ReactionRestController {
@@ -29,16 +30,24 @@ public class ReactionRestController {
     return commentService.getComment(scheduleId, pageable);
   }
 
+  //전체 댓글 갯수
+  @GetMapping("/comment/count")
+  public int getCommentCount(@RequestParam Long scheduleId) {
+    return commentService.getCommentCount(scheduleId);
+  }
+
   //댓글 작성
-  @PostMapping("/comment/write")
-  public void writeComment(@RequestBody CommentDTO commentDTO, @RequestBody Long userId) {
-    commentService.writeComment(commentDTO, userId);
+  @PostMapping("/comment/write/{userId}")
+  public CommentDTO writeComment(@RequestBody CommentDTO comment, @PathVariable Long userId) {
+    Comment response = commentService.writeComment(comment, userId);
+    return CommentDTO.toDTO(response);
   }
 
   //댓글 수정
   @PostMapping("/comment/update")
-  public void updateComment(@RequestBody CommentDTO commentDTO) {
-    commentService.updateComment(commentDTO);
+  public CommentDTO updateComment(@RequestBody CommentDTO comment) {
+    Comment response = commentService.updateComment(comment);
+    return CommentDTO.toDTO(response);
   }
 
   //댓글 삭제
@@ -60,9 +69,9 @@ public class ReactionRestController {
     return heartService.getHeartUsers(scheduleId, pageable);
   }
 
-  //전체 좋아요 갯수
-  @GetMapping("/like/count")
-  public int getLikeCount(@RequestParam Long scheduleId) {
-    return heartService.getHeartCount(scheduleId);
-  }
+//  //전체 좋아요 갯수
+//  @GetMapping("/like/count")
+//  public int getLikeCount(@RequestParam Long scheduleId) {
+//    return heartService.getHeartCount(scheduleId);
+//  }
 }
