@@ -313,6 +313,7 @@ const handleFollowingUserClick = (userId) => {
               <span>카테고리 편집...</span>
             </div>
           </div>}
+          
         </CategoryWrap>
 
       </div>
@@ -320,9 +321,9 @@ const handleFollowingUserClick = (userId) => {
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]} // 플러그인 설정
           headerToolbar={{
-            left: 'prev,next today', // 헤더 왼쪽 버튼
+            left: 'prevYear,prev,next,nextYear', // 헤더 왼쪽 버튼
             center: 'title', // 헤더 중앙 제목
-            right: 'dayGridMonth,timeGridWeek,timeGridDay', // 헤더 오른쪽 버튼
+            right: 'today,dayGridMonth,timeGridWeek,timeGridDay', // 헤더 오른쪽 버튼
           }}
           initialView="dayGridMonth" // 초기 뷰 설정 (월간 뷰)
           editable={true} // 이벤트 편집 가능
@@ -330,7 +331,7 @@ const handleFollowingUserClick = (userId) => {
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수
           displayEventTime={false} // 이벤트 시간 표시 비활성화
-          eventColor='#374983' // 이벤트 기본 색상
+          eventColor='#6699FF' // 이벤트 기본 색상
           weekends={weekendsVisible} // 주말 표시 여부
           select={handleDateSelect} // 날짜 선택 이벤트 핸들러
           eventContent={renderEventContent} // 사용자 정의 이벤트 내용 렌더링
