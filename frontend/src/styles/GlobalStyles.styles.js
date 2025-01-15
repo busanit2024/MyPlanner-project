@@ -27,6 +27,23 @@ const GlobalStyles = createGlobalStyle`
     padding: 0;
     font-family: 'Noto Sans KR', sans-serif;
     height: 100vh;
+
+    ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--light-gray);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
   }
 
   a {

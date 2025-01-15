@@ -66,7 +66,7 @@ export default function MyPage() {
 
   return (
     <Container>
-      <ProfileContainer>
+      <ProfileContainer className="profile-container">
         <div className="left">
           <div className="inner-container">
             <ProfileImage>
@@ -132,9 +132,10 @@ const ProfileContainer = styled.div`
   width: 100%;
   display: flex;
   justify-content: space-between;
-    align-items: end;
+  align-items: end;
   padding: 48px 128px;
   box-sizing: border-box;
+  flex-shrink: 0;
 
   & .left {
     display: flex;
@@ -199,6 +200,7 @@ const FollowTypeWrap = styled.div`
   gap: 4px;
   height: 64px;
   border-bottom: 1px solid var(--light-gray);
+  flex-shrink: 0;
 
   & .follow-type {
     display: flex;
@@ -239,6 +241,8 @@ const UserList = styled.div`
   padding: 24px 128px;
   box-sizing: border-box;
   width: 100%;
+  flex-grow: 1;
+  overflow-y: auto;
 
   & .no-list {
     margin-top: 36px;
