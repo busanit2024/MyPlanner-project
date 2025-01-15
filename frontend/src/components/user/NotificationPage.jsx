@@ -223,6 +223,7 @@ const Container = styled.div`
   width: 100%;
   padding: var(--layout-padding);
   box-sizing: border-box;
+  overflow-y: auto;
 `;
 
 const InnerContainer = styled.div`

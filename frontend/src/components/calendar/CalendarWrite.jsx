@@ -406,6 +406,7 @@ const ImageInput = styled.div`
   font-size: 20px;
   color: #ccc;
   margin-bottom: 20px;
+  flex-shrink: 0;
 
   .uploaded-image {
     width: auto;
