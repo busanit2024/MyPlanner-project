@@ -11,8 +11,9 @@ const ScheduleWrapper = styled.div`
 `
 
 const Title = styled.div`
-  font-size: 14px;
-  font-style: bold;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 10px;
   color: #000000;
   justify-content: left;
   border-bottom: 1px solid #B6B6B6;
@@ -46,6 +47,7 @@ const Content = styled.div`
 
 const Button = styled.button`
   border-radius: 5px;
+  border: none;
   width: 280px;
   height: 30px;
   background-color: #ECECEC;
