@@ -165,8 +165,12 @@ useEffect(() => {
       console.error('Error fetching user schedules:', error);
     });
 };
-
-
+// 내 프로필 클릭 핸들러
+const handleMyProfileClick = () => {
+  if (user) {
+    fetchSchedules(user.id); // 내 프로필을 클릭하면 로그인 사용자의 캘린더 데이터를 불러옴
+  }
+};
 // 팔로잉 유저 클릭 핸들러
 const handleFollowingUserClick = (userId) => {
   fetchSchedules(userId); // 선택한 유저의 캘린더 데이터 불러오기
@@ -250,17 +254,33 @@ const handleFollowingUserClick = (userId) => {
       <div className='calendar-header'>
       <div className="calendar-page">
       <ProfileContainer>
-      {followingList.map((followingUser) => (
-          <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)}>
-            <img
-              src={followingUser.profileImageUrl || defaultProfileImageUrl}
-              alt="profile"
-              onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
-            />
-            <span>{followingUser.username}</span>
-          </UserCard>
-        ))}
-      </ProfileContainer>
+  {/* 나의 프로필 */}
+  {user && (
+    <UserCard onClick={() => handleMyProfileClick()}>
+      <img
+        src={user.profileImageUrl || defaultProfileImageUrl}
+        alt="My Profile"
+        onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
+      />
+      <span>나</span> {/* 나의 이름 표시 */}
+    </UserCard>
+  )}
+
+  {/* 팔로잉 유저 목록 */}
+  {followingList.map((followingUser) => (
+    <UserCard
+      key={followingUser.id}
+      onClick={() => handleFollowingUserClick(followingUser.id)}
+    >
+      <img
+        src={followingUser.profileImageUrl || defaultProfileImageUrl}
+        alt="profile"
+        onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
+      />
+      <span>{followingUser.username}</span>
+    </UserCard>
+  ))}
+</ProfileContainer>
     </div>
         <CategoryWrap>
           {/* 카테고리 필터 */}
