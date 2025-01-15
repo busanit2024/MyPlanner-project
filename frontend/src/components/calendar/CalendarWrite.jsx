@@ -155,10 +155,29 @@ const CalendarWrite = () => {
       }
 
       console.log('일정이 저장되었습니다:', response.data);
+      Swal.fire({
+        title: '일정 저장 완료',
+        text: '일정이 저장되었습니다.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
       navigate('/calendar');
     } catch (error) {
       console.error('일정 저장 중 오류 발생:', error.response.data);
-      alert('일정 저장에 실패했습니다. 다시 시도해 주세요.');
+      Swal.fire({
+        title: '일정 저장 실패',
+        text: '오류가 발생했습니다. 다시 시도해주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     }
   };
 
@@ -311,7 +330,16 @@ const CalendarWrite = () => {
                           setEndTime(e.target.value);
                         }
                       } else {
-                        alert("끝 시간을 설정하기 전에 시작 시간부터 입력하세요.");
+                        Swal.fire({
+                          title: "시간 오류",
+                          text: "시작 시간을 먼저 설정해주세요.",
+                          customClass: {
+                            title: "swal-title",
+                            htmlContainer: "swal-text-container",
+                            confirmButton: "swal-button swal-button-confirm",
+                            cancelButton: "swal-button swal-button-cancel",
+                          },
+                        });
                       }
                     }}
                   />

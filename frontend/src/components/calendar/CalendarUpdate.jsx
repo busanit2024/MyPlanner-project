@@ -135,7 +135,16 @@ const CalendarUpdate = () => {
         }
       } catch (error) {
         console.error('일정 데이터 불러오기 실패:', error.response ? error.response.data : error.message);
-        alert('일정 데이터를 불러오는데 실패했습니다.');
+        Swal.fire({
+          title: '일정 불러오기 실패',
+          text: '일정을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
         navigate('/calendar');
       }
     };
@@ -227,7 +236,16 @@ const CalendarUpdate = () => {
       }
     } catch (error) {
       console.error("참가 요청 중 오류 발생: ", error.response.data);
-      alert("참가 요청에 실패했습니다. 다시 시도해 주세요.");
+      Swal.fire({
+        title: '참가 요청 실패',
+        text: '일정 참가 요청에 실패했습니다. 다시 시도해 주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     };
   };
 
@@ -244,31 +262,79 @@ const CalendarUpdate = () => {
     }
   };
 
-  const handleDelete = async () => {
-    const confirmed = window.confirm("정말로 이 일정을 삭제하시겠습니까?");
-
-    if (confirmed) {
-      try {
-        await axios.delete(`/api/schedules/${id}`);
-        alert("일정이 삭제되었습니다.");
-        navigate('/calendar');  // 삭제 후 캘린더 페이지로 이동
-      } catch (error) {
-        console.error("일정 삭제 중 오류 발생: ", error.message.data);
-        alert("일정 삭제에 실패했습니다. 다시 시도해 주세요.");
+  const handleDelete = () => {
+    Swal.fire({
+      title: '일정 삭제',
+      text: '일정을 삭제하시겠습니까?',
+      showCancelButton: true,
+      confirmButtonText: '삭제',
+      cancelButtonText: '취소',
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-danger",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteSchedule();
       }
+    });
+  };
+
+  const deleteSchedule = async () => {
+    try {
+      await axios.delete(`/api/schedules/${id}`);
+      Swal.fire({
+        title: '일정 삭제 완료',
+        text: '일정을 삭제했습니다.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
+      navigate('/calendar');
+    } catch (error) {
+      console.error("일정 삭제 중 오류 발생: ", error.response.data);
+      Swal.fire({
+        title: '일정 삭제 실패',
+        text: '일정 삭제에 실패했습니다. 다시 시도해 주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     }
   };
+
 
   const handleComplete = async () => {
     let confirmed = false;
     let checkDone = false;
-    if (doneRef.current) {
-      confirmed = window.confirm("일정을 완료되지 않은 상태로 변경하시겠습니까?");
-      checkDone = false;
-    } else {
-      confirmed = window.confirm("일정을 완료된 상태로 변경하시겠습니까?");
-      checkDone = true;
-    }
+
+
+    await Swal.fire({
+      title: '일정 완료 상태 변경',
+      text: `${doneRef.current ? '완료되지 않은' : '완료된'} 일정으로 변경하시겠습니까?`,
+      showCancelButton: true,
+      confirmButtonText: '변경',
+      cancelButtonText: '취소',
+      customClass: {
+        title: "swal-title",
+        htmlContainer: "swal-text-container",
+        confirmButton: "swal-button swal-button-confirm",
+        cancelButton: "swal-button swal-button-cancel",
+      },
+    }).then((result) => {
+      checkDone = !doneRef.current;
+      if (result.isConfirmed) {
+        confirmed = true;
+      }
+    });
 
     if (confirmed) {
       try {
@@ -279,10 +345,39 @@ const CalendarUpdate = () => {
           }
         });  // 일정 완료 처리
         setDone(checkDone);
-        checkDone ? alert("일정이 완료되었습니다.") : alert("일정이 완료되지 않은 상태로 변경되었습니다.");
+        checkDone
+        ? Swal.fire({
+          title: '일정 완료 상태 변경',
+          text: '일정이 완료된 상태로 변경되었습니다.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        }) 
+        : Swal.fire({
+          title: '일정 완료 상태 변경',
+          text: '일정이 완료되지 않은 상태로 변경되었습니다.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
       } catch (error) {
         console.error("일정 완료 상태 변경 중 오류 발생: ", error.response.data);
-        alert("일정 완료 상태 변경에 실패했습니다. 다시 시도해 주세요.");
+        Swal.fire({
+          title: '일정 완료 상태 변경 실패',
+          text: '일정 완료 상태 변경에 실패했습니다. 다시 시도해 주세요.',
+          confirmButtonText: '확인',
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
       }
     }
   };
@@ -346,11 +441,32 @@ const CalendarUpdate = () => {
         await axios.post(`/api/schedules/invite/${id}/cancel`, usersToDelete.map((user) => user.user.id));
       }
 
-      console.log('일정이 수정되었습니다:', response.data);
+      Swal.fire({
+        title: '일정 수정 완료',
+        text: '일정이 수정되었습니다.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
+
       navigate('/calendar');
+
+      
     } catch (error) {
       console.error('일정 수정 중 오류 발생:', error.response.data);
-      alert('일정 수정에 실패했습니다. 다시 시도해 주세요.');
+      Swal.fire({
+        title: '일정 수정 실패',
+        text: '일정 수정에 실패했습니다. 다시 시도해 주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     }
   };
 
@@ -412,7 +528,16 @@ const CalendarUpdate = () => {
       }
     } catch (error) {
       console.error("참가 취소 요청 중 오류 발생: ", error.response.data);
-      alert("참가 취소 요청에 실패했습니다. 다시 시도해 주세요.");
+      Swal.fire({
+        title: '참가 취소 실패',
+        text: '일정 참가 취소에 실패했습니다. 다시 시도해 주세요.',
+        confirmButtonText: '확인',
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
     };
   }
 
