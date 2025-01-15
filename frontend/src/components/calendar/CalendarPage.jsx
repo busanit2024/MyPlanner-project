@@ -118,6 +118,7 @@ export default function CalendarPage() {
   // useEffect에 추가
   useEffect(() => {
     if (user) {
+      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
       fetchFollowingList();
     }
   }, [user]);
