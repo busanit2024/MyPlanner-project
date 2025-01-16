@@ -30,7 +30,7 @@ export default function CalendarPage() {
   const calendarRef = useRef(null); // 캘린더 ref
   const [isResizing, setIsResizing] = useState(false); // 크기 변경 중인지 여부
   const resizeTimeout = useRef(null); // 크기 변경 타임아웃 ref
-  // 팔로우 유저 리스스트 상태
+  // 팔로우 유저 리스트 상태
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
     page: 0,
