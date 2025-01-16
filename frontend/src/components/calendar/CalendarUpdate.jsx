@@ -11,6 +11,7 @@ import UserSelectModal from './UserSelectModal';
 import Button from '../../ui/Button';
 import Comments from './Comments';
 import Swal from 'sweetalert2';
+import { generateDateFormat } from '../../util/generateDateFormat';
 
 
 const defaultProfileImageUrl = '/images/default/defaultProfileImage.png';
@@ -26,6 +27,8 @@ const CalendarUpdate = () => {
 
   const [label, setLabel] = useState({ color: '' });
   const [cancelButtonHover, setCancelButtonHover] = useState(false);
+
+  const [scheduleLoading, setScheduleLoading] = useState(true);
 
   const [title, setTitle] = useState(eventData?.title || '');
   const [categoryList, setCategoryList] = useState([]);
@@ -51,6 +54,8 @@ const CalendarUpdate = () => {
   const [isOwner, setIsOwner] = useState(false);  // 작성자 확인
   const [userSelectModalOpen, setUserSelectModalOpen] = useState(false);
   const [likeUserIds, setLikeUserIds] = useState([]);
+  const [scheduleOwner, setScheduleOwner] = useState(null);
+  const [isPrivate, setIsPrivate] = useState(false);
   const doneRef = useRef(done);
   const newParticipantsRef = useRef(newParticipants);
 
@@ -102,6 +107,7 @@ const CalendarUpdate = () => {
             email: participant.user.email,
             status: participant.status
           })));
+          setScheduleOwner(scheduleData.user);
           setStartDate(scheduleData.startDate.split('T')[0]);
           setEndDate(scheduleData.endDate.split('T')[0]);
           setStartTime(scheduleData.startTime);
@@ -118,7 +124,7 @@ const CalendarUpdate = () => {
           setColor(scheduleData.color || '');
           setLabel({ color: scheduleData.color || '' });
           setDone(scheduleData.done);
-          // setCheckDone((scheduleData.checkDone || []).slice(0, (scheduleData.checkList || []).length));
+          setIsPrivate(scheduleData.isPrivate);
 
           // 작성자 확인
           setIsOwner(scheduleData.user?.id === user?.id);
@@ -146,10 +152,13 @@ const CalendarUpdate = () => {
           },
         });
         navigate('/calendar');
+      } finally {
+        setScheduleLoading(false);
       }
     };
 
     if (id && user && !loading) {
+      setScheduleLoading(true);
       fetchSchedule();
     }
   }, [id, user, loading]);
@@ -187,7 +196,7 @@ const CalendarUpdate = () => {
       return false;
     }
 
-    return newParticipants.some((participant) => participant.id === user.id && participant.status === 'ACCEPTED');
+    return newParticipants.some((participant) => participant.id === user?.id && participant.status === 'ACCEPTED');
   };
 
   // 참가 버튼 클릭
@@ -346,26 +355,26 @@ const CalendarUpdate = () => {
         });  // 일정 완료 처리
         setDone(checkDone);
         checkDone
-        ? Swal.fire({
-          title: '일정 완료 상태 변경',
-          text: '일정이 완료된 상태로 변경되었습니다.',
-          confirmButtonText: '확인',
-          customClass: {
-            title: "swal-title",
-            htmlContainer: "swal-text-container",
-            confirmButton: "swal-button swal-button-confirm",
-          },
-        }) 
-        : Swal.fire({
-          title: '일정 완료 상태 변경',
-          text: '일정이 완료되지 않은 상태로 변경되었습니다.',
-          confirmButtonText: '확인',
-          customClass: {
-            title: "swal-title",
-            htmlContainer: "swal-text-container",
-            confirmButton: "swal-button swal-button-confirm",
-          },
-        });
+          ? Swal.fire({
+            title: '일정 완료 상태 변경',
+            text: '일정이 완료된 상태로 변경되었습니다.',
+            confirmButtonText: '확인',
+            customClass: {
+              title: "swal-title",
+              htmlContainer: "swal-text-container",
+              confirmButton: "swal-button swal-button-confirm",
+            },
+          })
+          : Swal.fire({
+            title: '일정 완료 상태 변경',
+            text: '일정이 완료되지 않은 상태로 변경되었습니다.',
+            confirmButtonText: '확인',
+            customClass: {
+              title: "swal-title",
+              htmlContainer: "swal-text-container",
+              confirmButton: "swal-button swal-button-confirm",
+            },
+          });
       } catch (error) {
         console.error("일정 완료 상태 변경 중 오류 발생: ", error.response.data);
         Swal.fire({
@@ -383,6 +392,7 @@ const CalendarUpdate = () => {
   };
 
   const handleSubmit = async () => {
+    if (!user) return;
     const scheduleData = {
       title: title,
       category: categoryList.find((category) => category.id === parseInt(categoryId)) || null,
@@ -399,7 +409,7 @@ const CalendarUpdate = () => {
       imageUrl: image || '',
       done: done,
       createdAt: createdAt,
-      userId: user.id || '',
+      userId: user?.id || '',
       color: color,
     };
 
@@ -454,7 +464,7 @@ const CalendarUpdate = () => {
 
       navigate('/calendar');
 
-      
+
     } catch (error) {
       console.error('일정 수정 중 오류 발생:', error.response.data);
       Swal.fire({
@@ -469,11 +479,6 @@ const CalendarUpdate = () => {
       });
     }
   };
-
-
-  if (loading) {
-    return <div>로딩 중...</div>;
-  }
 
   const handleMouseEnter = () => {
     setCancelButtonHover(true);
@@ -542,8 +547,9 @@ const CalendarUpdate = () => {
   }
 
 
-  return (
-    <Container>
+  // 일정이 로딩된 경우 출력할 화면
+  const schedulePage = (
+    <>
       <UserSelectModal title={"일정 참가자 추가"} onClose={() => setUserSelectModalOpen(false)} isOpen={userSelectModalOpen} participants={newParticipants} setParticipants={setNewParticipants}>
       </UserSelectModal>
 
@@ -563,6 +569,15 @@ const CalendarUpdate = () => {
         <ImageContainer>
           <img src={image} alt="Schedule" />
         </ImageContainer>
+      )}
+
+      {!isOwner && (
+        <ProfileContainer onClick={() => navigate(`/user/${scheduleOwner.id}`)}>
+          <div className='profile-image'>
+            <img src={scheduleOwner?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src = defaultProfileImageUrl} alt="profile" />
+          </div>
+          <div className='username'>{scheduleOwner?.username}</div>
+        </ProfileContainer>
       )}
 
       <InputContainer>
@@ -637,7 +652,7 @@ const CalendarUpdate = () => {
                     onMouseLeave={handleMouseLeave}
                   >
                     {cancelButtonHover ? '참가 취소' : '참가중'}
-                    </Button>
+                  </Button>
                 ) : (
                   <Button color="primary" onClick={handleParticipate}>참가하기</Button>
                 )}
@@ -648,82 +663,97 @@ const CalendarUpdate = () => {
 
         {/* 일정 날짜 입력 */}
         <ScheduleInput className='input-field'>
+
           <div className='input-list-item'>
             <img src="/images/icon/clock.svg" alt="Calendar" className='icon' />
-            <div className='date'>
-              <div className='input-item'>
-                <span>하루 종일</span>
-                {(isOwner && !done) && <Switch size="small" value={allDay} onChange={() => setAllDay(!allDay)} />}
-              </div>
-              <div className='input-item'>
-                <span>시작 날짜</span>
-                <div className='date-time'>
-                  <input className='date-time-input'
-                    type="date"
-                    value={startDate}
-                    disabled={!isOwner || done}
-                    onChange={(e) => {
-                      setStartDate(e.target.value);
-                      setStartTime(''); // 날짜 변경 시 시간 초기화
-                    }}
-                  />
-                  {(isOwner || startTime) &&
+            {isOwner && (
+              <div className='date'>
+                <div className='input-item'>
+                  <span>하루 종일</span>
+                  {(isOwner && !done) && <Switch size="small" value={allDay} onChange={() => setAllDay(!allDay)} />}
+                </div>
+                <div className='input-item'>
+                  <span>시작 날짜</span>
+                  <div className='date-time'>
                     <input className='date-time-input'
-                      type="time"
-                      value={startTime}
-                      disabled={allDay || !isOwner || done}
-                      onChange={(e) => setStartTime(e.target.value)}
+                      type="date"
+                      value={startDate}
+                      disabled={!isOwner || done}
+                      onChange={(e) => {
+                        setStartDate(e.target.value);
+                        setStartTime(''); // 날짜 변경 시 시간 초기화
+                      }}
                     />
-                  }
+                    {(isOwner || startTime) &&
+                      <input className='date-time-input'
+                        type="time"
+                        value={startTime}
+                        disabled={allDay || !isOwner || done}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
+                    }
+                  </div>
+                </div>
+                <div className='input-item'>
+                  <span>끝 날짜</span>
+                  <div className='date-time'>
+                    <input className='date-time-input'
+                      type="date"
+                      value={endDate}
+                      disabled={!isOwner || done}
+                      onChange={(e) => {
+                        setEndDate(e.target.value);
+                        setEndTime(''); // 날짜 변경 시 시간 초기화
+                      }}
+                    />
+                    {(isOwner || endTime) &&
+                      <input className='date-time-input'
+                        type="time"
+                        value={endTime}
+                        disabled={allDay || !isOwner || done}
+                        onChange={(e) => setEndTime(e.target.value)}
+                      />
+                    }
+                  </div>
                 </div>
               </div>
-              <div className='input-item'>
-                <span>끝 날짜</span>
-                <div className='date-time'>
-                  <input className='date-time-input'
-                    type="date"
-                    value={endDate}
-                    disabled={!isOwner || done}
-                    onChange={(e) => {
-                      setEndDate(e.target.value);
-                      setEndTime(''); // 날짜 변경 시 시간 초기화
-                    }}
-                  />
-                  {(isOwner || endTime) &&
-                    <input className='date-time-input'
-                      type="time"
-                      value={endTime}
-                      disabled={allDay || !isOwner || done}
-                      onChange={(e) => setEndTime(e.target.value)}
-                    />
-                  }
+            )}
+            {!isOwner && (
+              <div className='date-format'>
+                <span className='formated-date'>{generateDateFormat(startDate, startTime, endDate, endTime, 'long')}</span>
+                <span className='allday'>{allDay ? '(하루 종일)' : ''}</span>
+              </div>
+            )}
+
+          </div>
+
+          {isOwner && (
+            <>
+              <div className='input-list-item'>
+                <img src="/images/icon/loop.svg" alt="Repeat" className='icon' />
+                <div className='input-item'>
+                  <span>{repeat ? '반복' : '반복 안함'}</span>
+                  {(isOwner && !done) && <Switch size="small" value={repeat} onChange={() => setRepeat(!repeat)} />}
                 </div>
               </div>
-            </div>
-          </div>
-          <div className='input-list-item'>
-            <img src="/images/icon/loop.svg" alt="Repeat" className='icon' />
-            <div className='input-item'>
-              <span>{repeat ? '반복' : '반복 안함'}</span>
-              {(isOwner && !done) && <Switch size="small" value={repeat} onChange={() => setRepeat(!repeat)} />}
-            </div>
-          </div>
 
-          <div className='input-list-item'>
-            <img src="/images/icon/bell.svg" alt="Alarm" className='icon' />
-            <div className='input-item'>
-              <span>{reminder ? '5분 전 알림' : '알림 없음'}</span>
-              {(isOwner && !done) && <Switch size="small" value={reminder} onChange={() => setReminder(!reminder)} />}
-            </div>
-          </div>
+              <div className='input-list-item'>
+                <img src="/images/icon/bell.svg" alt="Alarm" className='icon' />
+                <div className='input-item'>
+                  <span>{reminder ? '5분 전 알림' : '알림 없음'}</span>
+                  {(isOwner && !done) && <Switch size="small" value={reminder} onChange={() => setReminder(!reminder)} />}
+                </div>
+              </div>
 
-          <div className='input-list-item'>
-            {viewOnlyMe ? <img src="/images/icon/lock.svg" alt="Private" className='icon' /> : <img src="/images/icon/lockOpen.svg" alt="Public" className='icon' />}
-            <div className='input-item'>
-              <span>{viewOnlyMe ? '나만 보기' : '전체 공개'}</span>
-              {(isOwner && !done) && <Switch size="small" value={viewOnlyMe} onChange={() => setViewOnlyMe(!viewOnlyMe)} />}
-            </div>
-          </div>
+              <div className='input-list-item'>
+                {viewOnlyMe ? <img src="/images/icon/lock.svg" alt="Private" className='icon' /> : <img src="/images/icon/lockOpen.svg" alt="Public" className='icon' />}
+                <div className='input-item'>
+                  <span>{viewOnlyMe ? '나만 보기' : '전체 공개'}</span>
+                  {(isOwner && !done) && <Switch size="small" value={viewOnlyMe} onChange={() => setViewOnlyMe(!viewOnlyMe)} />}
+                </div>
+              </div>
+            </>
+          )}
         </ScheduleInput>
 
         {/* 체크리스트 */}
@@ -750,20 +780,38 @@ const CalendarUpdate = () => {
         }
 
         {/* 상세 내용 */}
-        <DescSection className='input-field' visible={isOwner || detail}>
-          <textarea
-            value={detail}
-            onChange={(e) => setDetail(e.target.value)}
-            placeholder={`${isOwner ? "일정 상세 내용을 입력해 보세요." : ""}`}
-            disabled={!isOwner || done}
-          />
-        </DescSection>
+        {(isOwner || detail) &&
+          <DescSection className='input-field'>
+            <textarea
+              value={detail}
+              onChange={(e) => setDetail(e.target.value)}
+              placeholder={`${isOwner ? "일정 상세 내용을 입력해 보세요." : ""}`}
+              disabled={!isOwner || done}
+            />
+          </DescSection>
+        }
 
       </InputContainer>
 
       {/* 댓글 */}
       <Comments scheduleId={id} likeUserIds={likeUserIds} />
+    </>
+  );
+
+  const privateSchedule = (
+    <PrivateContainer>
+      <div className='private'>비공개 일정입니다.</div>
+      <Button color="primary" onClick={() => navigate(-1)}>뒤로가기</Button>
+    </PrivateContainer>
+  );
+
+
+
+  return (
+    <Container>
+      {scheduleLoading ? <div className='loading'>일정 로딩중...</div> : isPrivate ? privateSchedule : schedulePage}
     </Container>
+    
   );
 };
 
@@ -776,6 +824,24 @@ const Container = styled.div`
   width: 100%;
   box-sizing: border-box;
   padding: 24px 128px;
+  flex-grow: 1;
+
+`;
+
+const PrivateContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  flex-grow: 1;
+  gap: 24px;
+  margin-top: -120px;
+
+  .private {
+    font-size: 18px;
+    color: var(--dark-gray);
+  }
 
 `;
 
@@ -820,6 +886,33 @@ const ImageContainer = styled.div`
     height: 100%;
     width: auto;
     object-fit: cover;
+  }
+`;
+
+const ProfileContainer = styled.div`  
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  cursor: pointer;
+
+  .profile-image {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: var(--light-gray);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .username {
+    font-weight: bold;
   }
 `;
 
@@ -1062,6 +1155,16 @@ const ScheduleInput = styled.div`
       color: #000;
     }
   }
+
+  & .date-format {
+    font-size: 16px;
+    display: flex;
+    gap: 4px;
+  }
+
+  & .allday {
+    color: var(--dark-gray);
+  }
   
 `;
 
@@ -1142,7 +1245,7 @@ const ChecklistSection = styled.div`
 `;
 
 const DescSection = styled.div` 
-  display: ${(props) => (props.visible ? 'flex' : 'none')};
+  display: flex;
   flex-direction: column;
   gap: 12px;
   width: 100%;

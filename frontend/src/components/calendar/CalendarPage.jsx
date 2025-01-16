@@ -139,7 +139,13 @@ export default function CalendarPage() {
         classNames: [`${item.done ? 'done' : ''}`, `color-${getTextColor(item.category?.color)}`],
       }));
       console.log('Fetched events:', newEvents); // 디버깅 로그
-      scheduleList = newEvents;
+
+      if (targetUserId !== user?.id) {
+        // 비공개 일정 필터링
+        scheduleList = newEvents.filter((event) => response.data.find((item) => item.id === event.id).isPrivate === false);
+      } else {
+        scheduleList = newEvents;
+      }
 
       // 참여한 일정 가져오기
       if (targetUserId === user?.id) {
