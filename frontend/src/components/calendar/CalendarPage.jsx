@@ -32,8 +32,6 @@ export default function CalendarPage() {
   const [isResizing, setIsResizing] = useState(false); // 크기 변경 중인지 여부
   const resizeTimeout = useRef(null); // 크기 변경 타임아웃 ref
   const [eventChangeData, setEventChangeData] = useState(null); // 이벤트 변경 데이터
-
-  // 팔로잉 유저 리스트 상태
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
     page: 0,
@@ -357,7 +355,9 @@ export default function CalendarPage() {
               onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
             />
             <span>나</span>
+
           </UserCard>
+          
           {followingList.map((followingUser) => (
             <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)} selected={followingUser.id === selectedUserId}>
               <img
@@ -365,8 +365,11 @@ export default function CalendarPage() {
                 alt="profile"
                 onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
               />
+              
               <span>{followingUser.username}</span>
+              
             </UserCard>
+            
           ))}
         </ProfileContainer>
       </div>
