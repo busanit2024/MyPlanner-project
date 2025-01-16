@@ -30,8 +30,7 @@ export default function CalendarPage() {
   const calendarRef = useRef(null); // 캘린더 ref
   const [isResizing, setIsResizing] = useState(false); // 크기 변경 중인지 여부
   const resizeTimeout = useRef(null); // 크기 변경 타임아웃 ref
-
-  // 팔로잉 유저 리스트 상태
+  // 팔로우 유저 리스트 상태
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
     page: 0,
@@ -40,18 +39,6 @@ export default function CalendarPage() {
 
   const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
-  const ProfileImage = styled.div`
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background-color: var(--light-gray);
-
-    & img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-    }
-  `;
 
   useEffect(() => {
     // 인증되지 않은 사용자는 로그인 페이지로 이동
@@ -70,6 +57,8 @@ export default function CalendarPage() {
 
   // 로그인한 유저의 스케줄 불러오기기
   const fetchSchedules = (userId) => {
+    console.log('Fetching schedules for userId:', userId);
+    console.log('Fetching schedules for user.id:', user.id);
     axios.get(`/api/schedules/user/${userId}`)
       .then((response) => {
         const events = response.data.map(schedule => ({
@@ -78,6 +67,7 @@ export default function CalendarPage() {
           start: schedule.startDate,
           end: schedule.endDate,
           color: schedule.category?.color || 'var(--light-gray)',
+          editable: user.id == userId ? true : false
         }));
         setEventList(events);
       })
@@ -115,6 +105,7 @@ export default function CalendarPage() {
       });
   };
 
+ 
   // useEffect에 추가
   useEffect(() => {
     if (user) {
@@ -181,10 +172,7 @@ export default function CalendarPage() {
     setSelectedUserId(userId); // 선택한 유저 ID 상태 업데이트
     fetchSchedules(userId); // 선택한 유저의 캘린더 데이터 불러오기
   };
-  // 주말 표시 토글
-  function handleWeekendsToggle() {
-    setWeekendsVisible(!weekendsVisible);
-  }
+
 
   // 일정 작성 페이지 이동
   function handleDateSelect(selectInfo) {
@@ -266,7 +254,9 @@ export default function CalendarPage() {
               onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
             />
             <span>나</span>
+
           </UserCard>
+          
           {followingList.map((followingUser) => (
             <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)} selected={followingUser.id === selectedUserId}>
               <img
@@ -274,8 +264,11 @@ export default function CalendarPage() {
                 alt="profile"
                 onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
               />
+              
               <span>{followingUser.username}</span>
+              
             </UserCard>
+            
           ))}
         </ProfileContainer>
       </div>
