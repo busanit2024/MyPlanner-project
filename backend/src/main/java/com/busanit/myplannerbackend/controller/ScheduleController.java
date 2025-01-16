@@ -12,6 +12,8 @@ import com.busanit.myplannerbackend.service.CategoryService;
 import com.busanit.myplannerbackend.service.CheckListService;
 import com.busanit.myplannerbackend.service.ScheduleService;
 import com.busanit.myplannerbackend.service.UserService;
+import jakarta.persistence.Column;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.Console;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -153,6 +156,12 @@ public class ScheduleController {
         }
 
         Schedule response = scheduleService.updateSchedule(id, scheduleDetails);
+        return ScheduleDTO.toDTO(response);
+    }
+
+    @PutMapping("/{id}/datetime")
+    public ScheduleDTO updateScheduleDateTime(@PathVariable Long id, @RequestBody ScheduleDTO.DateTimeData data){
+        Schedule response = scheduleService.updateDateTime(id, data);
         return ScheduleDTO.toDTO(response);
     }
 

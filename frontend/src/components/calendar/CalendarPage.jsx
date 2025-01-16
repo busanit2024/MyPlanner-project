@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import "../../css/CalendarPage.css";
-import axios from 'axios';
+import axios, { all } from 'axios';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
@@ -31,6 +31,7 @@ export default function CalendarPage() {
   const calendarRef = useRef(null); // 캘린더 ref
   const [isResizing, setIsResizing] = useState(false); // 크기 변경 중인지 여부
   const resizeTimeout = useRef(null); // 크기 변경 타임아웃 ref
+  const [eventChangeData, setEventChangeData] = useState(null); // 이벤트 변경 데이터
 
   // 팔로잉 유저 리스트 상태
   const [followingList, setFollowingList] = useState([]);
@@ -121,6 +122,92 @@ export default function CalendarPage() {
   }, [calendarContainerRef, calendarRef, isResizing]);
 
 
+  const formatISOString = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const seconds = date.getSeconds();
+
+    const offset = -date.getTimezoneOffset() / 60;
+    const offsetString = offset >= 0 ? `+${offset}` : offset;
+    return `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}T${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}${offsetString}:00`;
+  };
+
+  useEffect(() => {
+    // 이벤트 드래그 드롭으로 변경 시 업데이트
+    const handleChangeEvent = (newEvent, oldEvent) => {
+
+      if (!newEvent || !oldEvent) return;
+
+      if (newEvent === oldEvent) return;
+
+      const start = newEvent.startStr;
+      const end = newEvent.endStr;
+
+      console.log('Event changed:', start, end);
+
+      //날짜 형식: 2021-09-01T00:00:00+09:00
+      //Date 객체로 변환
+      const newStartDate = new Date(start);
+      const newEndDate = end ? new Date(end) : newStartDate;
+
+      const formattedStartDate = formatISOString(newStartDate);
+      let formattedEndDate = formatISOString(newEndDate);
+
+      if (!newEvent.allDay && newStartDate === newEndDate) {
+        newEndDate.setHours(newEndDate.getHours() + 1);
+        formattedEndDate = formatISOString(newEndDate);
+      }
+
+      const newDateTime = {
+        startDate: formattedStartDate.split('T')[0],
+        startTime: formattedStartDate.split('T')[1].slice(0, 5),
+        endDate: formattedEndDate.split('T')[0],
+        endTime: formattedEndDate.split('T')[1].slice(0, 5),
+        allDay: newEvent.allDay,
+      };
+
+      console.log('New datetime:', newDateTime);
+
+      axios.put(`/api/schedules/${newEvent.id}/datetime`, newDateTime)
+        .then((res) => {
+          const updatedEvent = {
+            id: res.data.id,
+            title: res.data.title || '제목 없는 일정',
+            allDay: res.data.allDay,
+            start: generateISOString(res.data.startDate, res.data.startTime),
+            end: generateISOString(res.data.endDate, res.data.endTime),
+            backgroundColor: res.data.category?.color || 'var(--light-gray)',
+            borderColor: 'transparent',
+            textColor: getTextColor(res.data.category?.color),
+            classNames: [`${res.data.done ? 'done' : ''}`, `color-${getTextColor(res.data.category?.color)}`],
+          }
+          setEventList((prev) => prev.map((event) => {
+            if (event.id === updatedEvent.id) {
+              return {
+                ...event,
+                start: updatedEvent.start,
+                end: updatedEvent.end,
+                allDay: updatedEvent.allDay,
+              };
+            }
+            return event;
+          }));
+        })
+        .catch((error) => {
+          console.error('Error updating event datetime:', error);
+        });
+
+    };
+
+    if (eventChangeData) {
+      handleChangeEvent(eventChangeData.newEvent, eventChangeData.oldEvent);
+    }
+  }, [eventChangeData]);
+
+
   // 캘린더 데이터 가져오기
   const fetchCalendarData = async (targetUserId) => {
     setEventList([]); // 이벤트 목록 초기화
@@ -132,7 +219,6 @@ export default function CalendarPage() {
       const newEvents = response.data.map((item) => ({
         id: item.id,
         title: item.title || '제목 없는 일정',
-        //An ISO8601 형식 문자열을 반환합니다. 이 문자열은 날짜와 시간을 나타내며 항상 UTC 시간대를 사용합니다.
         allDay: item.allDay,
         start: generateISOString(item.startDate, item.startTime),
         end: generateISOString(item.endDate, item.endTime),
@@ -168,6 +254,7 @@ export default function CalendarPage() {
       const response = await axios.get(`/api/schedules/${user.id}/participated`);
       const newEvents = response.data.map((item) => ({
         id: item.id,
+        editable: false,
         title: item.title || '제목 없는 일정',
         allDay: item.allDay,
         start: generateISOString(item.startDate, item.startTime),
@@ -258,6 +345,7 @@ export default function CalendarPage() {
     }
   };
 
+
   return (
     <div className="demo-app-main calendar-page">
       <div className='calendar-header'>
@@ -332,6 +420,8 @@ export default function CalendarPage() {
           }}
           initialView="dayGridMonth" // 초기 뷰 설정 (월간 뷰)
           editable={isMine} // 이벤트 수정 활성화
+          eventStartEditable={true} // 이벤트 시작 시간 수정 활성화
+          droppable={true} // 이벤트 드래그 앤 드롭 활성화
           selectable={isMine} // 달력 셀 선택 활성화
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수
@@ -347,7 +437,9 @@ export default function CalendarPage() {
           eventDisplay='block'
           eventMouseEnter={(arg) => { arg.el.style.cursor = 'pointer'; }}
           eventMouseLeave={(arg) => { arg.el.style.cursor = 'default'; }}
-
+          eventLeave={(arg) => { setEventChangeData((prev) => ({ ...prev, oldEvent: arg.event })) }}
+          eventReceive={(arg) => { setEventChangeData((prev) => ({ ...prev, newEvent: arg.event })) }}
+          eventResize={(arg) => { setEventChangeData({ oldEvent: arg.oldEvent, newEvent: arg.event })}}
         />
       </CalendarWrap>
       {categoryModalOpen && <CategoryEditModal categories={user.categories} onClose={() => setCategoryModalOpen(false)} />}

@@ -133,6 +133,22 @@ public class ScheduleService {
         return scheduleRepository.save(schedule);
     }
 
+    //일정 날짜와 시간 수정
+    public Schedule updateDateTime(Long id, ScheduleDTO.DateTimeData data) {
+      Schedule schedule = scheduleRepository.findById(id).orElse(null);
+      if (schedule == null) {
+        throw new RuntimeException("Schedule not found");
+      }
+
+      schedule.setStartDate(data.getStartDate());
+      schedule.setStartTime(data.getStartTime());
+      schedule.setEndDate(data.getEndDate());
+      schedule.setEndTime(data.getEndTime());
+      schedule.setAllDay(data.getAllDay());
+
+      return scheduleRepository.save(schedule);
+    }
+
     // 일정 삭제
     public void deleteSchedule(Long id) {
         scheduleRepository.deleteById(id);
