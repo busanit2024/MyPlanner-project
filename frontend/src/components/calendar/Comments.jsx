@@ -41,6 +41,7 @@ export default function Comments(props) {
   };
 
   const checkLiked = () => {
+    if (!user)  return;
     const myLike = likeUserIds.includes(user.id);
     setLiked(myLike);
   };

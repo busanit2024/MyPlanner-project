@@ -5,21 +5,22 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import "../../css/CalendarPage.css";
-import axios from 'axios';
+import axios, { all } from 'axios';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
 import Radio from '../../ui/Radio';
 import CategoryEditModal from './CategoryEditModal';
 import { getTextColor } from '../../util/getTextColor';
+import { generateISOString } from '../../util/generateISOString';
 
 export default function CalendarPage() {
-  const [weekendsVisible, setWeekendsVisible] = useState(true); // 주말 표시 여부 상태
   const [currentEvents, setCurrentEvents] = useState([]); // 현재 표시 중인 이벤트 상태
   const [eventList, setEventList] = useState([]); // 서버에서 가져온 이벤트 목록 상태
   const [categoryBoxOpen, setCategoryBoxOpen] = useState(false); // 카테고리 박스 오픈 상태
   const [categoryModalOpen, setCategoryModalOpen] = useState(false); // 카테고리 모달 오픈 상태
   const [selectedCategory, setSelectedCategory] = useState(new Set()); // 선택된 카테고리 id 목록 (set으로 중복 방지)
+  const [isMine, setIsMine] = useState(true); // 내 캘린더인지 여부
   const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate
   const { user, loading } = useAuth(); // 인증된 사용자 정보 및 로딩 상태 가져오기
   const { id: calendarUserId } = useParams(); // URL의 사용자 ID
@@ -30,7 +31,7 @@ export default function CalendarPage() {
   const calendarRef = useRef(null); // 캘린더 ref
   const [isResizing, setIsResizing] = useState(false); // 크기 변경 중인지 여부
   const resizeTimeout = useRef(null); // 크기 변경 타임아웃 ref
-  // 팔로우 유저 리스트 상태
+  const [eventChangeData, setEventChangeData] = useState(null); // 이벤트 변경 데이터
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
     page: 0,
@@ -38,7 +39,6 @@ export default function CalendarPage() {
   });
 
   const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
-
 
   useEffect(() => {
     // 인증되지 않은 사용자는 로그인 페이지로 이동
@@ -48,39 +48,21 @@ export default function CalendarPage() {
     if (!loading && user) {
       // 선택된 유저 ID를 로그인 유저로 초기화
       setSelectedUserId(user.id);
-      // 초기값: 로그인 유저의 스케줄 정보 가져오기
-      fetchSchedules(user.id);
+      setIsMine(true);
       // 팔로잉 유저 리스트 가져오기
       fetchFollowingList(user.id);
+      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
     }
   }, [user, loading]);
 
-  // 로그인한 유저의 스케줄 불러오기기
-  const fetchSchedules = (userId) => {
-    console.log('Fetching schedules for userId:', userId);
-    console.log('Fetching schedules for user.id:', user.id);
-    axios.get(`/api/schedules/user/${userId}`)
-      .then((response) => {
-        const events = response.data.map(schedule => ({
-          id: schedule.id,
-          title: schedule.title || '제목 없는 일정',
-          start: schedule.startDate,
-          end: schedule.endDate,
-          color: schedule.category?.color || 'var(--light-gray)',
-          editable: user.id == userId ? true : false
-        }));
-        setEventList(events);
-      })
-      .catch((error) => console.error('Error fetching schedules:', error));
-  };
-
   useEffect(() => {
+    setEventList([]); // 이벤트 목록 초기화
     // 캘린더 데이터 가져오기
-    if (user && (calendarUserId || user.id)) {
-      const targetUserId = calendarUserId || user.id; // 현재 캘린더를 볼 사용자 ID
-      fetchCalendarData(targetUserId);
+    if (selectedUserId) {
+      fetchCalendarData(selectedUserId);
+      setIsMine(user.id === selectedUserId);
     }
-  }, [calendarUserId, user]);
+  }, [selectedUserId]);
 
 
   // 팔로잉 유저 리스트 불러오기
@@ -104,15 +86,6 @@ export default function CalendarPage() {
         console.error(err);
       });
   };
-
- 
-  // useEffect에 추가
-  useEffect(() => {
-    if (user) {
-      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
-      fetchFollowingList();
-    }
-  }, [user]);
 
   useEffect(() => {
     //컨테이너 사이즈 변경 시 캘린더 크기 업데이트
@@ -144,35 +117,164 @@ export default function CalendarPage() {
         clearTimeout(resizeTimeout.current);
       };
     };
-    }, [calendarContainerRef, calendarRef, isResizing]);
+  }, [calendarContainerRef, calendarRef, isResizing]);
+
+
+  const formatISOString = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const seconds = date.getSeconds();
+
+    const offset = -date.getTimezoneOffset() / 60;
+    const offsetString = offset >= 0 ? `+${offset}` : offset;
+    return `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}T${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}${offsetString}:00`;
+  };
+
+  useEffect(() => {
+    // 이벤트 드래그 드롭으로 변경 시 업데이트
+    const handleChangeEvent = (newEvent, oldEvent) => {
+
+      if (!newEvent || !oldEvent) return;
+
+      if (newEvent === oldEvent) return;
+
+      const start = newEvent.startStr;
+      const end = newEvent.endStr;
+
+      console.log('Event changed:', start, end);
+
+      //날짜 형식: 2021-09-01T00:00:00+09:00
+      //Date 객체로 변환
+      const newStartDate = new Date(start);
+      const newEndDate = end ? new Date(end) : newStartDate;
+
+      const formattedStartDate = formatISOString(newStartDate);
+      let formattedEndDate = formatISOString(newEndDate);
+
+      if (!newEvent.allDay && newStartDate === newEndDate) {
+        newEndDate.setHours(newEndDate.getHours() + 1);
+        formattedEndDate = formatISOString(newEndDate);
+      }
+
+      const newDateTime = {
+        startDate: formattedStartDate.split('T')[0],
+        startTime: formattedStartDate.split('T')[1].slice(0, 5),
+        endDate: formattedEndDate.split('T')[0],
+        endTime: formattedEndDate.split('T')[1].slice(0, 5),
+        allDay: newEvent.allDay,
+      };
+
+      console.log('New datetime:', newDateTime);
+
+      axios.put(`/api/schedules/${newEvent.id}/datetime`, newDateTime)
+        .then((res) => {
+          const updatedEvent = {
+            id: res.data.id,
+            title: res.data.title || '제목 없는 일정',
+            allDay: res.data.allDay,
+            start: generateISOString(res.data.startDate, res.data.startTime),
+            end: generateISOString(res.data.endDate, res.data.endTime),
+            backgroundColor: res.data.category?.color || 'var(--light-gray)',
+            borderColor: 'transparent',
+            textColor: getTextColor(res.data.category?.color),
+            classNames: [`${res.data.done ? 'done' : ''}`, `color-${getTextColor(res.data.category?.color)}`],
+          }
+          setEventList((prev) => prev.map((event) => {
+            if (event.id === updatedEvent.id) {
+              return {
+                ...event,
+                start: updatedEvent.start,
+                end: updatedEvent.end,
+                allDay: updatedEvent.allDay,
+              };
+            }
+            return event;
+          }));
+        })
+        .catch((error) => {
+          console.error('Error updating event datetime:', error);
+        });
+
+    };
+
+    if (eventChangeData) {
+      handleChangeEvent(eventChangeData.newEvent, eventChangeData.oldEvent);
+    }
+  }, [eventChangeData]);
 
 
   // 캘린더 데이터 가져오기
-  const fetchCalendarData = (targetUserId) => {
-    axios.get(`/api/schedules/user/${targetUserId}`) // 적절한 엔드포인트 호출
-      .then((response) => {
-        const newEvents = response.data.map((item) => ({
-          id: item.id,
-          title: item.title || '제목 없는 일정',
-          start: item.startDate,
-          end: item.endDate,
-          color: item.category?.color || 'var(--light-gray)',
-        }));
-        console.log('Fetched events:', newEvents); // 디버깅 로그
-        setEventList(newEvents);
-      })
-      .catch((error) => {
-        console.error('Error fetching user schedules:', error);
-      });
+  const fetchCalendarData = async (targetUserId) => {
+    setEventList([]); // 이벤트 목록 초기화
+    let scheduleList = [];
+    let participatedList = [];
+
+    try {
+      const response = await axios.get(`/api/schedules/user/${targetUserId}`);
+      const newEvents = response.data.map((item) => ({
+        id: item.id,
+        title: item.title || '제목 없는 일정',
+        allDay: item.allDay,
+        start: generateISOString(item.startDate, item.startTime),
+        end: generateISOString(item.endDate, item.endTime),
+        backgroundColor: item.category?.color || 'var(--light-gray)',
+        borderColor: 'transparent',
+        textColor: getTextColor(item.category?.color),
+        classNames: [`${item.done ? 'done' : ''}`, `color-${getTextColor(item.category?.color)}`],
+      }));
+      console.log('Fetched events:', newEvents); // 디버깅 로그
+
+      if (targetUserId !== user?.id) {
+        // 비공개 일정 필터링
+        scheduleList = newEvents.filter((event) => response.data.find((item) => item.id === event.id).isPrivate === false);
+      } else {
+        scheduleList = newEvents;
+      }
+
+      // 참여한 일정 가져오기
+      if (targetUserId === user?.id) {
+        participatedList = await fetchParticipatedEvents();
+      }
+
+      // 이벤트 목록 업데이트
+      setEventList([...scheduleList, ...participatedList]);
+
+    } catch (error) {
+      console.error('Error fetching user schedules:', error);
+    }
   };
+
+  const fetchParticipatedEvents = async () => {
+    try {
+      const response = await axios.get(`/api/schedules/${user.id}/participated`);
+      const newEvents = response.data.map((item) => ({
+        id: item.id,
+        editable: false,
+        title: item.title || '제목 없는 일정',
+        allDay: item.allDay,
+        start: generateISOString(item.startDate, item.startTime),
+        end: generateISOString(item.endDate, item.endTime),
+        backgroundColor: 'white',
+        borderColor: 'var(--dark-gray)',
+        textColor: 'var(--dark-gray)',
+        classNames: [`${item.done ? 'done' : ''}`, `color-black`],
+      }));
+      console.log('Fetched participated events:', newEvents); // 디버깅 로그
+      return newEvents;
+    } catch (error) {
+      console.error('Error fetching participated schedules:', error);
+    }
+  };
+
 
 
   // 팔로잉 유저 클릭 핸들러
   const handleFollowingUserClick = (userId) => {
     setSelectedUserId(userId); // 선택한 유저 ID 상태 업데이트
-    fetchSchedules(userId); // 선택한 유저의 캘린더 데이터 불러오기
   };
-
 
   // 일정 작성 페이지 이동
   function handleDateSelect(selectInfo) {
@@ -212,8 +314,6 @@ export default function CalendarPage() {
   }
 
 
-
-
   const handleDayCellContent = (arg) => {
     // 달력 셀의 날짜 포맷 조정 (ex. '1일' -> '1')
     const dayNumber = arg.dayNumberText.replace("일", "");
@@ -242,6 +342,7 @@ export default function CalendarPage() {
       setSelectedCategory((prev) => new Set(prev).add(categoryId));
     }
   };
+
 
   return (
     <div className="demo-app-main calendar-page">
@@ -321,12 +422,14 @@ export default function CalendarPage() {
             day: '일간', // 일간 버튼
           }}
           initialView="dayGridMonth" // 초기 뷰 설정 (월간 뷰)
-          editable={true} // 이벤트 편집 가능
-          selectable={true} // 달력 셀 선택 활성화
+          editable={isMine} // 이벤트 수정 활성화
+          eventStartEditable={true} // 이벤트 시작 시간 수정 활성화
+          droppable={true} // 이벤트 드래그 앤 드롭 활성화
+          selectable={isMine} // 달력 셀 선택 활성화
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수
           displayEventTime={false} // 이벤트 시간 표시 비활성화
-          weekends={weekendsVisible} // 주말 표시 여부
+          weekends={true} // 주말 표시 여부
           select={handleDateSelect} // 날짜 선택 이벤트 핸들러
           eventContent={renderEventContent} // 사용자 정의 이벤트 내용 렌더링
           eventClick={handleEventClick} // 이벤트 클릭 핸들러
@@ -335,6 +438,11 @@ export default function CalendarPage() {
           locale="ko" // 한국어 로케일
           dayCellContent={handleDayCellContent} // 달력 셀 내용 핸들러
           eventDisplay='block'
+          eventMouseEnter={(arg) => { arg.el.style.cursor = 'pointer'; }}
+          eventMouseLeave={(arg) => { arg.el.style.cursor = 'default'; }}
+          eventLeave={(arg) => { setEventChangeData((prev) => ({ ...prev, oldEvent: arg.event })) }}
+          eventReceive={(arg) => { setEventChangeData((prev) => ({ ...prev, newEvent: arg.event })) }}
+          eventResize={(arg) => { setEventChangeData({ oldEvent: arg.oldEvent, newEvent: arg.event })}}
         />
       </CalendarWrap>
       {categoryModalOpen && <CategoryEditModal categories={user.categories} onClose={() => setCategoryModalOpen(false)} />}
