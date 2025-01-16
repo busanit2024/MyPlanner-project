@@ -12,6 +12,7 @@ import styled from 'styled-components';
 import Radio from '../../ui/Radio';
 import CategoryEditModal from './CategoryEditModal';
 import { getTextColor } from '../../util/getTextColor';
+import { generateISOString } from '../../util/generateISOString';
 
 export default function CalendarPage() {
   const [currentEvents, setCurrentEvents] = useState([]); // 현재 표시 중인 이벤트 상태
@@ -131,8 +132,10 @@ export default function CalendarPage() {
       const newEvents = response.data.map((item) => ({
         id: item.id,
         title: item.title || '제목 없는 일정',
-        start: item.startDate,
-        end: item.endDate,
+        //An ISO8601 형식 문자열을 반환합니다. 이 문자열은 날짜와 시간을 나타내며 항상 UTC 시간대를 사용합니다.
+        allDay: item.allDay,
+        start: generateISOString(item.startDate, item.startTime),
+        end: generateISOString(item.endDate, item.endTime),
         backgroundColor: item.category?.color || 'var(--light-gray)',
         borderColor: 'transparent',
         textColor: getTextColor(item.category?.color),
@@ -166,8 +169,9 @@ export default function CalendarPage() {
       const newEvents = response.data.map((item) => ({
         id: item.id,
         title: item.title || '제목 없는 일정',
-        start: item.startDate,
-        end: item.endDate,
+        allDay: item.allDay,
+        start: generateISOString(item.startDate, item.startTime),
+        end: generateISOString(item.endDate, item.endTime),
         backgroundColor: 'white',
         borderColor: 'var(--dark-gray)',
         textColor: 'var(--dark-gray)',

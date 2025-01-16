@@ -53,6 +53,4 @@ export const generateDateFormat = (startDate, startTime, endDate, endTime, type 
 
   }
 
-
-
 };
