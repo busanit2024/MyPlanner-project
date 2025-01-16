@@ -157,4 +157,13 @@ public class ScheduleDTO {
     public static Slice<ScheduleDTO> toDTO(Slice<Schedule> slice) {
         return slice.map(ScheduleDTO::toDTO);
     }
+
+    @Data
+    public static class DateTimeData {
+        private Date startDate; // 시작일
+        private String startTime; // 시작 시간
+        private Date endDate;   // 종료일
+        private String endTime;   // 종료 시간
+        private Boolean allDay;
+    }
 }

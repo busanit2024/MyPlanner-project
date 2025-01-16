@@ -10,6 +10,8 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { generateISOString } from "../../util/generateISOString";
+import { getTextColor } from "../../util/getTextColor";
 
 const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
@@ -18,10 +20,10 @@ export const goToChat = async (user, targetUser, navigate) => {
     // 기존 채팅방 확인
     const response = await axios.get(`/api/chat/rooms/user/${user.email}`);
     const chatRooms = response.data;
-    
+
     // Individual 타입의 채팅방 중 현재 선택된 사용자와의 채팅방 찾기
-    const existingRoom = chatRooms.find(room => 
-      room.chatRoomType === "INDIVIDUAL" && 
+    const existingRoom = chatRooms.find(room =>
+      room.chatRoomType === "INDIVIDUAL" &&
       room.participants.some(p => p.email === targetUser.email)
     );
 
@@ -32,13 +34,13 @@ export const goToChat = async (user, targetUser, navigate) => {
         name: targetUser.username,
         profileImage: targetUser.profileImageUrl || defaultProfileImageUrl
       };
-      
-      navigate('/chat', { 
-        state: { 
+
+      navigate('/chat', {
+        state: {
           initialRoom: {
             ...existingRoom,
-            participants: existingRoom.participants.map(p => 
-              p.email === targetUser.email 
+            participants: existingRoom.participants.map(p =>
+              p.email === targetUser.email
                 ? { ...p, name: targetUser.username, profileImage: targetUser.profileImageUrl || defaultProfileImageUrl }
                 : p
             )
@@ -50,17 +52,17 @@ export const goToChat = async (user, targetUser, navigate) => {
       // 새로운 채팅방 생성
       const chatRoomRequest = {
         participantIds: [
-          { 
+          {
             email: user.email,
             name: user.username,
             profileImage: user.profileImageUrl || defaultProfileImageUrl,
-            status: "ACTIVE" 
+            status: "ACTIVE"
           },
-          { 
+          {
             email: targetUser.email,
             name: targetUser.username,
             profileImage: targetUser.profileImageUrl || defaultProfileImageUrl,
-            status: "ACTIVE" 
+            status: "ACTIVE"
           }
         ],
         chatroomTitle: targetUser.username,
@@ -69,9 +71,9 @@ export const goToChat = async (user, targetUser, navigate) => {
 
       const newRoomResponse = await axios.post('/api/chat/rooms', chatRoomRequest);
       const newRoom = newRoomResponse.data;
-      
-      navigate('/chat', { 
-        state: { 
+
+      navigate('/chat', {
+        state: {
           initialRoom: newRoom,
           initialPartner: {
             email: targetUser.email,
@@ -105,7 +107,7 @@ export default function UserProfilePage() {
   const [eventList, setEventList] = useState([]); // 서버에서 가져온 이벤트 목록 상태
   const [isResizing, setIsResizing] = useState(false); // 크기 변경 중인지 여부
   const resizeTimeout = useRef(null); // 크기 변경 타임아웃 ref
-// 팔로우 유저 리스스트 상태
+  // 팔로우 유저 리스스트 상태
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
     page: 0,
@@ -191,30 +193,43 @@ export default function UserProfilePage() {
 
 
   const fetchCalendarData = (userId) => {
+    let eventList = [];
     axios.get(`/api/schedules/user/${userId}`) // 적절한 엔드포인트 호출
       .then((response) => {
         const newEvents = response.data.map((item) => ({
           id: item.id,
           title: item.title || '제목 없는 일정',
-          start: item.startDate,
-          end: item.endDate,
-          color: item.category?.color || 'var(--light-gray)',
+          allDay: item.allDay,
+          start: generateISOString(item.startDate, item.startTime),
+          end: generateISOString(item.endDate, item.endTime),
+          backgroundColor: item.category?.color || 'var(--light-gray)',
+          borderColor: 'transparent',
+          textColor: getTextColor(item.category?.color),
+          classNames: [`${item.done ? 'done' : ''}`, `color-${getTextColor(item.category?.color)}`],
         }));
         console.log('userId:', userId); // 디버깅 로그
         console.log('Fetched events:', newEvents); // 디버깅 로그
-        setEventList(newEvents);
+        if (userId !== user?.id) {
+          // 비공개 일정 필터링
+          eventList = newEvents.filter((event) => response.data.find((item) => item.id === event.id).isPrivate === false);
+        } else {
+          eventList = newEvents;
+        }
+
+        setEventList(eventList); // 이벤트 목록 상태 업데이트
       })
       .catch((error) => {
         console.error('Error fetching user schedules:', error);
       });
   };
+
   useEffect(() => {
     // 캘린더 데이터 가져오기
-    if (user &&  user.id) {
+    if (user) {
       fetchCalendarData(userId);
     }
   }, [user]);
-  
+
   const handleUnfollowButton = () => {
     Swal.fire({
       title: "언팔로우하기",
@@ -242,33 +257,14 @@ export default function UserProfilePage() {
   }
 
 
- 
-  // 일정 작성 페이지 이동
-  function handleDateSelect(selectInfo) {
-    const { startStr, endStr } = selectInfo;
-
-    const endDateAdjusted = new Date(endStr);
-    // endStr를 강제로 하루 전으로 설정(FullCalendar의 특성상 endDate가 무조건 startDate의 하루 뒤가 되어버림)
-    endDateAdjusted.setDate(endDateAdjusted.getDate() - 1);
-    const adjustedEndDate = endDateAdjusted.toISOString().split('T')[0];  // YYYY-MM-DD 형식으로 조정
-
-    // 날짜를 선택하면 일정 작성 페이지로 이동하고 선택된 날짜 전달
-    navigate('/calendarWrite', {
-      state: {
-        startDate: startStr,
-        endDate: adjustedEndDate
-      }
-    });
+  function renderEventContent(eventInfo) {
+    return (
+      <>
+        <b>{eventInfo.timeText}</b> {/* 이벤트 시간 */}
+        <i>{eventInfo.event.title}</i> {/* 이벤트 제목 */}
+      </>
+    );
   }
-  
-function renderEventContent(eventInfo) {
-  return (
-    <>
-      <b>{eventInfo.timeText}</b> {/* 이벤트 시간 */}
-      <i>{eventInfo.event.title}</i> {/* 이벤트 제목 */}
-    </>
-  );
-}
 
 
   // 일정 클릭 시 업데이트 페이지 이동
@@ -286,7 +282,7 @@ function renderEventContent(eventInfo) {
     });
   }
 
-  
+
   function handleEvents(events) {
     setCurrentEvents(events); // 현재 표시 중인 이벤트 목록 상태 업데이트
   }
@@ -299,46 +295,46 @@ function renderEventContent(eventInfo) {
 
 
 
-  
-    useEffect(() => {
-      //컨테이너 사이즈 변경 시 캘린더 크기 업데이트
-      if (!calendarContainerRef.current || !calendarRef.current) return;
-  
-      const calendarApi = calendarRef.current.getApi();
-  
-      const handleResize = () => {
-        if (!isResizing) {
-          setIsResizing(true);
-        }
-  
-        if (resizeTimeout.current) {
-          clearTimeout(resizeTimeout.current);
-        }
-  
-        resizeTimeout.current = setTimeout(() => {
-          setIsResizing(false);
-          calendarApi.updateSize();
-        }, 100);
+
+  useEffect(() => {
+    //컨테이너 사이즈 변경 시 캘린더 크기 업데이트
+    if (!calendarContainerRef.current || !calendarRef.current) return;
+
+    const calendarApi = calendarRef.current.getApi();
+
+    const handleResize = () => {
+      if (!isResizing) {
+        setIsResizing(true);
+      }
+
+      if (resizeTimeout.current) {
+        clearTimeout(resizeTimeout.current);
+      }
+
+      resizeTimeout.current = setTimeout(() => {
+        setIsResizing(false);
+        calendarApi.updateSize();
+      }, 100);
+    };
+
+    const resizeObserver = new ResizeObserver(() => { handleResize(); });
+    resizeObserver.observe(calendarContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+      if (resizeTimeout.current) {
+        clearTimeout(resizeTimeout.current);
       };
-  
-      const resizeObserver = new ResizeObserver(() => { handleResize(); });
-      resizeObserver.observe(calendarContainerRef.current);
-  
-      return () => {
-        resizeObserver.disconnect();
-        if (resizeTimeout.current) {
-          clearTimeout(resizeTimeout.current);
-        };
-      };
-      }, [calendarContainerRef, calendarRef, isResizing]);
-  
+    };
+  }, [calendarContainerRef, calendarRef, isResizing]);
+
 
   return (
     <Container className="user-profile-page">
       <UserInfoContainer className="user-info-container">
         <LeftContainer className="left-container">
           <div className="profileImage">
-            <img src={pageUser?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src=defaultProfileImageUrl} alt="profile" />
+            <img src={pageUser?.profileImageUrl || defaultProfileImageUrl} onError={(e) => e.target.src = defaultProfileImageUrl} alt="profile" />
           </div>
           <div className="info">
             <div className="nameContainer">
@@ -366,7 +362,7 @@ function renderEventContent(eventInfo) {
         </RightContainer>
       </UserInfoContainer>
       <UserDataContainer className="user-data-container">
-      
+
       </UserDataContainer>
       <CalendarWrap ref={calendarContainerRef}>
         <FullCalendar
@@ -384,13 +380,12 @@ function renderEventContent(eventInfo) {
             day: '일간', // 일간 버튼
           }}
           initialView="dayGridMonth" // 초기 뷰 설정 (월간 뷰)
-          editable={true} // 이벤트 편집 가능
+          editable={false} // 이벤트 편집 가능
           selectable={true} // 달력 셀 선택 활성화
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수
           displayEventTime={false} // 이벤트 시간 표시 비활성화
           weekends={weekendsVisible} // 주말 표시 여부
-          select={handleDateSelect} // 날짜 선택 이벤트 핸들러
           eventContent={renderEventContent} // 사용자 정의 이벤트 내용 렌더링
           eventClick={handleEventClick} // 이벤트 클릭 핸들러
           eventsSet={handleEvents} // 이벤트 상태 변경 핸들러
@@ -398,6 +393,8 @@ function renderEventContent(eventInfo) {
           locale="ko" // 한국어 로케일
           dayCellContent={handleDayCellContent} // 달력 셀 내용 핸들러
           eventDisplay='block'
+          eventMouseEnter={(arg) => { arg.el.style.cursor = 'pointer'; }}
+          eventMouseLeave={(arg) => { arg.el.style.cursor = 'default'; }}
         />
       </CalendarWrap>
     </Container>
@@ -408,7 +405,6 @@ const Container = styled.div`
     display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
   box-sizing: border-box;
   padding: var(--layout-padding);
 `;
@@ -495,5 +491,5 @@ const UserDataContainer = styled.div`
 const CalendarWrap = styled.div`
   position: relative;
   margin-bottom: 24px;
-  padding: 12px 24px;
+  padding: 0 24px;
 `;

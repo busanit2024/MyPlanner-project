@@ -12,6 +12,8 @@ import com.busanit.myplannerbackend.service.CategoryService;
 import com.busanit.myplannerbackend.service.CheckListService;
 import com.busanit.myplannerbackend.service.ScheduleService;
 import com.busanit.myplannerbackend.service.UserService;
+import jakarta.persistence.Column;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.Console;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -156,6 +159,12 @@ public class ScheduleController {
         return ScheduleDTO.toDTO(response);
     }
 
+    @PutMapping("/{id}/datetime")
+    public ScheduleDTO updateScheduleDateTime(@PathVariable Long id, @RequestBody ScheduleDTO.DateTimeData data){
+        Schedule response = scheduleService.updateDateTime(id, data);
+        return ScheduleDTO.toDTO(response);
+    }
+
     // 일정 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
@@ -207,6 +216,13 @@ public class ScheduleController {
     public ResponseEntity<String> participateCancel(@PathVariable Long scheduleId, @RequestParam Long userId) {
         scheduleService.participateCancel(scheduleId, userId);
         return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    //내가 참여한 일정 가져오기
+    @GetMapping("/{userId}/participated")
+    public ResponseEntity<List<ScheduleDTO>> getParticipatedSchedules(@PathVariable Long userId) {
+        List<Schedule> schedules = scheduleService.getParticipatedSchedule(userId);
+        return ResponseEntity.ok(ScheduleDTO.toDTO(schedules));
     }
 
 }
