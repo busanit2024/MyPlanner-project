@@ -13,6 +13,7 @@ export default function Layout() {
   const { searchText, setSearchText, handleSearch, handleWriteSchedule, handleEditSchedule, handleDeleteSchedule, handleCompleteSchedule, isOwner, isDone } = useSearch();
   const location = useLocation();
   const navigate = useNavigate();
+  const [doneButtonHover, setDoneButtonHover] = useState(false);
 
   const setPageName = () => {
     const path = location.pathname;
@@ -70,6 +71,14 @@ export default function Layout() {
     }
   };
 
+  const onMouseEnterDoneButton = () => {
+    setDoneButtonHover(true);
+  }
+
+  const onMouseLeaveDoneButton = () => {
+    setDoneButtonHover(false);
+  }
+
   return (
     <Container className="layout">
       <SideNavbar />
@@ -102,7 +111,11 @@ export default function Layout() {
             <div className="edit-button-wrap" style={{ display: "flex", gap: "8px" }}>
               {isOwner && (
                 <>
-                  <Button color="" onClick={handleCompleteSchedule}>{isDone ? "완료 취소" : "완료"}</Button>
+                {isDone ? (
+                  <Button color={doneButtonHover ? "danger" : "gray"} onMouseEnter={onMouseEnterDoneButton} onMouseLeave={onMouseLeaveDoneButton} onClick={handleCompleteSchedule}>{doneButtonHover ? "완료 취소" : "완료됨"}</Button>
+                ) : (
+                  <Button color="" onClick={handleCompleteSchedule}>일정 완료</Button>
+                )}
                   <Button color="danger" onClick={handleDeleteSchedule}>삭제</Button>
                   <Button color="primary" onClick={handleEditSchedule}>수정</Button>
                 </>

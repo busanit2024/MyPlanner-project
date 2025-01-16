@@ -542,6 +542,8 @@ const CalendarUpdate = () => {
   }
 
 
+
+
   return (
     <Container>
       <UserSelectModal title={"일정 참가자 추가"} onClose={() => setUserSelectModalOpen(false)} isOpen={userSelectModalOpen} participants={newParticipants} setParticipants={setNewParticipants}>

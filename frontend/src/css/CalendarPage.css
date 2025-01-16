@@ -1,3 +1,20 @@
+
+/* 완료 일정 취소선 및 투명도 지정 */
+.fc-daygrid-day-events {
+    .done {
+        opacity: 0.5;
+        text-decoration: line-through;
+    }
+
+    .color-black {
+        color: black;
+    }
+
+    .color-white {
+        color: white;
+    }
+}
+
 .calendar-page {
     padding: 12px 48px;
     box-sizing: border-box;

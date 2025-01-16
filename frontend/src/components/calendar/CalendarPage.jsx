@@ -14,12 +14,12 @@ import CategoryEditModal from './CategoryEditModal';
 import { getTextColor } from '../../util/getTextColor';
 
 export default function CalendarPage() {
-  const [weekendsVisible, setWeekendsVisible] = useState(true); // 주말 표시 여부 상태
   const [currentEvents, setCurrentEvents] = useState([]); // 현재 표시 중인 이벤트 상태
   const [eventList, setEventList] = useState([]); // 서버에서 가져온 이벤트 목록 상태
   const [categoryBoxOpen, setCategoryBoxOpen] = useState(false); // 카테고리 박스 오픈 상태
   const [categoryModalOpen, setCategoryModalOpen] = useState(false); // 카테고리 모달 오픈 상태
   const [selectedCategory, setSelectedCategory] = useState(new Set()); // 선택된 카테고리 id 목록 (set으로 중복 방지)
+  const [isMine, setIsMine] = useState(true); // 내 캘린더인지 여부
   const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate
   const { user, loading } = useAuth(); // 인증된 사용자 정보 및 로딩 상태 가져오기
   const { id: calendarUserId } = useParams(); // URL의 사용자 ID
@@ -40,19 +40,6 @@ export default function CalendarPage() {
 
   const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
-  const ProfileImage = styled.div`
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background-color: var(--light-gray);
-
-    & img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-    }
-  `;
-
   useEffect(() => {
     // 인증되지 않은 사용자는 로그인 페이지로 이동
     if (!loading && !user) {
@@ -61,36 +48,24 @@ export default function CalendarPage() {
     if (!loading && user) {
       // 선택된 유저 ID를 로그인 유저로 초기화
       setSelectedUserId(user.id);
+      setIsMine(true);
       // 초기값: 로그인 유저의 스케줄 정보 가져오기
-      fetchSchedules(user.id);
+      fetchCalendarData(user.id);
       // 팔로잉 유저 리스트 가져오기
       fetchFollowingList(user.id);
+      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
     }
   }, [user, loading]);
 
-  // 로그인한 유저의 스케줄 불러오기기
-  const fetchSchedules = (userId) => {
-    axios.get(`/api/schedules/user/${userId}`)
-      .then((response) => {
-        const events = response.data.map(schedule => ({
-          id: schedule.id,
-          title: schedule.title || '제목 없는 일정',
-          start: schedule.startDate,
-          end: schedule.endDate,
-          color: schedule.category?.color || 'var(--light-gray)',
-        }));
-        setEventList(events);
-      })
-      .catch((error) => console.error('Error fetching schedules:', error));
-  };
-
   useEffect(() => {
     // 캘린더 데이터 가져오기
-    if (user && (calendarUserId || user.id)) {
-      const targetUserId = calendarUserId || user.id; // 현재 캘린더를 볼 사용자 ID
+    if (user) {
+      const targetUserId = selectedUserId || user.id; // 현재 캘린더를 볼 사용자 ID
       fetchCalendarData(targetUserId);
+      setIsMine(user.id === targetUserId);
+      console.log('isMine:', isMine); // 디버깅 로그
     }
-  }, [calendarUserId, user]);
+  }, [selectedUserId, user]);
 
 
   // 팔로잉 유저 리스트 불러오기
@@ -114,14 +89,6 @@ export default function CalendarPage() {
         console.error(err);
       });
   };
-
-  // useEffect에 추가
-  useEffect(() => {
-    if (user) {
-      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
-      fetchFollowingList();
-    }
-  }, [user]);
 
   useEffect(() => {
     //컨테이너 사이즈 변경 시 캘린더 크기 업데이트
@@ -165,7 +132,10 @@ export default function CalendarPage() {
           title: item.title || '제목 없는 일정',
           start: item.startDate,
           end: item.endDate,
-          color: item.category?.color || 'var(--light-gray)',
+          backgroundColor: item.category?.color || 'var(--light-gray)',
+          borderColor: 'transparent',
+          textColor: getTextColor(item.category?.color),
+          classNames: [`${item.done ? 'done' : ''}`, `color-${getTextColor(item.category?.color)}`],
         }));
         console.log('Fetched events:', newEvents); // 디버깅 로그
         setEventList(newEvents);
@@ -179,12 +149,7 @@ export default function CalendarPage() {
   // 팔로잉 유저 클릭 핸들러
   const handleFollowingUserClick = (userId) => {
     setSelectedUserId(userId); // 선택한 유저 ID 상태 업데이트
-    fetchSchedules(userId); // 선택한 유저의 캘린더 데이터 불러오기
   };
-  // 주말 표시 토글
-  function handleWeekendsToggle() {
-    setWeekendsVisible(!weekendsVisible);
-  }
 
   // 일정 작성 페이지 이동
   function handleDateSelect(selectInfo) {
@@ -222,8 +187,6 @@ export default function CalendarPage() {
   function handleEvents(events) {
     setCurrentEvents(events); // 현재 표시 중인 이벤트 목록 상태 업데이트
   }
-
-
 
 
   const handleDayCellContent = (arg) => {
@@ -328,12 +291,12 @@ export default function CalendarPage() {
             day: '일간', // 일간 버튼
           }}
           initialView="dayGridMonth" // 초기 뷰 설정 (월간 뷰)
-          editable={true} // 이벤트 편집 가능
-          selectable={true} // 달력 셀 선택 활성화
+          editable={isMine} // 이벤트 수정 활성화
+          selectable={isMine} // 달력 셀 선택 활성화
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수
           displayEventTime={false} // 이벤트 시간 표시 비활성화
-          weekends={weekendsVisible} // 주말 표시 여부
+          weekends={true} // 주말 표시 여부
           select={handleDateSelect} // 날짜 선택 이벤트 핸들러
           eventContent={renderEventContent} // 사용자 정의 이벤트 내용 렌더링
           eventClick={handleEventClick} // 이벤트 클릭 핸들러
@@ -342,6 +305,9 @@ export default function CalendarPage() {
           locale="ko" // 한국어 로케일
           dayCellContent={handleDayCellContent} // 달력 셀 내용 핸들러
           eventDisplay='block'
+          eventMouseEnter={ (arg) => { arg.el.style.cursor = 'pointer'; } }
+          eventMouseLeave={ (arg) => { arg.el.style.cursor = 'default'; } }
+
         />
       </CalendarWrap>
       {categoryModalOpen && <CategoryEditModal categories={user.categories} onClose={() => setCategoryModalOpen(false)} />}
