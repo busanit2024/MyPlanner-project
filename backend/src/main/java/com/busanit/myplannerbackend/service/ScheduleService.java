@@ -133,6 +133,22 @@ public class ScheduleService {
         return scheduleRepository.save(schedule);
     }
 
+    //일정 날짜와 시간 수정
+    public Schedule updateDateTime(Long id, ScheduleDTO.DateTimeData data) {
+      Schedule schedule = scheduleRepository.findById(id).orElse(null);
+      if (schedule == null) {
+        throw new RuntimeException("Schedule not found");
+      }
+
+      schedule.setStartDate(data.getStartDate());
+      schedule.setStartTime(data.getStartTime());
+      schedule.setEndDate(data.getEndDate());
+      schedule.setEndTime(data.getEndTime());
+      schedule.setAllDay(data.getAllDay());
+
+      return scheduleRepository.save(schedule);
+    }
+
     // 일정 삭제
     public void deleteSchedule(Long id) {
         scheduleRepository.deleteById(id);
@@ -324,6 +340,22 @@ public class ScheduleService {
       }
       notification.setInviteStatus(Participant.Status.DECLINED);
       notificationRepository.save(notification);
+    }
+
+    //내가 참여한 일정 목록 불러오기
+    public List<Schedule> getParticipatedSchedule(Long userId) {
+      List<Participant> participants = participantRepository.findByUserIdAndStatus(userId, Participant.Status.ACCEPTED);
+
+      List<Schedule> schedules = new ArrayList<>();
+      if (participants != null) {
+        for (Participant participant : participants) {
+          Schedule schedule = participant.getSchedule();
+          if (schedule != null) {
+            schedules.add(schedule);
+          }
+        }
+      }
+      return schedules;
     }
 
 }
