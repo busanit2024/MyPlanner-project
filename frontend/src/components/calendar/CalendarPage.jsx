@@ -40,18 +40,6 @@ export default function CalendarPage() {
 
   const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
-  const ProfileImage = styled.div`
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background-color: var(--light-gray);
-
-    & img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-    }
-  `;
 
   useEffect(() => {
     // 인증되지 않은 사용자는 로그인 페이지로 이동
@@ -70,6 +58,8 @@ export default function CalendarPage() {
 
   // 로그인한 유저의 스케줄 불러오기기
   const fetchSchedules = (userId) => {
+    console.log('Fetching schedules for userId:', userId);
+    console.log('Fetching schedules for user.id:', user.id);
     axios.get(`/api/schedules/user/${userId}`)
       .then((response) => {
         const events = response.data.map(schedule => ({
@@ -78,6 +68,7 @@ export default function CalendarPage() {
           start: schedule.startDate,
           end: schedule.endDate,
           color: schedule.category?.color || 'var(--light-gray)',
+          editable: user.id == userId ? true : false
         }));
         setEventList(events);
       })
