@@ -14,7 +14,6 @@ import CategoryEditModal from './CategoryEditModal';
 import { getTextColor } from '../../util/getTextColor';
 
 export default function CalendarPage() {
-  const [weekendsVisible, setWeekendsVisible] = useState(true); // 주말 표시 여부 상태
   const [currentEvents, setCurrentEvents] = useState([]); // 현재 표시 중인 이벤트 상태
   const [eventList, setEventList] = useState([]); // 서버에서 가져온 이벤트 목록 상태
   const [categoryBoxOpen, setCategoryBoxOpen] = useState(false); // 카테고리 박스 오픈 상태
@@ -36,7 +35,7 @@ export default function CalendarPage() {
     page: 0,
     hasNext: false,
   });
-
+  const [showAllFollowingUsers, setShowAllFollowingUsers] = useState(false);
   const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
 
@@ -61,6 +60,7 @@ export default function CalendarPage() {
     console.log('Fetching schedules for user.id:', user.id);
     axios.get(`/api/schedules/user/${userId}`)
       .then((response) => {
+        console.log('Fetched schedules:', response.data);
         const events = response.data.map(schedule => ({
           id: schedule.id,
           title: schedule.title || '제목 없는 일정',
@@ -89,7 +89,7 @@ export default function CalendarPage() {
       params: {
         userId: user?.id,
         page: followingListState.page,
-        size: 10,
+        size: 10, // 한 페이지에 가져올 팔로잉 유저의 수를 10으로 설정
       },
     })
       .then((res) => {
@@ -243,6 +243,23 @@ export default function CalendarPage() {
     }
   };
 
+  const renderFollowingUsers = () => {
+    const displayedUsers = showAllFollowingUsers ? followingList : followingList.slice(0, 12);
+  
+    return (
+      <div>
+        {displayedUsers.map((user) => (
+          <div key={user.id} onClick={() => handleFollowingUserClick(user.id)}>
+            {user.name}
+          </div>
+        ))}
+        {followingList.length > 12 && !showAllFollowingUsers && (
+          <button onClick={() => setShowAllFollowingUsers(true)}>+ {followingList.length - 12} more</button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="demo-app-main calendar-page">
       <div className='calendar-header'>
@@ -266,14 +283,17 @@ export default function CalendarPage() {
               />
               
               <span>{followingUser.username}</span>
-              
+              <div>
+              {renderFollowingUsers()}
+              </div>
             </UserCard>
             
           ))}
         </ProfileContainer>
       </div>
       <CalendarWrap ref={calendarContainerRef}>
-        <CategoryWrap>
+          {(selectedUserId == user.id) && (
+            <CategoryWrap className="category-wrap">
           {/* 카테고리 필터 */}
           <div className="filter-icon" onClick={() => setCategoryBoxOpen(!categoryBoxOpen)}>
             카테고리
@@ -305,6 +325,8 @@ export default function CalendarPage() {
             </div>
           </div>}
         </CategoryWrap>
+          )}
+        
 
         <FullCalendar
           ref={calendarRef}
@@ -326,7 +348,6 @@ export default function CalendarPage() {
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수
           displayEventTime={false} // 이벤트 시간 표시 비활성화
-          weekends={weekendsVisible} // 주말 표시 여부
           select={handleDateSelect} // 날짜 선택 이벤트 핸들러
           eventContent={renderEventContent} // 사용자 정의 이벤트 내용 렌더링
           eventClick={handleEventClick} // 이벤트 클릭 핸들러
