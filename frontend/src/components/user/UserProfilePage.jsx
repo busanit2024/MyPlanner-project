@@ -99,9 +99,6 @@ export default function UserProfilePage() {
   const [followsMe, setFollowsMe] = useState(false);
   const navigate = useNavigate();
   const calendarContainerRef = useRef(null); // 캘린더 컨테이너 ref
-  const [categoryBoxOpen, setCategoryBoxOpen] = useState(false); // 카테고리 박스 오픈 상태
-  const [selectedCategory, setSelectedCategory] = useState(new Set()); // 선택된 카테고리 id 목록 (set으로 중복 방지)
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false); // 카테고리 모달 오픈 상태
   const calendarRef = useRef(null); // 캘린더 ref
   const [weekendsVisible, setWeekendsVisible] = useState(true); // 주말 표시 여부 상태
   const [currentEvents, setCurrentEvents] = useState([]); // 현재 표시 중인 이벤트 상태
@@ -115,37 +112,7 @@ export default function UserProfilePage() {
     hasNext: false,
   });
 
-    // 팔로잉 유저 리스트 불러오기
-    const fetchFollowingList = () => {
-      axios.get(`/api/user/following`, {
-        params: {
-          userId: user?.id,
-          page: followingListState.page,
-          size: 10,
-        },
-      })
-        .then((res) => {
-          console.log("Following List:", res.data.content); // 확인용 로그
-          setFollowingList(res.data.content); // 팔로잉 유저 리스트 저장
-          setFollowingListState((prev) => ({
-            ...prev,
-            hasNext: res.data.hasNext,
-          }));
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    };
-  
 
-    
-    // useEffect에 추가
-    useEffect(() => {
-      if (user) {
-        setSelectedCategory(new Set(user.categories.map((category) => category.id)));
-        fetchFollowingList();
-      }
-    }, [user]);
 
 
   useEffect(() => {
@@ -274,29 +241,8 @@ export default function UserProfilePage() {
     goToChat(user, pageUser, navigate);
   }
 
-  // 전체 카테고리 선택 토글
-  const selectAllCategoryToggle = (e) => {
-    if (e.target.checked) {
-      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
-    } else {
-      setSelectedCategory(new Set());
-    }
-  };
-  
-  // 개별 카테고리 선택 토글
-  const selectCategoryToggle = (e) => {
-    const categoryId = parseInt(e.target.id);
-    if (selectedCategory.has(categoryId)) {
-      setSelectedCategory((prev) => {
-        const newSelected = new Set(prev);
-        newSelected.delete(categoryId);
-        return newSelected;
-      });
-    } else {
-      setSelectedCategory((prev) => new Set(prev).add(categoryId));
-    }
-  };
 
+ 
   // 일정 작성 페이지 이동
   function handleDateSelect(selectInfo) {
     const { startStr, endStr } = selectInfo;
@@ -423,39 +369,6 @@ function renderEventContent(eventInfo) {
       
       </UserDataContainer>
       <CalendarWrap ref={calendarContainerRef}>
-        <CategoryWrap>
-          {/* 카테고리 필터 */}
-          <div className="filter-icon" onClick={() => setCategoryBoxOpen(!categoryBoxOpen)}>
-            카테고리
-            <img src="/images/icon/filter.svg" alt="filter" />
-          </div>
-          {categoryBoxOpen && <div className="category-box">
-            <div className='title'>카테고리</div>
-            <CategoryLabel htmlFor="all">
-              <input type="checkbox" id="all" name="category" className='category-check' onChange={selectAllCategoryToggle} checked={selectedCategory.size === user.categories.length}
-              />
-              <div className='color-box'>
-                <img src="/images/icon/checkWhite.svg" alt="check" />
-              </div>
-              <span>전체</span>
-            </CategoryLabel>
-            {user.categories.map((category) => (
-              <CategoryLabel key={category.id} htmlFor={category.id} color={category.color}>
-                <input type="checkbox" id={category.id} name="category" className='category-check' onChange={selectCategoryToggle} checked={selectedCategory.has(category.id)} />
-                <div className='color-box'>
-                  <img src="/images/icon/checkWhite.svg" alt="check" />
-                </div>
-                <span>{category.categoryName}</span>
-              </CategoryLabel>
-            ))}
-
-            <div className='category-button' onClick={() => setCategoryModalOpen(true)}>
-              <img src="/images/icon/setting.svg" alt="plus" />
-              <span>카테고리 편집...</span>
-            </div>
-          </div>}
-        </CategoryWrap>
-
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]} // 플러그인 설정
@@ -583,107 +496,4 @@ const CalendarWrap = styled.div`
   position: relative;
   margin-bottom: 24px;
   padding: 12px 24px;
-`;
-
-const CategoryWrap = styled.div`
-position: absolute;
-
-top: 15px;
-right: 190px;
-
-
-flex-shrink: 0;
-& .filter-icon {
-  font-size: 16px;
-  white-space: nowrap;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-
-  & img {
-    width: auto;
-    height: 100%;
-  }
-}
-
-
-& .category-box {
-  position: absolute;
-  top: 28px;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  min-width: 200px;
-  white-space: nowrap;
-  gap: 12px;
-  padding: 24px;
-  background-color: white;
-  z-index: 100;
-  border-radius: 4px;
-  border: 1px solid var(--light-gray);
-
-  & .title {
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 12px;
-  }
-
-  & label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  & .category-button {
-    margin-top: 12px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-
-    & img {
-      width: 16px;
-      height: 16px;
-    }
-  }
-}
-`;
-
-const CategoryLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-
-  & .color-box {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background-color: ${(props) => props.color ?? 'var(--light-gray)'};
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2px;
-    box-sizing: border-box;
-    cursor: pointer;
-
-    & img {
-      display: none;
-      width: 100%;
-      height: 100%;
-    }
-  }
-
-  & input:checked + .color-box img {
-    display: block;
-  }
-
-  & input {
-    display: none;
-  }
-
-  & span {
-    font-size: 16px;
-  }
 `;

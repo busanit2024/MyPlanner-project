@@ -30,7 +30,6 @@ export default function CalendarPage() {
   const calendarRef = useRef(null); // 캘린더 ref
   const [isResizing, setIsResizing] = useState(false); // 크기 변경 중인지 여부
   const resizeTimeout = useRef(null); // 크기 변경 타임아웃 ref
-
   // 팔로우 유저 리스스트 상태
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
@@ -106,6 +105,7 @@ export default function CalendarPage() {
       });
   };
 
+ 
   // useEffect에 추가
   useEffect(() => {
     if (user) {
@@ -172,10 +172,7 @@ export default function CalendarPage() {
     setSelectedUserId(userId); // 선택한 유저 ID 상태 업데이트
     fetchSchedules(userId); // 선택한 유저의 캘린더 데이터 불러오기
   };
-  // 주말 표시 토글
-  function handleWeekendsToggle() {
-    setWeekendsVisible(!weekendsVisible);
-  }
+
 
   // 일정 작성 페이지 이동
   function handleDateSelect(selectInfo) {
@@ -257,7 +254,9 @@ export default function CalendarPage() {
               onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
             />
             <span>나</span>
+
           </UserCard>
+          
           {followingList.map((followingUser) => (
             <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)} selected={followingUser.id === selectedUserId}>
               <img
@@ -265,8 +264,11 @@ export default function CalendarPage() {
                 alt="profile"
                 onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
               />
+              
               <span>{followingUser.username}</span>
+              
             </UserCard>
+            
           ))}
         </ProfileContainer>
       </div>
