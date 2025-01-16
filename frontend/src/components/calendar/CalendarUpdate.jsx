@@ -542,8 +542,6 @@ const CalendarUpdate = () => {
   }
 
 
-
-
   return (
     <Container>
       <UserSelectModal title={"일정 참가자 추가"} onClose={() => setUserSelectModalOpen(false)} isOpen={userSelectModalOpen} participants={newParticipants} setParticipants={setNewParticipants}>
@@ -881,6 +879,10 @@ const TitleAndCategory = styled.div`
     border: 1px solid var(--light-gray);
     border-radius: 4px;
     padding: 8px;
+    min-width: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
 `;

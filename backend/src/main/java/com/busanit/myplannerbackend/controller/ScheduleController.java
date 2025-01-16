@@ -209,6 +209,13 @@ public class ScheduleController {
         return new ResponseEntity<>("success", HttpStatus.OK);
     }
 
+    //내가 참여한 일정 가져오기
+    @GetMapping("/{userId}/participated")
+    public ResponseEntity<List<ScheduleDTO>> getParticipatedSchedules(@PathVariable Long userId) {
+        List<Schedule> schedules = scheduleService.getParticipatedSchedule(userId);
+        return ResponseEntity.ok(ScheduleDTO.toDTO(schedules));
+    }
+
 }
 
 

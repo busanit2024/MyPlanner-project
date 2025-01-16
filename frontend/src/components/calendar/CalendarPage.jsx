@@ -49,8 +49,6 @@ export default function CalendarPage() {
       // 선택된 유저 ID를 로그인 유저로 초기화
       setSelectedUserId(user.id);
       setIsMine(true);
-      // 초기값: 로그인 유저의 스케줄 정보 가져오기
-      fetchCalendarData(user.id);
       // 팔로잉 유저 리스트 가져오기
       fetchFollowingList(user.id);
       setSelectedCategory(new Set(user.categories.map((category) => category.id)));
@@ -58,14 +56,13 @@ export default function CalendarPage() {
   }, [user, loading]);
 
   useEffect(() => {
+    setEventList([]); // 이벤트 목록 초기화
     // 캘린더 데이터 가져오기
-    if (user) {
-      const targetUserId = selectedUserId || user.id; // 현재 캘린더를 볼 사용자 ID
-      fetchCalendarData(targetUserId);
-      setIsMine(user.id === targetUserId);
-      console.log('isMine:', isMine); // 디버깅 로그
+    if (selectedUserId) {
+      fetchCalendarData(selectedUserId);
+      setIsMine(user.id === selectedUserId);
     }
-  }, [selectedUserId, user]);
+  }, [selectedUserId]);
 
 
   // 팔로잉 유저 리스트 불러오기
@@ -120,30 +117,63 @@ export default function CalendarPage() {
         clearTimeout(resizeTimeout.current);
       };
     };
-    }, [calendarContainerRef, calendarRef, isResizing]);
+  }, [calendarContainerRef, calendarRef, isResizing]);
 
 
   // 캘린더 데이터 가져오기
-  const fetchCalendarData = (targetUserId) => {
-    axios.get(`/api/schedules/user/${targetUserId}`) // 적절한 엔드포인트 호출
-      .then((response) => {
-        const newEvents = response.data.map((item) => ({
-          id: item.id,
-          title: item.title || '제목 없는 일정',
-          start: item.startDate,
-          end: item.endDate,
-          backgroundColor: item.category?.color || 'var(--light-gray)',
-          borderColor: 'transparent',
-          textColor: getTextColor(item.category?.color),
-          classNames: [`${item.done ? 'done' : ''}`, `color-${getTextColor(item.category?.color)}`],
-        }));
-        console.log('Fetched events:', newEvents); // 디버깅 로그
-        setEventList(newEvents);
-      })
-      .catch((error) => {
-        console.error('Error fetching user schedules:', error);
-      });
+  const fetchCalendarData = async (targetUserId) => {
+    setEventList([]); // 이벤트 목록 초기화
+    let scheduleList = [];
+    let participatedList = [];
+
+    try {
+      const response = await axios.get(`/api/schedules/user/${targetUserId}`);
+      const newEvents = response.data.map((item) => ({
+        id: item.id,
+        title: item.title || '제목 없는 일정',
+        start: item.startDate,
+        end: item.endDate,
+        backgroundColor: item.category?.color || 'var(--light-gray)',
+        borderColor: 'transparent',
+        textColor: getTextColor(item.category?.color),
+        classNames: [`${item.done ? 'done' : ''}`, `color-${getTextColor(item.category?.color)}`],
+      }));
+      console.log('Fetched events:', newEvents); // 디버깅 로그
+      scheduleList = newEvents;
+
+      // 참여한 일정 가져오기
+      if (targetUserId === user?.id) {
+        participatedList = await fetchParticipatedEvents();
+      }
+
+      // 이벤트 목록 업데이트
+      setEventList([...scheduleList, ...participatedList]);
+
+    } catch (error) {
+      console.error('Error fetching user schedules:', error);
+    }
   };
+
+  const fetchParticipatedEvents = async () => {
+    try {
+      const response = await axios.get(`/api/schedules/${user.id}/participated`);
+      const newEvents = response.data.map((item) => ({
+        id: item.id,
+        title: item.title || '제목 없는 일정',
+        start: item.startDate,
+        end: item.endDate,
+        backgroundColor: 'white',
+        borderColor: 'var(--dark-gray)',
+        textColor: 'var(--dark-gray)',
+        classNames: [`${item.done ? 'done' : ''}`, `color-black`],
+      }));
+      console.log('Fetched participated events:', newEvents); // 디버깅 로그
+      return newEvents;
+    } catch (error) {
+      console.error('Error fetching participated schedules:', error);
+    }
+  };
+
 
 
   // 팔로잉 유저 클릭 핸들러
@@ -305,8 +335,8 @@ export default function CalendarPage() {
           locale="ko" // 한국어 로케일
           dayCellContent={handleDayCellContent} // 달력 셀 내용 핸들러
           eventDisplay='block'
-          eventMouseEnter={ (arg) => { arg.el.style.cursor = 'pointer'; } }
-          eventMouseLeave={ (arg) => { arg.el.style.cursor = 'default'; } }
+          eventMouseEnter={(arg) => { arg.el.style.cursor = 'pointer'; }}
+          eventMouseLeave={(arg) => { arg.el.style.cursor = 'default'; }}
 
         />
       </CalendarWrap>

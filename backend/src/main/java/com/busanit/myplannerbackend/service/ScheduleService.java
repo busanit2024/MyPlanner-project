@@ -326,4 +326,20 @@ public class ScheduleService {
       notificationRepository.save(notification);
     }
 
+    //내가 참여한 일정 목록 불러오기
+    public List<Schedule> getParticipatedSchedule(Long userId) {
+      List<Participant> participants = participantRepository.findByUserIdAndStatus(userId, Participant.Status.ACCEPTED);
+
+      List<Schedule> schedules = new ArrayList<>();
+      if (participants != null) {
+        for (Participant participant : participants) {
+          Schedule schedule = participant.getSchedule();
+          if (schedule != null) {
+            schedules.add(schedule);
+          }
+        }
+      }
+      return schedules;
+    }
+
 }
