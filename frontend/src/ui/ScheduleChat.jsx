@@ -54,7 +54,7 @@ const Content = styled.div`
     position: absolute;
     width: 42px;
     height: 42px;
-    background-color: #FFB800;  // 원하는 배경색으로 변경
+    background-color: ${props => props.schedule?.category?.color || '#FFB800'};  // 카테고리 색상 사용
     border-radius: 50%;
     left: -6px;
     top: -6px;
@@ -141,7 +141,7 @@ const ScheduleChat = ({ schedule }) => {
   return (
     <ScheduleWrapper>
       <Title>일정이 공유되었어요.</Title>
-      <Content>
+      <Content schedule={schedule}>
         <div className="schedule-header">
           <div className="schedule-img-container">
             <div className="schedule-img-background" />
