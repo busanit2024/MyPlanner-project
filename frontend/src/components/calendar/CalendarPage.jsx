@@ -200,7 +200,7 @@ export default function CalendarPage() {
 
     };
 
-    if (eventChangeData) {
+    if (eventChangeData && isMine) {
       handleChangeEvent(eventChangeData.newEvent, eventChangeData.oldEvent);
     }
   }, [eventChangeData]);
@@ -423,8 +423,8 @@ export default function CalendarPage() {
           }}
           initialView="dayGridMonth" // 초기 뷰 설정 (월간 뷰)
           editable={isMine} // 이벤트 수정 활성화
-          eventStartEditable={true} // 이벤트 시작 시간 수정 활성화
-          droppable={true} // 이벤트 드래그 앤 드롭 활성화
+          eventStartEditable={isMine} // 이벤트 시작 시간 수정 활성화
+          droppable={isMine} // 이벤트 드래그 앤 드롭 활성화
           selectable={isMine} // 달력 셀 선택 활성화
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수

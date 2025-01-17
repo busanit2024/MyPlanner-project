@@ -122,6 +122,21 @@ export default function NotiListItem(props) {
       }
     } catch (error) {
       console.error("초대 수락 에러", error);
+      let message = "초대 수락에 실패했습니다. 다시 시도해주세요.";
+      if (error.response.data.message === 'Schedule not found') {
+        message = "존재하지 않는 일정입니다.";
+      }
+        Swal.fire({
+          title: "초대 수락 실패",
+          text: message,
+          confirmButtonText: "확인",
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        });
+      
     }
   }
 
@@ -147,9 +162,24 @@ export default function NotiListItem(props) {
         });
         setInviteStatus('DECLINED');
         onReaction();
-      } 
+      }
     } catch (error) {
       console.error("초대 거절 에러", error);
+      let message = "초대 거절에 실패했습니다. 다시 시도해주세요.";
+      if (error.response.data.message === 'Schedule not found') {
+        message = "존재하지 않는 일정입니다.";
+      }
+      Swal.fire({
+        title: "초대 거절 실패",
+        text: message,
+        confirmButtonText: "확인",
+        customClass: {
+          title: "swal-title",
+          htmlContainer: "swal-text-container",
+          confirmButton: "swal-button swal-button-confirm",
+        },
+      });
+
     }
   }
 
