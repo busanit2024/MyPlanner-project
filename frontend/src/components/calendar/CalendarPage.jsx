@@ -63,7 +63,9 @@ export default function CalendarPage() {
       fetchCalendarData(selectedUserId);
       setIsMine(user.id === selectedUserId);
     }
-  }, [selectedUserId]);
+  }, [selectedUserId, selectedCategory], );
+  
+  
 
 
   // 팔로잉 유저 리스트 불러오기
@@ -342,36 +344,27 @@ export default function CalendarPage() {
   const selectCategoryToggle = (e) => {
     const categoryId = parseInt(e.target.id);
     const category_checked = e.target.checked;
-    console.log("선택된 카테고리 true/false",e.target.checked);
-    // if (selectedCategory.has(categoryId)) {
-    //   setSelectedCategory((prev) => {
-    //     const newSelected = new Set(prev);
-    //     newSelected.delete(categoryId);
-    //     return newSelected;
-    //   });
-    // } else {
-    //   setSelectedCategory((prev) => new Set(prev).add(categoryId));
-    // }
-    if (!category_checked) {
-      setSelectedCategory((prev) => {
-        const newSelected = new Set(prev);
+
+    setSelectedCategory((prev) => {
+      const newSelected = new Set(prev);
+      if (category_checked) {
+        // checked = true이면 카테고리 리스트에 추가
+        newSelected.add(categoryId);
+      } else {
+        // checked = false이면 카테고리 리스트에서 삭제
         newSelected.delete(categoryId);
-        return newSelected;
-      });
-    } else if(!selectedCategory.has(categoryId) && category_checked) {
-      setSelectedCategory((prev) => new Set(prev).add(categoryId));
-    }
-
-    console.log("선택된 카테고리 출력",selectedCategory);
-
-    fetchCalendarData(selectedUserId);
-    if(category_checked) {
-    }
+      }
+      return newSelected;
+    });
   };
 
 
   return (
     <div className="demo-app-main calendar-page">
+          {loading && <div className="no-result">로딩중...</div>}
+          {!loading && (
+      <>
+
       <div className='calendar-header'>
         <ProfileContainer>
           <UserCard onClick={() => handleFollowingUserClick(user?.id)} selected={user?.id === selectedUserId}>
@@ -473,6 +466,8 @@ export default function CalendarPage() {
         />
       </CalendarWrap>
       {categoryModalOpen && <CategoryEditModal categories={user.categories} onClose={() => setCategoryModalOpen(false)} />}
+      </>
+      )}
     </div>
   );
 }
