@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext, useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import Swal from "sweetalert2";
 import { useNoti } from "../context/NotiContext";
 
@@ -125,6 +124,10 @@ const NavList = styled.ul`
   padding: 0;
   margin-top: 36px;
   flex-grow: 1;
+
+  & .profile {
+    margin-bottom: 24px;
+  }
 
   & .profile a {
     font-size: 18px;

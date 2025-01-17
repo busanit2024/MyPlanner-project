@@ -809,7 +809,7 @@ const CalendarUpdate = () => {
 
   return (
     <Container>
-      {scheduleLoading ? <div className='loading'>일정 로딩중...</div> : isPrivate ? privateSchedule : schedulePage}
+      {scheduleLoading ? <div className='loading'>일정 로딩중...</div> : (!isOwner && isPrivate) ? privateSchedule : schedulePage}
     </Container>
     
   );
