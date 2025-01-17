@@ -57,7 +57,7 @@ export default function NotificationPage() {
       notifications.invite.forEach((noti) => {
         const idx = newInvite.findIndex((item) => item.id === noti.id);
         if (idx === -1) {
-          newInvite.push(noti);
+          newInvite.unshift(noti);
         } else if (newInvite[idx].read && !noti.read) {
           newInvite[idx] = noti;
         }
@@ -66,7 +66,7 @@ export default function NotificationPage() {
       notifications.noti.forEach((noti) => {
         const idx = newNoti.findIndex((item) => item.id === noti.id);
         if (idx === -1) {
-          newNoti.push(noti);
+          newNoti.unshift(noti);
         } else if (newNoti[idx].read && !noti.read) {
           newNoti[idx] = noti;
         }
@@ -134,16 +134,14 @@ export default function NotificationPage() {
     readNoti(item);
     const targetId = item.targetId;
     switch (item.type) {
-      case "INVITE":
-        navigate(`/schedule/${targetId}`);
-        break;
       case "FOLLOW":
         navigate(`/user/${targetId}`);
         break;
-      case "LIKE":
+      case "INVITE":
+      case "HEART":
       case "COMMENT":
+      case "PARTICIPATE":
         navigate(`/schedule/${targetId}`);
-        break;
       default:
         break;
     }
@@ -187,7 +185,6 @@ export default function NotificationPage() {
   };
 
 
-
   return (
     <Container>
       <InnerContainer>
@@ -195,7 +192,7 @@ export default function NotificationPage() {
         {isloading.invite && <p>로딩중...</p>}
         {notiList.invite.length === 0 && !isloading.invite && <p>받은 초대가 없어요.</p>}
         {notiList.invite.map((invite) => (
-          <NotiListItem key={invite.id} data={invite} onClick={() => handleClick(invite)} />
+          <NotiListItem key={invite.id} data={invite} onClick={() => handleClick(invite)} onReaction={() => readNoti(invite)} />
         ))}
 
         <div className="button-wrap">
@@ -226,6 +223,7 @@ const Container = styled.div`
   width: 100%;
   padding: var(--layout-padding);
   box-sizing: border-box;
+  overflow-y: auto;
 `;
 
 const InnerContainer = styled.div`

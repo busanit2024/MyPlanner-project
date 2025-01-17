@@ -12,6 +12,8 @@ import com.busanit.myplannerbackend.service.CategoryService;
 import com.busanit.myplannerbackend.service.CheckListService;
 import com.busanit.myplannerbackend.service.ScheduleService;
 import com.busanit.myplannerbackend.service.UserService;
+import jakarta.persistence.Column;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.Console;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,11 +62,11 @@ public class ScheduleController {
             scheduleDTO.setCheckList(new ArrayList<>());
         }
 
-        scheduleService.createSchedule(scheduleDTO);
+        Schedule response = scheduleService.createSchedule(scheduleDTO);
 //        checkListService.saveCheckList(scheduleDTO.getCheckListItem(), schedule);
 
         //return ResponseEntity.noContent().build();
-        return new ResponseEntity<>("success", HttpStatus.OK);
+        return new ResponseEntity<Long>(response.getId(), HttpStatus.OK);
     }
 
     // 모든 일정 조회
@@ -74,9 +77,9 @@ public class ScheduleController {
 //    }
 
     @GetMapping // 모든 일정 가져오기
-    public ResponseEntity<List<Schedule>> getAllSchedules() {
+    public ResponseEntity<List<ScheduleDTO>> getAllSchedules() {
         List<Schedule> schedules = scheduleService.getAllSchedules();
-        return ResponseEntity.ok(schedules);
+        return ResponseEntity.ok(ScheduleDTO.toDTO(schedules));
     }
 
 
@@ -126,31 +129,40 @@ public class ScheduleController {
         return page.map(ScheduleDTO::toDTO);
     }
 
+    //일정 완료
     @GetMapping("/check")
     public void scheduleDoneCheck(@RequestParam Long id, @RequestParam boolean done) {
         scheduleService.scheduleDoneToggle(id, done);
     }
 
+    //체크리스트 완료
     @GetMapping("/checklist/check")
     public void checkListDoneCheck(@RequestParam Long id, @RequestParam boolean done) {
         scheduleService.checkListDoneToggle(id, done);
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<List<Schedule>> getSchedulesByUserId(@PathVariable Long id) {
+    public ResponseEntity<List<ScheduleDTO>> getSchedulesByUserId(@PathVariable Long id) {
         List<Schedule> schedules = scheduleService.getSchedulesByUserId(id);
-        return ResponseEntity.ok(schedules);
+        return ResponseEntity.ok(ScheduleDTO.toDTO(schedules));
     }
 
     // 일정 수정
     @PutMapping("/{id}")
-    public Schedule updateSchedule(@PathVariable Long id, @RequestBody Schedule scheduleDetails) {
+    public ScheduleDTO updateSchedule(@PathVariable Long id, @RequestBody Schedule scheduleDetails) {
         // 체크리스트가 null인 경우 빈 리스트로 초기화
         if (scheduleDetails.getCheckList() == null) {
             scheduleDetails.setCheckList(new ArrayList<>());
         }
 
-        return scheduleService.updateSchedule(id, scheduleDetails);
+        Schedule response = scheduleService.updateSchedule(id, scheduleDetails);
+        return ScheduleDTO.toDTO(response);
+    }
+
+    @PutMapping("/{id}/datetime")
+    public ScheduleDTO updateScheduleDateTime(@PathVariable Long id, @RequestBody ScheduleDTO.DateTimeData data){
+        Schedule response = scheduleService.updateDateTime(id, data);
+        return ScheduleDTO.toDTO(response);
     }
 
     // 일정 삭제
@@ -159,6 +171,60 @@ public class ScheduleController {
         scheduleService.deleteSchedule(id);
         return ResponseEntity.noContent().build();
     }
+
+    //일정초대
+    @PostMapping("/invite/{scheduleId}")
+    public ResponseEntity<String> inviteUsers(@RequestBody List<Long> userIds, @PathVariable Long scheduleId) {
+        for (Long userId : userIds) {
+            scheduleService.inviteUser(scheduleId, userId);
+        }
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    //초대 취소
+    @PostMapping("/invite/{scheduleId}/cancel")
+    public ResponseEntity<String> inviteCancel(@RequestBody List<Long> userIds, @PathVariable Long scheduleId) {
+        for (Long userId : userIds) {
+            scheduleService.inviteCancel(scheduleId, userId);
+        }
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    //일정 초대 수락
+    @GetMapping("/invite/{scheduleId}/accept")
+    public ResponseEntity<String> inviteAccept(@RequestParam Long userId, @PathVariable Long scheduleId) {
+        scheduleService.participate(scheduleId, userId);
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    //일정 초대 거절
+    @GetMapping("/invite/{scheduleId}/decline")
+    public ResponseEntity<String> inviteDecline(@PathVariable Long scheduleId, @RequestParam Long userId) {
+        scheduleService.declineInvite(scheduleId, userId);
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    //일정 참가
+    @GetMapping("/participate/{scheduleId}")
+    public ResponseEntity<String> participate(@PathVariable Long scheduleId, @RequestParam Long userId) {
+        scheduleService.participate(scheduleId, userId);
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    //일정 참가 취소
+    @GetMapping("/participate/{scheduleId}/cancel")
+    public ResponseEntity<String> participateCancel(@PathVariable Long scheduleId, @RequestParam Long userId) {
+        scheduleService.participateCancel(scheduleId, userId);
+        return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    //내가 참여한 일정 가져오기
+    @GetMapping("/{userId}/participated")
+    public ResponseEntity<List<ScheduleDTO>> getParticipatedSchedules(@PathVariable Long userId) {
+        List<Schedule> schedules = scheduleService.getParticipatedSchedule(userId);
+        return ResponseEntity.ok(ScheduleDTO.toDTO(schedules));
+    }
+
 }
 
 

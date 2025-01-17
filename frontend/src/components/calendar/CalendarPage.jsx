@@ -1,31 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { formatDate } from '@fullcalendar/core';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import "../../css/CalendarPage.css";
-import axios from 'axios';
+import axios, { all } from 'axios';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
 import Radio from '../../ui/Radio';
 import CategoryEditModal from './CategoryEditModal';
+import { getTextColor } from '../../util/getTextColor';
+import { generateISOString } from '../../util/generateISOString';
 
 export default function CalendarPage() {
-  const [weekendsVisible, setWeekendsVisible] = useState(true); // 주말 표시 여부 상태
   const [currentEvents, setCurrentEvents] = useState([]); // 현재 표시 중인 이벤트 상태
   const [eventList, setEventList] = useState([]); // 서버에서 가져온 이벤트 목록 상태
   const [categoryBoxOpen, setCategoryBoxOpen] = useState(false); // 카테고리 박스 오픈 상태
   const [categoryModalOpen, setCategoryModalOpen] = useState(false); // 카테고리 모달 오픈 상태
   const [selectedCategory, setSelectedCategory] = useState(new Set()); // 선택된 카테고리 id 목록 (set으로 중복 방지)
+  const [isMine, setIsMine] = useState(true); // 내 캘린더인지 여부
   const navigate = useNavigate(); // 페이지 이동을 위한 useNavigate
   const { user, loading } = useAuth(); // 인증된 사용자 정보 및 로딩 상태 가져오기
   const { id: calendarUserId } = useParams(); // URL의 사용자 ID
   const { state } = useLocation();
+  const [selectedUserId, setSelectedUserId] = useState(null);
   const eventData = state?.eventData;
-
-  // 팔로잉 유저 리스트 상태
+  const calendarContainerRef = useRef(null); // 캘린더 컨테이너 ref
+  const calendarRef = useRef(null); // 캘린더 ref
+  const [isResizing, setIsResizing] = useState(false); // 크기 변경 중인지 여부
+  const resizeTimeout = useRef(null); // 크기 변경 타임아웃 ref
+  const [eventChangeData, setEventChangeData] = useState(null); // 이벤트 변경 데이터
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
     page: 0,
@@ -33,153 +39,259 @@ export default function CalendarPage() {
   });
 
   const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
-  const defaultProfileImage = "/images/default/defaultProfileImage.png"; // 기본 프로필 이미지 URL
 
-  const ProfileImage = styled.div`
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background-color: var(--light-gray);
-
-    & img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-    }
-  `;
-
-
-  // useEffect(() => {
-  //   // 인증되지 않은 사용자는 로그인 페이지로 이동
-  //   if (!loading && !user) {
-  //     navigate("/login");
-  //   }
-  //   console.log("user", user);
-
-  //   // 인증된 사용자가 있다면 일정 데이터를 불러오기
-  //   if (!loading && user) {
-  //     setSelectedCategory(new Set(user.categories.map((category) => category.id))); // 초기 상태: 전체 카테고리 선택
-
-  //     axios
-  //       .get('/api/schedules?id=' + user.id) // 사용자 ID 기반으로 일정 데이터 요청
-  //       .then((response) => {
-  //         if (response.data) {
-  //           console.log("response.data", response.data);
-
-  //           // 서버에서 받은 데이터를 FullCalendar 이벤트 형식으로 변환
-  //           const newEvents = response.data.map((item) => ({
-  //             id: item.id,
-  //             title: item.title,
-  //             start: item.startDate,
-  //             end: item.endDate,
-  //           }));
-
-  //           setEventList(newEvents); // 이벤트 목록 상태 업데이트
-  //         }
-  //       })
-  //       .catch((error) => {
-  //         console.error('Error fetching user schedules:', error); // 에러 처리
-  //       });
-  //   }
-  // }, [user, loading]); // user와 loading 상태가 변경될 때 실행
   useEffect(() => {
     // 인증되지 않은 사용자는 로그인 페이지로 이동
     if (!loading && !user) {
       navigate("/login");
     }
     if (!loading && user) {
-      // 초기값: 로그인 유저의 스케줄 정보 가져오기
-      fetchSchedules(user.id);
+      // 선택된 유저 ID를 로그인 유저로 초기화
+      setSelectedUserId(user.id);
+      setIsMine(true);
       // 팔로잉 유저 리스트 가져오기
       fetchFollowingList(user.id);
+      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
     }
   }, [user, loading]);
 
-  // 로그인한 유저의 스케줄 불러오기기
-  const fetchSchedules = (userId) => {
-    axios.get(`/api/schedules/user/${userId}`)
-      .then((response) => {
-        const events = response.data.map(schedule => ({
-          id: schedule.id,
-          title: schedule.title,
-          start: schedule.startDate,
-          end: schedule.endDate,
-        }));
-        setEventList(events);
-      })
-      .catch((error) => console.error('Error fetching schedules:', error));
-  };
-  
   useEffect(() => {
+    setEventList([]); // 이벤트 목록 초기화
     // 캘린더 데이터 가져오기
-    if (user && (calendarUserId || user.id)) {
-      const targetUserId = calendarUserId || user.id; // 현재 캘린더를 볼 사용자 ID
-      fetchCalendarData(targetUserId);
+    if (selectedUserId) {
+      fetchCalendarData(selectedUserId);
+      setIsMine(user.id === selectedUserId);
     }
-  }, [calendarUserId, user]);
+  }, [selectedUserId]);
 
 
   // 팔로잉 유저 리스트 불러오기
-const fetchFollowingList = () => {
-  axios.get(`/api/user/following`, {
-    params: {
-      userId: user?.id,
-      page: followingListState.page,
-      size: 10,
-    },
-  })
-    .then((res) => {
-      console.log("Following List:", res.data.content); // 확인용 로그
-      setFollowingList(res.data.content); // 팔로잉 유저 리스트 저장
-      setFollowingListState((prev) => ({
-        ...prev,
-        hasNext: res.data.hasNext,
-      }));
+  const fetchFollowingList = () => {
+    axios.get(`/api/user/following`, {
+      params: {
+        userId: user?.id,
+        page: followingListState.page,
+        size: 10,
+      },
     })
-    .catch((err) => {
-      console.error(err);
-    });
-};
+      .then((res) => {
+        console.log("Following List:", res.data.content); // 확인용 로그
+        setFollowingList(res.data.content); // 팔로잉 유저 리스트 저장
+        setFollowingListState((prev) => ({
+          ...prev,
+          hasNext: res.data.hasNext,
+        }));
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
 
-// useEffect에 추가
-useEffect(() => {
-  if (user) {
-    fetchFollowingList();
-  }
-}, [user]);
+  useEffect(() => {
+    //컨테이너 사이즈 변경 시 캘린더 크기 업데이트
+    if (!calendarContainerRef.current || !calendarRef.current) return;
 
- // 캘린더 데이터 가져오기
- const fetchCalendarData = (targetUserId) => {
-  axios.get(`/api/schedules/user/${targetUserId}`) // 적절한 엔드포인트 호출
-    .then((response) => {
+    const calendarApi = calendarRef.current.getApi();
+
+    const handleResize = () => {
+      if (!isResizing) {
+        setIsResizing(true);
+      }
+
+      if (resizeTimeout.current) {
+        clearTimeout(resizeTimeout.current);
+      }
+
+      resizeTimeout.current = setTimeout(() => {
+        setIsResizing(false);
+        calendarApi.updateSize();
+      }, 100);
+    };
+
+    const resizeObserver = new ResizeObserver(() => { handleResize(); });
+    resizeObserver.observe(calendarContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+      if (resizeTimeout.current) {
+        clearTimeout(resizeTimeout.current);
+      };
+    };
+  }, [calendarContainerRef, calendarRef, isResizing]);
+
+
+  const formatISOString = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const seconds = date.getSeconds();
+
+    const offset = -date.getTimezoneOffset() / 60;
+    const offsetString = offset >= 0 ? `+${offset}` : offset;
+    return `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}T${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}${offsetString}:00`;
+  };
+
+  useEffect(() => {
+    // 이벤트 드래그 드롭으로 변경 시 업데이트
+    const handleChangeEvent = (newEvent, oldEvent) => {
+
+      if (!newEvent || !oldEvent) return;
+
+      if (newEvent === oldEvent) return;
+
+      const start = newEvent.startStr;
+      const end = newEvent.endStr;
+
+      console.log('Event changed:', start, end);
+
+      //날짜 형식: 2021-09-01T00:00:00+09:00
+      //Date 객체로 변환
+      const newStartDate = new Date(start);
+      const newEndDate = end ? new Date(end) : newStartDate;
+
+      const formattedStartDate = formatISOString(newStartDate);
+      let formattedEndDate = formatISOString(newEndDate);
+
+      if (!newEvent.allDay && newStartDate === newEndDate) {
+        newEndDate.setHours(newEndDate.getHours() + 1);
+        formattedEndDate = formatISOString(newEndDate);
+      }
+
+      const newDateTime = {
+        startDate: formattedStartDate.split('T')[0],
+        startTime: formattedStartDate.split('T')[1].slice(0, 5),
+        endDate: formattedEndDate.split('T')[0],
+        endTime: formattedEndDate.split('T')[1].slice(0, 5),
+        allDay: newEvent.allDay,
+      };
+
+      console.log('New datetime:', newDateTime);
+
+      axios.put(`/api/schedules/${newEvent.id}/datetime`, newDateTime)
+        .then((res) => {
+          const updatedEvent = {
+            id: res.data.id,
+            title: res.data.title || '제목 없는 일정',
+            allDay: res.data.allDay,
+            start: generateISOString(res.data.startDate, res.data.startTime),
+            end: generateISOString(res.data.endDate, res.data.endTime),
+            backgroundColor: res.data.category?.color || 'var(--light-gray)',
+            borderColor: 'transparent',
+            textColor: getTextColor(res.data.category?.color),
+            classNames: [`${res.data.done ? 'done' : ''}`, `color-${getTextColor(res.data.category?.color)}`],
+          }
+          setEventList((prev) => prev.map((event) => {
+            if (event.id === updatedEvent.id) {
+              return {
+                ...event,
+                start: updatedEvent.start,
+                end: updatedEvent.end,
+                allDay: updatedEvent.allDay,
+              };
+            }
+            return event;
+          }));
+        })
+        .catch((error) => {
+          console.error('Error updating event datetime:', error);
+        });
+
+    };
+
+    if (eventChangeData && isMine) {
+      handleChangeEvent(eventChangeData.newEvent, eventChangeData.oldEvent);
+    }
+  }, [eventChangeData]);
+
+
+  // 캘린더 데이터 가져오기
+  const fetchCalendarData = async (targetUserId) => {
+    setEventList([]); // 이벤트 목록 초기화
+    let scheduleList = [];
+    let participatedList = [];
+
+    try {
+      const response = await axios.get(`/api/schedules/user/${targetUserId}`);
       const newEvents = response.data.map((item) => ({
         id: item.id,
-        title: item.title,
-        start: item.startDate,
-        end: item.endDate,
+        title: item.title || '제목 없는 일정',
+        allDay: item.allDay,
+        start: generateISOString(item.startDate, item.startTime),
+        end: generateISOString(item.endDate, item.endTime),
+        backgroundColor: item.category?.color || 'var(--light-gray)',
+        borderColor: 'transparent',
+        textColor: getTextColor(item.category?.color),
+        classNames: [`${item.done ? 'done' : ''}`, `color-${getTextColor(item.category?.color)}`],
       }));
       console.log('Fetched events:', newEvents); // 디버깅 로그
-      setEventList(newEvents);
-    })
-    .catch((error) => {
+
+      if (targetUserId !== user?.id) {
+        // 비공개 일정 필터링
+        scheduleList = newEvents.filter((event) => response.data.find((item) => item.id === event.id).isPrivate === false);
+      } else {
+        scheduleList = newEvents;
+      }
+
+      // 참여한 일정 가져오기
+      if (targetUserId === user?.id) {
+        participatedList = await fetchParticipatedEvents();
+      }
+
+      // 이벤트 목록 업데이트
+      setEventList([...scheduleList, ...participatedList]);
+
+    } catch (error) {
       console.error('Error fetching user schedules:', error);
-    });
-};
+    }
+  };
+
+  const fetchParticipatedEvents = async () => {
+    try {
+      const response = await axios.get(`/api/schedules/${user.id}/participated`);
+      const newEvents = response.data.map((item) => ({
+        id: item.id,
+        editable: false,
+        title: item.title || '제목 없는 일정',
+        allDay: item.allDay,
+        start: generateISOString(item.startDate, item.startTime),
+        end: generateISOString(item.endDate, item.endTime),
+        backgroundColor: 'white',
+        borderColor: 'var(--dark-gray)',
+        textColor: 'var(--dark-gray)',
+        classNames: [`${item.done ? 'done' : ''}`, `color-black`],
+      }));
+      console.log('Fetched participated events:', newEvents); // 디버깅 로그
+      return newEvents;
+    } catch (error) {
+      console.error('Error fetching participated schedules:', error);
+    }
+  };
 
 
-// 팔로잉 유저 클릭 핸들러
-const handleFollowingUserClick = (userId) => {
-  fetchSchedules(userId); // 선택한 유저의 캘린더 데이터 불러오기
-};
-  // 주말 표시 토글
-  function handleWeekendsToggle() {
-    setWeekendsVisible(!weekendsVisible);
-  }
+
+  // 팔로잉 유저 클릭 핸들러
+  const handleFollowingUserClick = (userId) => {
+    setSelectedUserId(userId); // 선택한 유저 ID 상태 업데이트
+  };
 
   // 일정 작성 페이지 이동
   function handleDateSelect(selectInfo) {
+    const { startStr, endStr } = selectInfo;
+
+    const endDateAdjusted = new Date(endStr);
+    // endStr를 강제로 하루 전으로 설정(FullCalendar의 특성상 endDate가 무조건 startDate의 하루 뒤가 되어버림)
+    endDateAdjusted.setDate(endDateAdjusted.getDate() - 1);
+    const adjustedEndDate = endDateAdjusted.toISOString().split('T')[0];  // YYYY-MM-DD 형식으로 조정
+
     // 날짜를 선택하면 일정 작성 페이지로 이동하고 선택된 날짜 전달
-    navigate('/calendarWrite', { state: { startDate: selectInfo.startStr, endDate: selectInfo.endStr } });
+    navigate('/calendarWrite', {
+      state: {
+        startDate: startStr,
+        endDate: adjustedEndDate
+      }
+    });
   }
 
   // 일정 클릭 시 업데이트 페이지 이동
@@ -192,7 +304,7 @@ const handleFollowingUserClick = (userId) => {
       start: clickInfo.event.start,
       end: clickInfo.event.end,
     };
-    navigate(`/calendarUpdate/${eventId}`, {
+    navigate(`/schedule/${eventId}`, {
       state: { eventData }
     });
   }
@@ -200,8 +312,6 @@ const handleFollowingUserClick = (userId) => {
   function handleEvents(events) {
     setCurrentEvents(events); // 현재 표시 중인 이벤트 목록 상태 업데이트
   }
-
-
 
 
   const handleDayCellContent = (arg) => {
@@ -233,27 +343,41 @@ const handleFollowingUserClick = (userId) => {
     }
   };
 
+
   return (
-    <div className="demo-app-main">
+    <div className="demo-app-main calendar-page">
       <div className='calendar-header'>
-      <div className="calendar-page">
-      <ProfileContainer>
-      {followingList.map((followingUser) => (
-          <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)}>
+        <ProfileContainer>
+          <UserCard onClick={() => handleFollowingUserClick(user?.id)} selected={user?.id === selectedUserId}>
             <img
-              src={followingUser.profileImageUrl || defaultProfileImageUrl}
+              src={user?.profileImageUrl || defaultProfileImageUrl}
               alt="profile"
               onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
             />
-            <span>{followingUser.username}</span>
+            <span>나</span>
+
           </UserCard>
-        ))}
-      </ProfileContainer>
-    </div>
+          
+          {followingList.map((followingUser) => (
+            <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)} selected={followingUser.id === selectedUserId}>
+              <img
+                src={followingUser.profileImageUrl || defaultProfileImageUrl}
+                alt="profile"
+                onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
+              />
+              
+              <span>{followingUser.username}</span>
+              
+            </UserCard>
+            
+          ))}
+        </ProfileContainer>
+      </div>
+      <CalendarWrap ref={calendarContainerRef}>
         <CategoryWrap>
           {/* 카테고리 필터 */}
           <div className="filter-icon" onClick={() => setCategoryBoxOpen(!categoryBoxOpen)}>
-            카테고리 필터 버튼 (임시로 배치함, 나중에 위치 변경해 주세요)
+            카테고리
             <img src="/images/icon/filter.svg" alt="filter" />
           </div>
           {categoryBoxOpen && <div className="category-box">
@@ -283,23 +407,29 @@ const handleFollowingUserClick = (userId) => {
           </div>}
         </CategoryWrap>
 
-      </div>
-      <div>
         <FullCalendar
+          ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]} // 플러그인 설정
           headerToolbar={{
             left: 'prev,next today', // 헤더 왼쪽 버튼
             center: 'title', // 헤더 중앙 제목
             right: 'dayGridMonth,timeGridWeek,timeGridDay', // 헤더 오른쪽 버튼
           }}
+          buttonText={{
+            today: '오늘', // 오늘 버튼
+            month: '월간', // 월간 버튼
+            week: '주간', // 주간 버튼
+            day: '일간', // 일간 버튼
+          }}
           initialView="dayGridMonth" // 초기 뷰 설정 (월간 뷰)
-          editable={true} // 이벤트 편집 가능
-          selectable={true} // 달력 셀 선택 활성화
+          editable={isMine} // 이벤트 수정 활성화
+          eventStartEditable={isMine} // 이벤트 시작 시간 수정 활성화
+          droppable={isMine} // 이벤트 드래그 앤 드롭 활성화
+          selectable={isMine} // 달력 셀 선택 활성화
           selectMirror={true} // 선택 미러링 활성화
           dayMaxEvents={true} // 하루에 표시할 최대 이벤트 수
           displayEventTime={false} // 이벤트 시간 표시 비활성화
-          eventColor='#374983' // 이벤트 기본 색상
-          weekends={weekendsVisible} // 주말 표시 여부
+          weekends={true} // 주말 표시 여부
           select={handleDateSelect} // 날짜 선택 이벤트 핸들러
           eventContent={renderEventContent} // 사용자 정의 이벤트 내용 렌더링
           eventClick={handleEventClick} // 이벤트 클릭 핸들러
@@ -307,28 +437,19 @@ const handleFollowingUserClick = (userId) => {
           events={eventList} // 이벤트 데이터
           locale="ko" // 한국어 로케일
           dayCellContent={handleDayCellContent} // 달력 셀 내용 핸들러
+          eventDisplay='block'
+          eventMouseEnter={(arg) => { arg.el.style.cursor = 'pointer'; }}
+          eventMouseLeave={(arg) => { arg.el.style.cursor = 'default'; }}
+          eventLeave={(arg) => { setEventChangeData((prev) => ({ ...prev, oldEvent: arg.event })) }}
+          eventReceive={(arg) => { setEventChangeData((prev) => ({ ...prev, newEvent: arg.event })) }}
+          eventResize={(arg) => { setEventChangeData({ oldEvent: arg.oldEvent, newEvent: arg.event })}}
         />
-      </div>
-      <div className="demo-app">
-        <Sidebar
-          weekendsVisible={weekendsVisible} // 주말 표시 여부 전달
-          handleWeekendsToggle={handleWeekendsToggle} // 주말 표시 토글 핸들러 전달
-          currentEvents={currentEvents} // 현재 이벤트 목록 전달
-        />
-      </div>
+      </CalendarWrap>
       {categoryModalOpen && <CategoryEditModal categories={user.categories} onClose={() => setCategoryModalOpen(false)} />}
     </div>
   );
 }
 
-function SidebarEvent({ event }) {
-  return (
-    <li>
-      <b>{formatDate(event.start, { year: 'numeric', month: 'short', day: 'numeric' })}</b>
-      <i>{event.title}</i>
-    </li>
-  );
-}
 
 function renderEventContent(eventInfo) {
   return (
@@ -339,48 +460,27 @@ function renderEventContent(eventInfo) {
   );
 }
 
-function Sidebar({ weekendsVisible, handleWeekendsToggle, currentEvents }) {
-  return (
-    <div className="demo-app-sidebar">
-      <div className="demo-app-sidebar-section">
-        <h2>안내</h2>
-        <ul>
-          <li>클릭해서 작성</li>
-          <li>드래그 앤 드롭</li>
-          <li></li>
-        </ul>
-      </div>
-      <div className="demo-app-sidebar-section">
-        <label>
-          <input
-            type="checkbox"
-            checked={weekendsVisible} // 주말 표시 여부 체크박스
-            onChange={handleWeekendsToggle} // 체크박스 변경 핸들러
-          />
-          주말 추가/제거 토글
-        </label>
-      </div>
-      <div className="demo-app-sidebar-section">
-        <h2>일정 ({currentEvents.length})</h2>
-        <ul>
-          {currentEvents.map((event) => (
-            <SidebarEvent key={event.id} event={event} />
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-};
+
+const CalendarWrap = styled.div`
+  position: relative;
+  margin-bottom: 24px;
+`;
 
 const CategoryWrap = styled.div`
-position: relative;
+position: absolute;
+
+top: 4px;
+right: 168px;
+
+
 flex-shrink: 0;
 & .filter-icon {
-  font-size: 12px;
+  font-size: 16px;
   white-space: nowrap;
-  height: 24px;
+  height: 36px;
   display: flex;
   align-items: center;
+  cursor: pointer;
 
   & img {
     width: auto;
@@ -475,7 +575,9 @@ const ProfileContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  margin: 24px;
+  padding: 16px;
+  justify-content: flex-start;
+  width: 100%;
 
   & .item {
     display: flex;
@@ -524,6 +626,7 @@ const UserCard = styled.div`
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 8px;
+    outline: 2px solid ${(props) => (props.selected ? 'var(--primary-color)' : 'transparent')};
   }
 
   span {

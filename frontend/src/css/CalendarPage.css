@@ -1,15 +1,92 @@
-.calendar-page {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-  }
 
+
+.fc {
+    /* 완료 일정 취소선 및 투명도 지정 */
+    .fc-daygrid-day-events {
+        .done {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        .color-black {
+            color: black;
+        }
+
+        .color-white {
+            color: white;
+        }
+    }
+
+    /* 버튼 스타일 */
+    .fc-button {
+        background-color: var(--light-gray);
+        border-color: var(--light-gray);
+        color: var(--dark-gray);
+
+        &:disabled {
+            background-color: var(--light-gray);
+            border-color: var(--light-gray);
+            color: var(--dark-gray);
+            opacity: 0.5;
+        }
+
+        &:hover {
+            background-color: var(--light-gray);
+            border-color: var(--light-gray);
+            opacity: 0.8;
+            color: var(--dark-gray);
+        }
+
+        &:not(:disabled):active,
+        &:not(:disabled).fc-button-active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: none;
+        }
+
+    }
+
+    .fc-button-primary {
+        background-color: var(--light-gray);
+        border-color: var(--light-gray);
+        color: var(--dark-gray);
+
+        &:hover {
+            background-color: var(--light-gray);
+            border-color: var(--light-gray);
+            opacity: 0.9;
+        }
+
+        &:not(:disabled):active,
+        &:not(:disabled).fc-button-active
+        {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+
+            &:hover {
+                background-color: var(--accent-text-color);
+                border-color: var(--accent-text-color);
+            }
+        }
+    }
+
+    .fc-prev-button,
+    .fc-next-button {
+        color: white;
+    }
+}
+
+.calendar-page {
+    padding: 12px 48px;
+    box-sizing: border-box;
+}
 
   .calendar-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 24px;
   }
 
   .category-select {

@@ -28,10 +28,11 @@ public class ScheduleService {
     private final CategoryRepository categoryRepository;
     private final ParticipantRepository participantRepository;
     private final ApplicationEventPublisher eventPublisher;
+  private final NotificationRepository notificationRepository;
 
-    @Transactional
+  @Transactional
     // 일정 등록
-    public void createSchedule(ScheduleDTO scheduleDTO) {
+    public Schedule createSchedule(ScheduleDTO scheduleDTO) {
       //userId에 해당하는 User 객체를 찾아서 엔티티로 변환시 사용
       Long userId = scheduleDTO.getUserId();
       User user = userRepository.findById(userId).orElse(null);
@@ -44,15 +45,17 @@ public class ScheduleService {
       schedule.setCategory(category);
       schedule.setCheckList(scheduleDTO.getCheckList() != null ? scheduleDTO.getCheckList() : new ArrayList<>());
 
-      scheduleRepository.save(schedule);
+      Schedule savedSchedule = scheduleRepository.save(schedule);
 
       for (CheckListDTO checkListDTO : scheduleDTO.getCheckListItem()) {
         CheckList checkList_entity = new CheckList();
         checkList_entity.setContent(checkListDTO.getContent());
         checkList_entity.setIsDone(checkListDTO.getIsDone());
-        checkList_entity.setSchedule(schedule);
+        checkList_entity.setSchedule(savedSchedule);
         checkListRepository.save(checkList_entity);
       }
+
+      return savedSchedule;
     }
 
     // 모든 일정 조회
@@ -130,6 +133,22 @@ public class ScheduleService {
         return scheduleRepository.save(schedule);
     }
 
+    //일정 날짜와 시간 수정
+    public Schedule updateDateTime(Long id, ScheduleDTO.DateTimeData data) {
+      Schedule schedule = scheduleRepository.findById(id).orElse(null);
+      if (schedule == null) {
+        throw new RuntimeException("Schedule not found");
+      }
+
+      schedule.setStartDate(data.getStartDate());
+      schedule.setStartTime(data.getStartTime());
+      schedule.setEndDate(data.getEndDate());
+      schedule.setEndTime(data.getEndTime());
+      schedule.setAllDay(data.getAllDay());
+
+      return scheduleRepository.save(schedule);
+    }
+
     // 일정 삭제
     public void deleteSchedule(Long id) {
         scheduleRepository.deleteById(id);
@@ -180,9 +199,9 @@ public class ScheduleService {
       checkListRepository.save(checkList);
     }
 
-
     //일정 초대
     //targetUser를 participant 리스트에 추가한다
+    @Transactional
     public void inviteUser(Long scheduleId, Long targetUserId) {
       Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
       if (schedule == null) {
@@ -209,9 +228,9 @@ public class ScheduleService {
         newParticipant = Participant.of(schedule, targetUser);
       }
 
-      participantRepository.save(newParticipant);
+      Participant savedParticipant =  participantRepository.save(newParticipant);
       //일정 초대 시 notification 이벤트 발행
-      newParticipant.publishInviteEvent(eventPublisher);
+      savedParticipant.publishInviteEvent(eventPublisher);
     }
 
     // 초대 삭제
@@ -230,9 +249,12 @@ public class ScheduleService {
         return;
       }
       participantRepository.delete(existingParticipant);
+
+      notificationRepository.findByUserAndTargetIdAndType(targetUser, scheduleId, Notification.NotiType.INVITE).ifPresent(notificationRepository::delete);
     }
 
     //일정 참여하기
+    @Transactional
     public void participate(Long scheduleId, Long userId) {
       Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
       if (schedule == null) {
@@ -249,20 +271,51 @@ public class ScheduleService {
 
       if (existingParticipant.isPresent()) {
         newParticipant = existingParticipant.get();
-        //수락하지 않은 초대가 이미 존재할 시 상태를 수락으로 바꿈
-        if (newParticipant.getStatus().equals(Participant.Status.ACCEPTED)) {
-          return;
-        } else {
-          newParticipant.setStatus(Participant.Status.ACCEPTED);
-        }
       }
 
-      participantRepository.save(newParticipant);
+      newParticipant.setStatus(Participant.Status.ACCEPTED);
+      Participant savedParticipant = participantRepository.save(newParticipant);
+
+      try {
+        // 수락하지 않은 초대 알림이 있을 시 상태를 수락으로 바꿈
+        Notification notification = notificationRepository.findByUserAndTargetIdAndType(user, scheduleId, Notification.NotiType.INVITE ).orElse(null);
+        if (notification != null) {
+          notification.setInviteStatus(Participant.Status.ACCEPTED);
+          notificationRepository.save(notification);
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("Failed to save notification", e);
+      }
+
       //일정 작성자에게 알림 보내기
-      newParticipant.publishParticipateEvent(eventPublisher);
+      savedParticipant.publishParticipateEvent(eventPublisher);
+
+    }
+
+    //일정 참여 취소하기
+    @Transactional
+    public void participateCancel(Long scheduleId, Long userId) {
+    Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+    if (schedule == null) {
+      throw new RuntimeException("Schedule not found");
+    }
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+    Participant participant = participantRepository.findByScheduleIdAndUserId(scheduleId, userId).orElse(null);
+    if (participant == null) {
+      throw new RuntimeException("Participant not found");
+    }
+
+    if (participant.getStatus().equals(Participant.Status.ACCEPTED)) {
+      participantRepository.delete(participant);
+    }
+
     }
 
     //일정 초대 거절하기
+    @Transactional
     public void declineInvite(Long scheduleId, Long userId) {
       Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
       if (schedule == null) {
@@ -280,6 +333,29 @@ public class ScheduleService {
 
       existingParticipant.setStatus(Participant.Status.DECLINED);
       participantRepository.save(existingParticipant);
+
+      Notification notification = notificationRepository.findByUserAndTargetIdAndType(user, scheduleId, Notification.NotiType.INVITE).orElse(null);
+      if (notification == null) {
+        return;
+      }
+      notification.setInviteStatus(Participant.Status.DECLINED);
+      notificationRepository.save(notification);
+    }
+
+    //내가 참여한 일정 목록 불러오기
+    public List<Schedule> getParticipatedSchedule(Long userId) {
+      List<Participant> participants = participantRepository.findByUserIdAndStatus(userId, Participant.Status.ACCEPTED);
+
+      List<Schedule> schedules = new ArrayList<>();
+      if (participants != null) {
+        for (Participant participant : participants) {
+          Schedule schedule = participant.getSchedule();
+          if (schedule != null) {
+            schedules.add(schedule);
+          }
+        }
+      }
+      return schedules;
     }
 
 }

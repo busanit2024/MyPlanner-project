@@ -9,31 +9,41 @@ import { useNavigate } from "react-router-dom";
 export default function RightSidebar({ open, setOpen }) {
   const { user, loading } = useAuth();
   const [schedules, setSchedules] = useState([]);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && user) {
-      axios.get(`/api/schedules/todo`, {
+      fetchSchedules();
+    }
+  }, [user, loading]);
+
+  const fetchSchedules = async () => {
+    setScheduleLoading(true);
+    setSchedules([]);
+    if (!user)  {
+      setScheduleLoading(false);
+      return;
+    }
+    try {
+      const response = await axios.get(`/api/schedules/todo`, {
         params: {
           userId: user.id,
           size: 10,
         }
-      }).then((response) => {
-        console.log('Fetched schedules:', response.data);
-        setSchedules(response.data.content);
-      }).catch((error) => {
-        console.error('Error fetching schedules:', error);
       });
+      setSchedules(response.data.content);
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+    } finally {
+      setScheduleLoading(false);
     }
-  }, [user, loading]);
+  };
+
 
   const getCategoryColor = (schedule) => {
     const category = schedule.category;
     return category ? category.color : 'var(--light-gray)';
-  };
-
-  const handleScheduleClick = (scheduleId) => {
-    // 일정 상세 페이지로 이동
   };
 
   // 일정 완료 체크
@@ -89,17 +99,22 @@ export default function RightSidebar({ open, setOpen }) {
     <SidebarContainer className="right-sidebar" open={open}>
       <SidebarHeader>
         <h2>일정</h2>
-        <button onClick={() => setOpen(false)}>
+        <button onClick={fetchSchedules} className="refresh">
+          <img src="/images/icon/refresh.svg" alt="refresh" />
+        </button>
+        <button onClick={() => setOpen(false)} className="close">
           <img src="/images/icon/doubleArrowRight.svg" alt="close" />
         </button>
       </SidebarHeader>
 
       <ScheduleList>
+        {scheduleLoading && <div className="loading">일정 불러오는 중...</div>}
+        {!scheduleLoading && schedules.length === 0 && <div className="loading">예정된 일이 없어요.</div>}
         {schedules.map((schedule) => (
           <ScheduleItem key={schedule.id}>
             <div className="color-dot" style={{ backgroundColor: getCategoryColor(schedule) }}></div>
             <div className="content">
-              <span className="title">{schedule.title}</span>
+              <span className={`title ${schedule.done ? 'done' : ''}`} onClick={() => navigate(`/schedule/${schedule.id}`)}>{schedule.title}</span>
               <span className="date">{generateDateFormat(schedule.startDate, schedule.startTime, schedule.endDate, schedule.endTime)}</span>
 
               {schedule.checkList && (
@@ -109,7 +124,7 @@ export default function RightSidebar({ open, setOpen }) {
                       <div className="todo-checkbox">
                         <input type="checkbox" checked={todo.isDone} onChange={(e) => handleTodoCheck(todo.id, e.target.checked)} />
                       </div>
-                      <span className="todo-content">{todo.content}</span>
+                      <span className={`todo-content ${todo.isDone ? 'done' : ''}`}>{todo.content}</span>
                     </ScheduleTodoItem>
                   ))}
                 </ScheduleTodoList>
@@ -129,7 +144,7 @@ export default function RightSidebar({ open, setOpen }) {
 
 
 const SidebarContainer = styled.aside`
-  --sidebar-width: 260px;
+  --sidebar-width: 300px;
   display: flex;
   position: fixed;
   top: 0;
@@ -137,7 +152,7 @@ const SidebarContainer = styled.aside`
   flex-direction: column;
   gap: 24px;
   width: ${props => props.open ? 'var(--sidebar-width)' : '0'};
-  padding: 20px ${props => props.open ? '24px' : '0'};
+  padding-top: 20px;
   border-left: 1px solid;
   border-color: var(--light-gray);
   position: relative;
@@ -147,8 +162,14 @@ const SidebarContainer = styled.aside`
 
 const SidebarHeader = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  padding: 0 24px;
+
+  & .close {
+    justify-self: flex-end;
+    margin-left: auto;
+  }
 
   & h2 {
     font-weight: normal;
@@ -175,17 +196,31 @@ const SidebarHeader = styled.div`
 
 const ScheduleList = styled.ul`
   list-style: none;
-  padding: 0;
+  padding: 0 24px;
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-bottom: 36px;
+
+  & .loading {
+    color: var(--mid-gray);
+    justify-self: center;
+    margin: 24px auto;
+  }
 `;
 
 const ScheduleItem = styled.li`
   display: flex;
   align-items: flex-start;
   gap: 12px;
+
+  & .done {
+    text-decoration: line-through;
+    color: var(--mid-gray);
+  }
 
   & .color-dot {
     width: 12px;

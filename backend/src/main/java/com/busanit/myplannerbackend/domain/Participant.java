@@ -12,4 +12,5 @@ public class Participant {
     private String username;
     private String profileImageUrl;
     private String status;
+    private String lastReadMessageId; //마지막으로 읽은 메시지ID
 }

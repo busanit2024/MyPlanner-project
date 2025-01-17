@@ -3,8 +3,8 @@ import styled from "styled-components";
 const SwitchWrapper = styled.label`
   position: relative;
   display: inline-block;
-  width: 52px;
-  height: 28px;
+  width: ${props => props.size === "small" ? "40px" : "56px"};
+  height: ${props => props.size === "small" ? "20px" : "32px"};
 
   input {
     opacity: 0;
@@ -21,16 +21,16 @@ const SwitchWrapper = styled.label`
     bottom: 0;
     background-color: var(--light-gray);
     transition: 0.2s;
-    border-radius: 28px;
+    border-radius: ${props => props.size === "small" ? "16px" : "28px"};
   }
 
   .slider:before {
     position: absolute;
     content: "";
-    height: 20px;
-    width: 20px;
-    left: 4px;
-    bottom: 4px;
+    height: ${props => props.size === "small" ? "14px" : "24px"};
+    width: ${props => props.size === "small" ? "14px" : "24px"};
+    left: ${props => props.size === "small" ? "3px" : "4px"};
+    bottom: ${props => props.size === "small" ? "3px" : "4px"};
     background-color: white;
     transition: 0.2s;
     border-radius: 50%;
@@ -45,11 +45,11 @@ const SwitchWrapper = styled.label`
   }
 
   input:checked + .slider:before {
-    transform: translateX(24px);
+    transform: translateX(${props => props.size === "small" ? "20px" : "24px"});
   }
 
   .slider.round {
-    border-radius: 28px;
+    border-radius: ${props => props.size === "small" ? "16px" : "28px"};
   }
 
   .slider.round:before {
@@ -59,9 +59,9 @@ const SwitchWrapper = styled.label`
 
 
 export default function Switch(props) {
-  const { value, onChange } = props;
+  const { value, onChange, size } = props;
   return (
-    <SwitchWrapper>
+    <SwitchWrapper size={size}>
       <input type="checkbox" checked={value} onChange={onChange} />
       <span className="slider round"></span>
     </SwitchWrapper>

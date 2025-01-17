@@ -8,8 +8,6 @@ import { AuthProvider } from './context/AuthContext';
 import GlobalStyles from './styles/GlobalStyles.styles';
 
 import CalendarWrite from './components/calendar/CalendarWrite';
-import WeeklyPage from './components/calendar/WeeklyPage';
-import DailyPage from './components/calendar/DailyPage';
 import Grid100Page from './components/calendar/Grid100Page';
 import CalendarPage from './components/calendar/CalendarPage';
 import CalendarUpdate from './components/calendar/CalendarUpdate';
@@ -42,8 +40,6 @@ function App() {
               <Route element={<Layout />} >
                 <Route path='/search' element={<SearchPage />} />
                 <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/weekly" element={<WeeklyPage />} />
-                <Route path="/daily" element={<DailyPage />} />
                 <Route path="/grid" element={<Grid100Page />} />
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path='profile' element={<MyPage />} />
@@ -51,6 +47,7 @@ function App() {
                 <Route path='notification' element={<NotificationPage />} />
                 <Route path='calendarWrite' element={<CalendarWrite />} />
                 <Route path='calendarUpdate/:id' element={<CalendarUpdate />} />
+                <Route path="schedule/:id" element={<CalendarUpdate />} />
                 <Route path='feed' element={<FeedPage />} />
                 <Route path='user/:userId' element={<UserProfilePage />} />
                 <Route path='group' element={<GroupPage />} />
