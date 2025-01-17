@@ -215,6 +215,7 @@ export default function CalendarPage() {
 
     try {
       const response = await axios.get(`/api/schedules/user/${targetUserId}`);
+      console.log('Fetched user schedules:', response.data); // 디버깅 로그
       const newEvents = response.data.map((item) => ({
         id: item.id,
         title: item.title || '제목 없는 일정',
@@ -225,14 +226,21 @@ export default function CalendarPage() {
         borderColor: 'transparent',
         textColor: getTextColor(item.category?.color),
         classNames: [`${item.done ? 'done' : ''}`, `color-${getTextColor(item.category?.color)}`],
+        category: item.category,
       }));
       console.log('Fetched events:', newEvents); // 디버깅 로그
+      console.log('Fetched events category@@@:', newEvents[0].category); // 디버깅 로그
+      
+
+      // 선택된 카테고리로 필터링
+      const filteredEvents = newEvents.filter(event => selectedCategory.has(event.category.id));
+      console.log("filteredEvents", filteredEvents);
 
       if (targetUserId !== user?.id) {
         // 비공개 일정 필터링
-        scheduleList = newEvents.filter((event) => response.data.find((item) => item.id === event.id).isPrivate === false);
+        scheduleList = filteredEvents.filter((event) => response.data.find((item) => item.id === event.id).isPrivate === false);
       } else {
-        scheduleList = newEvents;
+        scheduleList = filteredEvents;
       }
 
       // 참여한 일정 가져오기
@@ -333,14 +341,31 @@ export default function CalendarPage() {
   // 개별 카테고리 선택 토글
   const selectCategoryToggle = (e) => {
     const categoryId = parseInt(e.target.id);
-    if (selectedCategory.has(categoryId)) {
+    const category_checked = e.target.checked;
+    console.log("선택된 카테고리 true/false",e.target.checked);
+    // if (selectedCategory.has(categoryId)) {
+    //   setSelectedCategory((prev) => {
+    //     const newSelected = new Set(prev);
+    //     newSelected.delete(categoryId);
+    //     return newSelected;
+    //   });
+    // } else {
+    //   setSelectedCategory((prev) => new Set(prev).add(categoryId));
+    // }
+    if (!category_checked) {
       setSelectedCategory((prev) => {
         const newSelected = new Set(prev);
         newSelected.delete(categoryId);
         return newSelected;
       });
-    } else {
+    } else if(!selectedCategory.has(categoryId) && category_checked) {
       setSelectedCategory((prev) => new Set(prev).add(categoryId));
+    }
+
+    console.log("선택된 카테고리 출력",selectedCategory);
+
+    fetchCalendarData(selectedUserId);
+    if(category_checked) {
     }
   };
 
@@ -401,14 +426,14 @@ export default function CalendarPage() {
                 <span>{category.categoryName}</span>
               </CategoryLabel>
             ))}
-
+                                                                  
             <div className='category-button' onClick={() => setCategoryModalOpen(true)}>
               <img src="/images/icon/setting.svg" alt="plus" />
               <span>카테고리 편집...</span>
             </div>
           </div>}
         </CategoryWrap>
-
+          )}
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]} // 플러그인 설정
@@ -607,13 +632,6 @@ const ProfileContainer = styled.div`
       color: var(--dark-gray);
     }
   }
-`;
-
-const FollowingList = styled.div`
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding: 16px 0;
 `;
 
 const UserCard = styled.div`

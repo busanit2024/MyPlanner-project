@@ -21,9 +21,11 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
   //일정 제목으로 검색 슬라이스(임시)
   Slice<Schedule> findByTitleContainingIgnoreCaseAndIsPrivateFalseOrderByCreatedAtDesc(String title, Pageable pageable);
 
-    // 특정 사용자 ID로 일정 목록 조회
-    List<Schedule> findByUserId(Long userId);
+  // 특정 사용자 ID로 일정 목록 조회
+  List<Schedule> findByUserId(Long userId);
 
-    //완료되지 않은 일정 종료일이 갸까운 순으로 조회
-    Page<Schedule> findByUserIdAndDoneFalseOrderByEndDateAsc(Long userId, Pageable pageable);
+  //완료되지 않은 일정 종료일이 갸까운 순으로 조회
+  Page<Schedule> findByUserIdAndDoneFalseOrderByEndDateAsc(Long userId, Pageable pageable);
+
+
 }
