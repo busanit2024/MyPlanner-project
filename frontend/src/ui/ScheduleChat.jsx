@@ -126,7 +126,10 @@ const ScheduleChat = ({ schedule }) => {
     return `${date.getMonth() + 1}월${date.getDate()}일`;
   };
 
-  const formatTime = (dateString) => {
+  const formatTime = (dateString, isAllDay) => {
+    if (isAllDay) {
+      return '하루종일';
+    }
     const date = new Date(dateString);
     const hours = date.getHours();
     const minutes = date.getMinutes();
@@ -150,7 +153,7 @@ const ScheduleChat = ({ schedule }) => {
           </div>
         </div>
         <div className="schedule-time">
-          {formatTime(schedule.startDate)}
+          {formatTime(schedule.startDate, schedule.allDay)}
         </div>
         <Button onClick={handleScheduleClick}>일정보기</Button>
       </Content>
