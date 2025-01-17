@@ -141,9 +141,13 @@ const CalendarUpdate = () => {
         }
       } catch (error) {
         console.error('일정 데이터 불러오기 실패:', error.response ? error.response.data : error.message);
+        let message = '일정을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.';
+        if (error.response.data.message === '일정을 찾을 수 없습니다.') {
+          message = '존재하지 않는 일정입니다.';
+        }
         Swal.fire({
           title: '일정 불러오기 실패',
-          text: '일정을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.',
+          text: message,
           confirmButtonText: '확인',
           customClass: {
             title: "swal-title",
@@ -151,7 +155,7 @@ const CalendarUpdate = () => {
             confirmButton: "swal-button swal-button-confirm",
           },
         });
-        navigate('/calendar');
+        navigate(-1);
       } finally {
         setScheduleLoading(false);
       }
@@ -811,7 +815,7 @@ const CalendarUpdate = () => {
     <Container>
       {scheduleLoading ? <div className='loading'>일정 로딩중...</div> : (!isOwner && isPrivate) ? privateSchedule : schedulePage}
     </Container>
-    
+
   );
 };
 
