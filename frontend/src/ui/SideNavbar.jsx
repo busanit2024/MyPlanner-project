@@ -10,18 +10,18 @@ const navItems = [
     name: "캘린더",
     link: "/calendar",
   },
-  {
-    name: "100그리드",
-    link: "/grid",
-  },
+  // {
+  //   name: "100그리드",
+  //   link: "/grid",
+  // },
   {
     name: "피드",
     link: "/feed",
   },
-  {
-    name: "그룹",
-    link: "/group",
-  },
+  // {
+  //   name: "그룹",
+  //   link: "/group",
+  // },
   {
     name: "알림",
     link: "/notification",
@@ -125,6 +125,10 @@ const NavList = styled.ul`
   padding: 0;
   margin-top: 36px;
   flex-grow: 1;
+
+  & .profile a {
+    font-size: 18px;
+  }
 `;
 
 const NavItem = styled.li`
@@ -136,7 +140,7 @@ const NavItem = styled.li`
   & a {
     text-decoration: none;
     color: inherit;
-    font-size: 18px;
+    font-size: 20px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -145,6 +149,8 @@ const NavItem = styled.li`
       color: var(--mid-gray);
     }
   }
+
+
 
   & .active {
     font-weight: bold;
