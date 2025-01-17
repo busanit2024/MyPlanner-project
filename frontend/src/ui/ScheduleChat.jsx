@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { useNavigate } from 'react-router-dom';
 
 const ScheduleWrapper = styled.div`
   background-color: #ffffff;
@@ -102,7 +103,22 @@ const Button = styled.button`
 `
 
 const ScheduleChat = ({ schedule }) => {
+  const navigate = useNavigate();
+  
   if (!schedule) return null;
+
+  const handleScheduleClick = () => {
+    const eventData = {
+      id: schedule.id,
+      title: schedule.title,
+      start: new Date(schedule.startDate),
+      end: new Date(schedule.endDate)
+    };
+    
+    navigate(`/schedule/${schedule.id}`, {
+      state: { eventData }
+    });
+  };
 
   // 날짜 포맷팅 함수 추가
   const formatDate = (dateString) => {
@@ -136,7 +152,7 @@ const ScheduleChat = ({ schedule }) => {
         <div className="schedule-time">
           {formatTime(schedule.startDate)}
         </div>
-        <Button>일정보기</Button>
+        <Button onClick={handleScheduleClick}>일정보기</Button>
       </Content>
     </ScheduleWrapper>
   );
