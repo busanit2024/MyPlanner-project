@@ -8,6 +8,7 @@ const ScheduleWrapper = styled.div`
   border: 1px solid #B6B6B6;
   padding: 15px;
   width: 300px;
+  margin: 0;
 `
 
 const Title = styled.div`

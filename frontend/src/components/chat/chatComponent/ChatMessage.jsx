@@ -5,7 +5,7 @@ import ScheduleChat from '../../../ui/ScheduleChat';
 const MessageContainer = styled.div`
   display: flex;
   flex-direction: ${props => props.isMine ? 'row-reverse' : 'row'};
-  align-items: center;
+  align-items: ${props => props.isScheduleOrImage ? 'flex-end' : 'center'};  // 일정/이미지일 때는 상단 정렬
   margin: ${props => props.isNewSender ? '5px 0' : '2px 0'};
   gap: 8px;
 `;
@@ -91,7 +91,7 @@ const TimeStamp = styled.span`
   ${props => !props.show && `display : none; `}
 `;
 
-const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderProfile , showTime}) => {
+const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderProfile , showTime, isNewSender}) => {
   // 메시지가 이미지 URL인지 확인
   const isImageMessage = (msg) => {
     if (!msg) return false;
@@ -135,8 +135,11 @@ const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderP
       }
   };
 
+  // 일정이나 이미지 메시지인지 확인
+  const isScheduleOrImage = isScheduleMessage(message) || isImageMessage(message);
+
   return (
-    <MessageContainer isMine={isMine} isNewSender={showTime}> 
+    <MessageContainer isMine={isMine} isNewSender={showTime} isScheduleOrImage={isScheduleOrImage}> 
       <ProfileImage 
         src={senderProfile || '/images/default/defaultProfileImage.png'} 
         alt="프로필" 
