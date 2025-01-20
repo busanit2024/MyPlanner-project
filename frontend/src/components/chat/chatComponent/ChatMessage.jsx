@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import React from 'react';
+import ScheduleChat from '../../../ui/ScheduleChat';
 
 const MessageContainer = styled.div`
   display: flex;
@@ -114,6 +115,26 @@ const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderP
     }
   };
 
+  // 메시지가 일정인지 확인하는 함수
+  const isScheduleMessage = (msg) => {
+    try {
+        const parsed = JSON.parse(msg);
+        return parsed.type === 'SCHEDULE';
+    } catch {
+        return false;
+    }
+  };
+
+  // 일정 데이터 파싱
+  const getScheduleData = (msg) => {
+      try {
+          const parsed = JSON.parse(msg);
+          return parsed.type === 'SCHEDULE' ? parsed.data : null;
+      } catch {
+          return null;
+      }
+  };
+
   return (
     <MessageContainer isMine={isMine} isNewSender={showTime}> 
       <ProfileImage 
@@ -125,40 +146,36 @@ const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderP
         }}
       />
       <MessageContent isMine={isMine}>
-        <SenderName isMine={isMine}>{senderName}</SenderName>
-        <MessageRow isMine={isMine}>
-          <TimeStamp show={showTime}>
-            {new Date(time).toLocaleTimeString('ko-KR', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            })}
-          </TimeStamp>
-          <MessageBubble 
-          isMine={isMine} 
-          message={message} 
-          isImage={isImageMessage(message)}
-          imageCount={isImageMessage(message) ? getImageUrls(message).length : 0}
-        >
-            {isImageMessage(message) ? (
-              <div className="image-grid">
-              {getImageUrls(message).map((url, index) => (
-                <img 
-                    key={index}
-                  src={url} 
-                    alt="첨부 이미지"
-                    onError={(e) => {
-                      console.error('이미지 로드 실패:', url);
-                      e.target.style.display = 'none';
-                    }} 
-                  />
-                ))}
-            </div>
-          ) : (
-              message
-            )}
-          </MessageBubble>
-        </MessageRow>
+          <SenderName isMine={isMine}>{senderName}</SenderName>
+          <MessageRow isMine={isMine}>
+              <TimeStamp show={showTime}>
+                  {new Date(time).toLocaleTimeString('ko-KR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                  })}
+              </TimeStamp>
+              {isScheduleMessage(message) ? (
+                  <ScheduleChat schedule={getScheduleData(message)} />
+              ) : (
+                  <MessageBubble 
+                      isMine={isMine} 
+                      message={message}
+                      isImage={isImageMessage(message)}
+                      imageCount={isImageMessage(message) ? getImageUrls(message).length : 0}
+                  >
+                      {isImageMessage(message) ? (
+                          <div className="image-grid">
+                              {getImageUrls(message).map((url, index) => (
+                                  <img key={index} src={url} alt="첨부 이미지" />
+                              ))}
+                          </div>
+                      ) : (
+                          message
+                      )}
+                  </MessageBubble>
+              )}
+          </MessageRow>
       </MessageContent>
     </MessageContainer>
   );

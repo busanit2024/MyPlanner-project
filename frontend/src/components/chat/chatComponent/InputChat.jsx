@@ -3,7 +3,6 @@ import { useState } from "react";
 import ImageUploadModal from '../../../ui/ImageUploadModal';
 import MyScheduleModal from '../../../ui/MyScheduleModal';
 import { imageFileUpload } from "../../../firebase";
-import ScheduleChat from '../../../ui/ScheduleChat';
 
 const InputChatBox = styled.div`
     display: flex;
@@ -126,8 +125,20 @@ export default function InputChat({ onSendMessage, isLeft }) {
         }
     };
 
-    const handleScheduleSelect = (schedule) => {
+    const handleScheduleSelect = async (schedule) => {
         setSelectedSchedule(schedule);
+        // 일정 데이터를 특별한 형식의 문자열로 변환
+        const scheduleMessage = JSON.stringify({
+            type: 'SCHEDULE',
+            data: schedule
+        });
+        
+        try {
+            await onSendMessage(scheduleMessage);
+            setScheduleModalOpen(false);
+        } catch (error) {
+            console.error('일정 전송 실패:', error);
+        }
     };
 
     const handleSend = async () => {
@@ -201,7 +212,6 @@ export default function InputChat({ onSendMessage, isLeft }) {
                 onClose={() => setScheduleModalOpen(false)}
                 onScheduleSelect={handleScheduleSelect}
             />
-            {selectedSchedule && <ScheduleChat schedule={selectedSchedule} />}
         </>
     );
 }
