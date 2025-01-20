@@ -56,6 +56,12 @@ export default function FeedPage() {
     }
   }, [feedState.page]);
 
+  useEffect(() => {
+    if (followingListState.page > 0) {
+      fetchFollowingList();
+    }
+  }, [followingListState.page]);
+
   const fetchFeedByType = () => {
     if (feedType === "follow") {
       if (userRef.current) {
@@ -68,18 +74,19 @@ export default function FeedPage() {
 
   // 팔로잉 유저 리스트 불러오기
   const fetchFollowingList = () => {
+    const size = 10;
     axios.get(`/api/user/following`, {
       params: {
         userId: user?.id,
-        page: followingListState.page,
-        size: 10
+        page: 0,
+        size: size * (followingListState.page + 1)
       }
     })
       .then(res => {
         setFollowingList(res.data.content);
         setFollowingListState((prev) => ({
           ...prev,
-          hasNext: res.data.hasNext
+          hasNext: !res.data.last
         }));
       })
       .catch(err => {
@@ -174,6 +181,14 @@ export default function FeedPage() {
                 <span className="username">{item.username}</span>
               </div>
             ))}
+            {followingListState.hasNext && 
+              <div className="item" onClick={() => setFollowingListState((prev) => ({ ...prev, page: prev.page + 1 }))}>
+                <div className="avatar more">
+                  <img src="/images/icon/plusLineGray.svg" alt="more" />
+                </div>
+                <span className="username">더보기</span>
+              </div>
+            }
           </FollowingListContainer>
           {followFeed.map((item) => (
             <ScheduleListItem key={item.id} data={item} />
@@ -259,7 +274,9 @@ const FollowingListContainer = styled.div`
   box-sizing: border-box;
   display: flex;
   gap: 24px;
-  align-items: center;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding: 12px 0;
 
   & .item {
     display: flex;
@@ -269,7 +286,12 @@ const FollowingListContainer = styled.div`
     cursor: pointer;
 
     & .username {
-      font-size: 14px;
+      font-size: 12px;
+      -webkit-line-clamp: 1;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     & .avatar {
@@ -284,6 +306,14 @@ const FollowingListContainer = styled.div`
         object-fit: cover;
         border-radius: 50%;
       }
+    }
+
+    & .more {
+      background-color: var(--white);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid var(--light-gray);
     }
   }
   `;

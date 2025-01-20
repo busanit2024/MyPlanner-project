@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import NotiListItem from "./NotiListItem";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import Button from "../../ui/Button";
@@ -8,7 +8,7 @@ import { useNoti } from "../../context/NotiContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export default function NotificationPage() {
-  const size = 10;
+  const size = 5;
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { notifications, setUnreadCount, clearNotiList } = useNoti();
@@ -44,6 +44,18 @@ export default function NotificationPage() {
       fetchNotiList();
     }
   }, [user, loading]);
+
+  useEffect(() => {
+    if (page.invite > 0) {
+      fetchInviteList();
+    }
+  }, [page.invite]);
+
+  useEffect(() => {
+    if (page.noti > 0) {
+      fetchNotiList();
+    }
+  }, [page.noti]);
 
 
   useEffect(() => {
@@ -90,8 +102,8 @@ export default function NotificationPage() {
         params: {
           userId: user.id,
           type: "noti",
-          page: 0,
-          size: page.noti * size + size,
+          page: page.noti,
+          size: size,
         },
       });
       setNotiList((prev) => ({
@@ -113,8 +125,8 @@ export default function NotificationPage() {
         params: {
           userId: user.id,
           type: "invite",
-          page: 0,
-          size: page.invite * size + size,
+          page: page.invite,
+          size: size
         },
       });
       setNotiList((prev) => ({
@@ -189,11 +201,12 @@ export default function NotificationPage() {
     <Container>
       <InnerContainer>
         <h2 className="title">일정 초대</h2>
-        {isloading.invite && <p>로딩중...</p>}
-        {notiList.invite.length === 0 && !isloading.invite && <p>받은 초대가 없어요.</p>}
+        
+        {notiList.invite.length === 0 && !isloading.invite && <p className="loading">받은 초대가 없어요.</p>}
         {notiList.invite.map((invite) => (
           <NotiListItem key={invite.id} data={invite} onClick={() => handleClick(invite)} onReaction={() => readNoti(invite)} />
         ))}
+        {isloading.invite && <p className="loading">로딩중...</p>}
 
         <div className="button-wrap">
           {hasNext.invite && (<Button onClick={() => setPage((prev) => ({ ...prev, invite: prev.invite + 1 }))}>더보기</Button>)}
@@ -202,11 +215,12 @@ export default function NotificationPage() {
       <InnerContainer>
 
         <h2 className="title">반응</h2>
-        {isloading.noti && <p>로딩중...</p>}
-        {notiList.noti.length === 0 && !isloading.noti && <p>받은 알림이 없어요.</p>}
+        
+        {notiList.noti.length === 0 && !isloading.noti && <p className="loading">받은 알림이 없어요.</p>}
         {notiList.noti.map((noti) => (
           <NotiListItem key={noti.id} data={noti} onClick={() => handleClick(noti)} />
         ))}
+        {isloading.noti && <p className="loading">로딩중...</p>}
         <div className="button-wrap">
           {hasNext.noti && (<Button onClick={() => setPage((prev) => ({ ...prev, noti: prev.noti + 1 }))}>더보기</Button>)}
         </div>
@@ -255,5 +269,9 @@ const InnerContainer = styled.div`
   & p {
     text-align: center;
     margin: 0;
+  }
+
+  & .loading {  
+    color: var(--mid-gray);
   }
 `;
