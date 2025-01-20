@@ -25,6 +25,7 @@ public class Message {
     private String contents;
     private LocalDateTime sendTime;
     private List<String> images;
+    private Schedule schedule;
     private String messageType;
 
     //읽음처리
