@@ -90,6 +90,18 @@ export default function CalendarPage() {
       });
   };
 
+  const handleNextPage = () => {
+    if (followingListState.hasNext) {
+      fetchFollowingList(user.id, followingListState.page + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (followingListState.page > 0) {
+      fetchFollowingList(user.id, followingListState.page - 1);
+    }
+  };
+
   useEffect(() => {
     //컨테이너 사이즈 변경 시 캘린더 크기 업데이트
     if (!calendarContainerRef.current || !calendarRef.current) return;
@@ -367,6 +379,8 @@ export default function CalendarPage() {
 
       <div className='calendar-header'>
         <ProfileContainer>
+        <button onClick={handlePrevPage} disabled={followingListState.page === 0}>이전</button>
+
           <UserCard onClick={() => handleFollowingUserClick(user?.id)} selected={user?.id === selectedUserId}>
             <img
               src={user?.profileImageUrl || defaultProfileImageUrl}
@@ -390,6 +404,8 @@ export default function CalendarPage() {
             </UserCard>
             
           ))}
+          <button onClick={handleNextPage} disabled={!followingListState.hasNext}>다음</button>
+
         </ProfileContainer>
       </div>
       <CalendarWrap ref={calendarContainerRef}>
