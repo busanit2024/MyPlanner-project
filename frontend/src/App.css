@@ -76,3 +76,14 @@
   color: var(--dark-gray);
   border: 1px solid var(--mid-gray);
 }
+
+.swal-input {
+  border-radius: 8px;
+  border: 2px solid var(--light-gray);
+
+  &:focus {
+    border: 2px solid var(--primary-color);
+    outline: none;
+    box-shadow: none;
+  }
+}
