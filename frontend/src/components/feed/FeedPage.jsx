@@ -209,12 +209,14 @@ export default function FeedPage() {
       <FeedResultList>
         {feedType === "follow" && <>
           <FollowingListContainer>
-          <div className="pagination-buttons">
-                <button onClick={handlePrevPage} disabled={followingListState.first}>
-                  이전
-                  {console.log("Previous button disabled:", followingListState.page === 0)}
-                </button>
-              </div>
+          {followingList.length > 0 && (
+            <div className="pagination-buttons">
+              <button onClick={handlePrevPage} disabled={followingListState.first}>
+                이전
+                {console.log("Previous button disabled:", followingListState.page === 0)}
+              </button>
+            </div>
+          )}
             {followingList.map((item) => (
               <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
                 <div className="avatar" key={item.id}>
@@ -223,12 +225,14 @@ export default function FeedPage() {
                 <span className="username">{item.username}</span>
               </div>
             ))}
+            {followingList.length > 0 && (
             <div className="pagination-buttons">
               <button onClick={handleNextPage} disabled={followingListState.last}>
                 다음
-                {console.log("last!!!!!!!!!!!!!!!", followingListState.last)}
+                {console.log("Next button disabled:", followingListState.last)}
               </button>
-              </div>       
+            </div>
+          )}   
           </FollowingListContainer>
           {followFeed.map((item) => (
             <ScheduleListItem key={item.id} data={item} />
