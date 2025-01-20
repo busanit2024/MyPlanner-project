@@ -67,25 +67,49 @@ export default function FeedPage() {
   };
 
   // 팔로잉 유저 리스트 불러오기
-  const fetchFollowingList = () => {
+  const fetchFollowingList = (userId, page = 0) => {
+    console.log(`Fetching following list for user ${userId} at page ${page}`);
     axios.get(`/api/user/following`, {
       params: {
-        userId: user?.id,
-        page: followingListState.page,
-        size: 10
-      }
+        userId: userId,
+        page: page,
+        size: 10, // 한 페이지에 가져올 팔로잉 유저의 수를 10으로 설정
+      },
     })
       .then(res => {
         setFollowingList(res.data.content);
-        setFollowingListState((prev) => ({
-          ...prev,
-          hasNext: res.data.hasNext
-        }));
+        setFollowingListState({
+          page: page,
+          hasNext: res.data.hasNext,
+          total: res.data.totalElements, // 전체 유저 수 저장\
+          first: res.data.first,
+          last: res.data.last,
+        });
       })
       .catch(err => {
         console.error(err);
       });
   }
+
+  useEffect(() => {
+    console.log("followingListState updated:", followingListState);
+  }, [followingListState]);
+  
+  const handleNextPage = () => {
+    console.log("Next page button clicked");
+    if (!followingListState.last) {
+      console.log("Fetching next page");
+      fetchFollowingList(user.id, followingListState.page + 1);
+    }
+  };
+  
+  const handlePrevPage = () => {
+    console.log("Previous page button clicked");
+    if (!followingListState.first) {
+      console.log("Fetching previous page");
+      fetchFollowingList(user.id, followingListState.page - 1);
+    }
+  };
 
   // 전체 피드 불러오기
   const fetchFeed = () => {
@@ -166,6 +190,12 @@ export default function FeedPage() {
       <FeedResultList>
         {feedType === "follow" && <>
           <FollowingListContainer>
+          <div className="pagination-buttons">
+                <button onClick={handlePrevPage} disabled={followingListState.first}>
+                  이전
+                  {console.log("Previous button disabled:", followingListState.page === 0)}
+                </button>
+              </div>
             {followingList.map((item) => (
               <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
                 <div className="avatar" key={item.id}>
@@ -174,6 +204,12 @@ export default function FeedPage() {
                 <span className="username">{item.username}</span>
               </div>
             ))}
+            <div className="pagination-buttons">
+              <button onClick={handleNextPage} disabled={followingListState.last}>
+                다음
+                {console.log("last!!!!!!!!!!!!!!!", followingListState.last)}
+              </button>
+              </div>       
           </FollowingListContainer>
           {followFeed.map((item) => (
             <ScheduleListItem key={item.id} data={item} />
