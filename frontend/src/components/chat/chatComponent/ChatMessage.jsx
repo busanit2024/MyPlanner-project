@@ -1,10 +1,13 @@
 import styled from 'styled-components';
 import React from 'react';
+import { useState } from 'react';
+import ScheduleChat from '../../../ui/ScheduleChat';
+import ImageViewModal from '../../../ui/ImageViewModal';
 
 const MessageContainer = styled.div`
   display: flex;
   flex-direction: ${props => props.isMine ? 'row-reverse' : 'row'};
-  align-items: center;
+  align-items: ${props => props.isScheduleOrImage ? 'flex-end' : 'center'};  // 일정/이미지일 때는 상단 정렬
   margin: ${props => props.isNewSender ? '5px 0' : '2px 0'};
   gap: 8px;
 `;
@@ -90,7 +93,20 @@ const TimeStamp = styled.span`
   ${props => !props.show && `display : none; `}
 `;
 
-const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderProfile , showTime}) => {
+const ImageContainer = styled.div`
+  img {
+    cursor: pointer;
+    transition: opacity 0.2s;
+    
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+`;
+
+const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderProfile , showTime, isNewSender}) => {
+  const [selectedImage, setSelectedImage] = useState(null);
+  
   // 메시지가 이미지 URL인지 확인
   const isImageMessage = (msg) => {
     if (!msg) return false;
@@ -114,8 +130,36 @@ const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderP
     }
   };
 
+  // 메시지가 일정인지 확인하는 함수
+  const isScheduleMessage = (msg) => {
+    try {
+        const parsed = JSON.parse(msg);
+        return parsed.type === 'SCHEDULE';
+    } catch {
+        return false;
+    }
+  };
+
+  // 일정 데이터 파싱
+  const getScheduleData = (msg) => {
+      try {
+          const parsed = JSON.parse(msg);
+          return parsed.type === 'SCHEDULE' ? parsed.data : null;
+      } catch {
+          return null;
+      }
+  };
+
+  const handleImageClick = (url) => {
+    setSelectedImage(url);
+  };
+
+  // 일정이나 이미지 메시지인지 확인
+  const isScheduleOrImage = isScheduleMessage(message) || isImageMessage(message);
+
   return (
-    <MessageContainer isMine={isMine} isNewSender={showTime}> 
+    <>
+    <MessageContainer isMine={isMine} isNewSender={showTime} isScheduleOrImage={isScheduleOrImage}> 
       <ProfileImage 
         src={senderProfile || '/images/default/defaultProfileImage.png'} 
         alt="프로필" 
@@ -125,42 +169,50 @@ const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderP
         }}
       />
       <MessageContent isMine={isMine}>
-        <SenderName isMine={isMine}>{senderName}</SenderName>
-        <MessageRow isMine={isMine}>
-          <TimeStamp show={showTime}>
-            {new Date(time).toLocaleTimeString('ko-KR', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            })}
-          </TimeStamp>
-          <MessageBubble 
-          isMine={isMine} 
-          message={message} 
-          isImage={isImageMessage(message)}
-          imageCount={isImageMessage(message) ? getImageUrls(message).length : 0}
-        >
-            {isImageMessage(message) ? (
-              <div className="image-grid">
-              {getImageUrls(message).map((url, index) => (
-                <img 
-                    key={index}
-                  src={url} 
-                    alt="첨부 이미지"
-                    onError={(e) => {
-                      console.error('이미지 로드 실패:', url);
-                      e.target.style.display = 'none';
-                    }} 
-                  />
-                ))}
-            </div>
-          ) : (
-              message
-            )}
-          </MessageBubble>
-        </MessageRow>
+          <SenderName isMine={isMine}>{senderName}</SenderName>
+          <MessageRow isMine={isMine}>
+              <TimeStamp show={showTime}>
+                  {new Date(time).toLocaleTimeString('ko-KR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                  })}
+              </TimeStamp>
+              {isScheduleMessage(message) ? (
+                  <ScheduleChat schedule={getScheduleData(message)} />
+              ) : (
+                  <MessageBubble 
+                      isMine={isMine} 
+                      message={message}
+                      isImage={isImageMessage(message)}
+                      imageCount={isImageMessage(message) ? getImageUrls(message).length : 0}
+                  >
+                      {isImageMessage(message) ? (
+                        <ImageContainer className="image-grid">
+                            {getImageUrls(message).map((url, index) => (
+                                <img 
+                                    key={index} 
+                                    src={url} 
+                                    alt="첨부 이미지"
+                                    onClick={() => handleImageClick(url)}
+                                />
+                            ))}
+                        </ImageContainer>
+                      ) : (
+                          message
+                      )}
+                  </MessageBubble>
+              )}
+          </MessageRow>
       </MessageContent>
     </MessageContainer>
+    {selectedImage && (
+        <ImageViewModal 
+            imageUrl={selectedImage} 
+            onClose={() => setSelectedImage(null)} 
+        />
+    )}
+    </>
   );
 };
 

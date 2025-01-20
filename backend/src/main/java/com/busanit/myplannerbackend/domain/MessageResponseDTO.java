@@ -16,4 +16,5 @@ public class MessageResponseDTO {
     private String senderName;
     private String senderProfile;
     private LocalDateTime sendTime;
+    private String messageType;
 }

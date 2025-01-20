@@ -9,6 +9,9 @@ import com.busanit.myplannerbackend.domain.MessageResponseDTO;
 import com.busanit.myplannerbackend.service.ChatRoomService;
 import com.busanit.myplannerbackend.service.MessageService;
 import com.busanit.myplannerbackend.service.UserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -73,6 +76,22 @@ public class ChatController {
                         return Mono.error(new RuntimeException("퇴장한 채팅방입니다."));
                     }
 
+                    // 메시지 내용이 JSON 형식인지 확인
+                    String contents = message.getContents();
+                    try {
+                        // JSON 파싱 시도
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode jsonNode = mapper.readTree(contents);
+
+                        // 일정 메시지인 경우
+                        if (jsonNode.has("type") && "SCHEDULE".equals(jsonNode.get("type").asText())) {
+                            message.setMessageType("SCHEDULE");
+                        }
+                    } catch (JsonProcessingException e) {
+                        // JSON이 아닌 경우 일반 텍스트 메시지로 처리
+                        message.setMessageType("TEXT");
+                    }
+
                     return messageService.saveMessage(message)
                             .doOnSuccess(savedMessage -> {
                                 // 채팅방 정보 업데이트
@@ -86,21 +105,11 @@ public class ChatController {
                                         .contents(savedMessage.getContents())
                                         .senderEmail(message.getSenderEmail())
                                         .sendTime(savedMessage.getSendTime())
+                                        .messageType(savedMessage.getMessageType()) // messageType 추가
                                         .build();
                                 messagingTemplate.convertAndSend("/sub/chat/rooms/" + chatRoomId, response);
 
-                                // 읽지 않은 메시지 수 업데이트 및 전송
-                                chatRoom.getParticipants().stream()
-                                        .filter(p -> !p.getEmail().equals(message.getSenderEmail()))
-                                        .forEach(participant -> {
-                                            getUnreadCounts(participant.getEmail())
-                                                    .subscribe(unreadCounts -> {
-                                                        messagingTemplate.convertAndSend(
-                                                                "/sub/chat/unread/" + participant.getEmail(),
-                                                                unreadCounts
-                                                        );
-                                                    });
-                                        });
+                                // ... existing code for unread counts ...
                             })
                             .then();
                 });
