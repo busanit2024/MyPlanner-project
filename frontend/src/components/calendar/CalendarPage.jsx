@@ -37,29 +37,20 @@ export default function CalendarPage() {
   const [followingListState, setFollowingListState] = useState({
     page: 0,
     hasNext: false,
+    total: 0,
+    first: true,
+    last: false,
   });
 
   const defaultProfileImageUrl = "/images/default/defaultProfileImage.png";
 
-  useEffect(() => {
-    // 인증되지 않은 사용자는 로그인 페이지로 이동
-    if (!loading && !user) {
-      navigate("/login");
-    }
-    if (!loading && user) {
-      // 선택된 유저 ID를 로그인 유저로 초기화
-      setSelectedUserId(user.id);
-      setIsMine(true);
-      // 팔로잉 유저 리스트 가져오기
-      fetchFollowingList(user.id);
-      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
-    }
-  }, [user, loading]);
+ 
 
   useEffect(() => {
     setEventList([]); // 이벤트 목록 초기화
     // 캘린더 데이터 가져오기
     if (selectedUserId) {
+      console.log("Fetching calendar data for user:", selectedUserId);
       fetchCalendarData(selectedUserId);
       setIsMine(user.id === selectedUserId);
     }
@@ -69,38 +60,93 @@ export default function CalendarPage() {
 
 
   // 팔로잉 유저 리스트 불러오기
-  const fetchFollowingList = () => {
+  const fetchFollowingList = (userId, page = 0) => {
+    console.log(`Fetching following list for user ${userId} at page ${page}`);
     axios.get(`/api/user/following`, {
       params: {
-        userId: user?.id,
-        page: followingListState.page,
+        userId: userId,
+        page: page,
         size: 10, // 한 페이지에 가져올 팔로잉 유저의 수를 10으로 설정
       },
     })
       .then((res) => {
+        console.log("Server Response:", res); // 서버 응답 전체를 출력
+        console.log("res.data", res.data); // 서버 응답 전체를 출력
         console.log("Following List:", res.data.content); // 확인용 로그
-        setFollowingList(res.data.content); // 팔로잉 유저 리스트 저장
-        setFollowingListState((prev) => ({
-          ...prev,
+        setFollowingList(res.data.content); // 팔로잉 유저 리스트 저장        
+        setFollowingListState({
+          page: page,
           hasNext: res.data.hasNext,
-        }));
+          total: res.data.totalElements, // 전체 유저 수 저장\
+          first: res.data.first,
+          last: res.data.last,
+        });
+        console.log("Updated followingListState:", { page, hasNext: res.data.hasNext, total: res.data.totalElements });
       })
       .catch((err) => {
         console.error(err);
       });
   };
 
-  const handleNextPage = () => {
-    if (followingListState.hasNext) {
-      fetchFollowingList(user.id, followingListState.page + 1);
-    }
-  };
 
-  const handlePrevPage = () => {
-    if (followingListState.page > 0) {
-      fetchFollowingList(user.id, followingListState.page - 1);
+useEffect(() => {
+  const fetchData = async () => {
+    // 인증되지 않은 사용자는 로그인 페이지로 이동
+    if (!loading && !user) {
+      navigate("/login");
     }
-  };
+    if (!loading && user && user.id) {
+      // 선택된 유저 ID를 로그인 유저로 초기화
+      setSelectedUserId(user.id);
+      setIsMine(true);
+      // 팔로잉 유저 리스트 가져오기
+      console.log("Fetching initial following list");
+      fetchFollowingList(user.id, 0); // 초기 페이지를 0으로 설정하여 호출
+      setSelectedCategory(new Set(user.categories.map((category) => category.id)));
+    } else if (!loading && user && !user.id) {
+      console.error("User ID is null or undefined");
+      // Handle the error case, e.g., show an error message or navigate to an error page
+    }
+  }; 
+
+  fetchData();
+}, [user, loading]);
+
+useEffect(() => {
+  console.log("followingListState updated:", followingListState);
+}, [followingListState]);
+
+const handleNextPage = () => {
+  console.log("Next page button clicked");
+  if (!followingListState.last) {
+    console.log("Fetching next page");
+    fetchFollowingList(user.id, followingListState.page + 1);
+  }
+};
+
+const handlePrevPage = () => {
+  console.log("Previous page button clicked");
+  if (!followingListState.first) {
+    console.log("Fetching previous page");
+    fetchFollowingList(user.id, followingListState.page - 1);
+  }
+};
+
+// const handleNextPage = async () => {
+//   console.log("Next page button clicked");
+//   if (followingListState.hasNext) {
+//     console.log("Fetching next page");
+//     await fetchFollowingList(user.id, followingListState.page + 1);
+//   }
+// };
+
+// const handlePrevPage = async () => {
+//   console.log("Previous page button clicked");
+//   if (followingListState.page > 0) {
+//     console.log("Fetching previous page");
+//     await fetchFollowingList(user.id, followingListState.page - 1);
+//   }
+// };
 
   useEffect(() => {
     //컨테이너 사이즈 변경 시 캘린더 크기 업데이트
@@ -226,7 +272,7 @@ export default function CalendarPage() {
     setEventList([]); // 이벤트 목록 초기화
     let scheduleList = [];
     let participatedList = [];
-
+  
     try {
       const response = await axios.get(`/api/schedules/user/${targetUserId}`);
       console.log('Fetched user schedules:', response.data); // 디버깅 로그
@@ -243,28 +289,30 @@ export default function CalendarPage() {
         category: item.category,
       }));
       console.log('Fetched events:', newEvents); // 디버깅 로그
-      console.log('Fetched events category@@@:', newEvents[0].category); // 디버깅 로그
-      
-
-      // 선택된 카테고리로 필터링
-      const filteredEvents = newEvents.filter(event => selectedCategory.has(event.category.id));
-      console.log("filteredEvents", filteredEvents);
-
+  
+      let filteredEvents = newEvents;
+  
+      if (targetUserId === user?.id) {
+        // 선택된 카테고리로 필터링 (로그인된 유저의 경우에만)
+        filteredEvents = newEvents.filter(event => event.category && selectedCategory.has(event.category.id));
+        console.log("filteredEvents", filteredEvents);
+      }
+  
       if (targetUserId !== user?.id) {
         // 비공개 일정 필터링
         scheduleList = filteredEvents.filter((event) => response.data.find((item) => item.id === event.id).isPrivate === false);
       } else {
         scheduleList = filteredEvents;
       }
-
+  
       // 참여한 일정 가져오기
       if (targetUserId === user?.id) {
         participatedList = await fetchParticipatedEvents();
       }
-
+  
       // 이벤트 목록 업데이트
       setEventList([...scheduleList, ...participatedList]);
-
+  
     } catch (error) {
       console.error('Error fetching user schedules:', error);
     }
@@ -373,40 +421,44 @@ export default function CalendarPage() {
 
   return (
     <div className="demo-app-main calendar-page">
-          {loading && <div className="no-result">로딩중...</div>}
-          {!loading && (
-      <>
-
-      <div className='calendar-header'>
-        <ProfileContainer>
-        <button onClick={handlePrevPage} disabled={followingListState.page === 0}>이전</button>
-
-          <UserCard onClick={() => handleFollowingUserClick(user?.id)} selected={user?.id === selectedUserId}>
-            <img
-              src={user?.profileImageUrl || defaultProfileImageUrl}
-              alt="profile"
-              onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
-            />
-            <span>나</span>
-
-          </UserCard>
-          
-          {followingList.map((followingUser) => (
-            <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)} selected={followingUser.id === selectedUserId}>
-              <img
-                src={followingUser.profileImageUrl || defaultProfileImageUrl}
-                alt="profile"
-                onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
-              />
+      {loading && <div className="no-result">로딩중...</div>}
+      {!loading && (
+        <>
+          <div className='calendar-header'>
+            <ProfileContainer>
+            <div className="pagination-buttons">
+                <button onClick={handlePrevPage} disabled={followingListState.first}>
+                  이전
+                  {console.log("Previous button disabled:", followingListState.page === 0)}
+                </button>
+              </div>
+              <UserCard onClick={() => handleFollowingUserClick(user?.id)} selected={user?.id === selectedUserId}>
+                <img
+                  src={user?.profileImageUrl || defaultProfileImageUrl}
+                  alt="profile"
+                  onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
+                />
+                <span>나</span>
+              </UserCard>
               
-              <span>{followingUser.username}</span>
+              {followingList.map((followingUser) => (
+                <UserCard key={followingUser.id} onClick={() => handleFollowingUserClick(followingUser.id)} selected={followingUser.id === selectedUserId}>                  
+                  <img
+                    src={followingUser.profileImageUrl || defaultProfileImageUrl}
+                    alt="profile"
+                    onError={(e) => (e.target.src = defaultProfileImageUrl)} // 기본 이미지로 대체
+                  />                  
+                  <span>{followingUser.username}</span>
+                </UserCard>
+              ))}
               
-            </UserCard>
-            
-          ))}
-          <button onClick={handleNextPage} disabled={!followingListState.hasNext}>다음</button>
-
-        </ProfileContainer>
+              <div className="pagination-buttons">
+              <button onClick={handleNextPage} disabled={followingListState.last}>
+                다음
+                {console.log("last!!!!!!!!!!!!!!!", followingListState.last)}
+              </button>
+              </div>              
+            </ProfileContainer>
       </div>
       <CalendarWrap ref={calendarContainerRef}>
           {(selectedUserId == user.id) && (
@@ -435,7 +487,6 @@ export default function CalendarPage() {
                 <span>{category.categoryName}</span>
               </CategoryLabel>
             ))}
-                                                                  
             <div className='category-button' onClick={() => setCategoryModalOpen(true)}>
               <img src="/images/icon/setting.svg" alt="plus" />
               <span>카테고리 편집...</span>
