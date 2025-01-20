@@ -1,6 +1,8 @@
 import styled from 'styled-components';
 import React from 'react';
+import { useState } from 'react';
 import ScheduleChat from '../../../ui/ScheduleChat';
+import ImageViewModal from '../../../ui/ImageViewModal';
 
 const MessageContainer = styled.div`
   display: flex;
@@ -91,7 +93,20 @@ const TimeStamp = styled.span`
   ${props => !props.show && `display : none; `}
 `;
 
+const ImageContainer = styled.div`
+  img {
+    cursor: pointer;
+    transition: opacity 0.2s;
+    
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+`;
+
 const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderProfile , showTime, isNewSender}) => {
+  const [selectedImage, setSelectedImage] = useState(null);
+  
   // 메시지가 이미지 URL인지 확인
   const isImageMessage = (msg) => {
     if (!msg) return false;
@@ -135,10 +150,15 @@ const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderP
       }
   };
 
+  const handleImageClick = (url) => {
+    setSelectedImage(url);
+  };
+
   // 일정이나 이미지 메시지인지 확인
   const isScheduleOrImage = isScheduleMessage(message) || isImageMessage(message);
 
   return (
+    <>
     <MessageContainer isMine={isMine} isNewSender={showTime} isScheduleOrImage={isScheduleOrImage}> 
       <ProfileImage 
         src={senderProfile || '/images/default/defaultProfileImage.png'} 
@@ -168,11 +188,16 @@ const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderP
                       imageCount={isImageMessage(message) ? getImageUrls(message).length : 0}
                   >
                       {isImageMessage(message) ? (
-                          <div className="image-grid">
-                              {getImageUrls(message).map((url, index) => (
-                                  <img key={index} src={url} alt="첨부 이미지" />
-                              ))}
-                          </div>
+                        <ImageContainer className="image-grid">
+                            {getImageUrls(message).map((url, index) => (
+                                <img 
+                                    key={index} 
+                                    src={url} 
+                                    alt="첨부 이미지"
+                                    onClick={() => handleImageClick(url)}
+                                />
+                            ))}
+                        </ImageContainer>
                       ) : (
                           message
                       )}
@@ -181,6 +206,13 @@ const ChatMessage = ({ message, displayMessage,time, isMine, senderName, senderP
           </MessageRow>
       </MessageContent>
     </MessageContainer>
+    {selectedImage && (
+        <ImageViewModal 
+            imageUrl={selectedImage} 
+            onClose={() => setSelectedImage(null)} 
+        />
+    )}
+    </>
   );
 };
 
