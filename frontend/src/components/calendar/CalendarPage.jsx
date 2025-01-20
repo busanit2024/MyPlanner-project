@@ -427,10 +427,12 @@ const handlePrevPage = () => {
           <div className='calendar-header'>
             <ProfileContainer>
             <PaginationButtons>
-              <PaginationButton onClick={handlePrevPage} disabled={followingListState.first}>
-                이전
-                {console.log("Previous button disabled:", followingListState.page === 0)}
-              </PaginationButton>
+          {followingList.length > 0 && (
+            <PaginationButton onClick={handlePrevPage} disabled={followingListState.first}>
+            이전
+            {console.log("Previous button disabled:", followingListState.page === 0)}
+          </PaginationButton>
+          )}
               
               <UserCard onClick={() => handleFollowingUserClick(user?.id)} selected={user?.id === selectedUserId}>
                 <img
@@ -451,11 +453,12 @@ const handlePrevPage = () => {
                   <span>{followingUser.username}</span>
                 </UserCard>
               ))}
-              
+              {followingList.length > 0 && (
               <PaginationButton onClick={handleNextPage} disabled={followingListState.last}>
                 다음
                 {console.log("Next button disabled:", followingListState.last)}
               </PaginationButton>
+          )}   
             </PaginationButtons>        
             </ProfileContainer>
       </div>

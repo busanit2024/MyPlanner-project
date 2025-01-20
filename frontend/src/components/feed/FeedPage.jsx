@@ -210,12 +210,12 @@ export default function FeedPage() {
         {feedType === "follow" && <>
           <FollowingListContainer>
           <PaginationButtons>
-          {followingList.length > 0 && (
-            <PaginationButton onClick={handlePrevPage} disabled={followingListState.first}>
-            이전
-            {console.log("Previous button disabled:", followingListState.page === 0)}
-          </PaginationButton>
-          )}
+            {followingListState.page > 0 && (
+              <PaginationButton onClick={handlePrevPage} disabled={followingListState.first}>
+                이전
+                {console.log("Previous button disabled:", followingListState.page === 0)}
+              </PaginationButton>
+            )}
             {followingList.map((item) => (
               <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
                 <div className="avatar" key={item.id}>
