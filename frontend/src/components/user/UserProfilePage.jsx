@@ -118,14 +118,30 @@ export default function UserProfilePage() {
 
 
   useEffect(() => {
-    axios.get(`/api/user/${userId}`)
-      .then(res => {
-        console.log(res.data);
+    const getUserInfo = async () => {
+      try {
+        const res = await axios.get(`/api/user/${userId}`);
         setPageUser(res.data);
-      })
-      .catch(err => {
-        console.error(err);
-      });
+      } catch (error) {
+        console.error(error);
+        Swal.fire({
+          title: "사용자 불러오기 실패",
+          text: "존재하지 않는 사용자입니다.",
+          confirmButtonText: "확인",
+          customClass: {
+            title: "swal-title",
+            htmlContainer: "swal-text-container",
+            confirmButton: "swal-button swal-button-confirm",
+          },
+        }).then(() => {
+          navigate(-1);
+        });
+      }
+    };
+
+    if (userId) {
+      getUserInfo();
+    }
   }, [userId]);
 
   useEffect(() => {
