@@ -1,7 +1,7 @@
 import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { EmailAuthProvider, onAuthStateChanged, reauthenticateWithCredential } from "firebase/auth";
 
 export const AuthContext = createContext();
 
@@ -72,8 +72,22 @@ export const AuthProvider = ({ children }) => {
     setIsLoggedIn(false);
   }
 
+  // 사용자 재인증
+  const reauthenticate = async (password) => {
+    const currentUser = auth.currentUser;
+    const credential = EmailAuthProvider.credential(currentUser.email, password);
+    
+    try {
+      await reauthenticateWithCredential(currentUser, credential);
+      return true;
+    } catch (error) {
+      console.error("재인증 에러", error);
+      return false;
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout, loadUser }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout, loadUser, reauthenticate }}>
       {children}
     </AuthContext.Provider>
   );

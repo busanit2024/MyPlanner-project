@@ -160,4 +160,12 @@ public class UserRestController {
     }
     return ResponseEntity.ok(notifications);
   }
+
+  //회원 탈퇴
+  @DeleteMapping("/delete/{userId}")
+  public ResponseEntity<String> deleteUser(@PathVariable Long userId) throws FirebaseAuthException {
+    userService.deleteUser(userId);
+    return ResponseEntity.ok("success");
+  }
+
 }
