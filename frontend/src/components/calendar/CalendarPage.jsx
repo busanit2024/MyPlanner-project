@@ -66,7 +66,7 @@ export default function CalendarPage() {
       params: {
         userId: userId,
         page: page,
-        size: 8, // 한 페이지에 가져올 팔로잉 유저의 수를 10으로 설정
+        size: 10, // 한 페이지에 가져올 팔로잉 유저의 수를 10으로 설정
       },
     })
       .then((res) => {
@@ -426,12 +426,12 @@ const handlePrevPage = () => {
         <>
           <div className='calendar-header'>
             <ProfileContainer>
-            <div className="pagination-buttons">
-                <button onClick={handlePrevPage} disabled={followingListState.first}>
-                  이전
-                  {console.log("Previous button disabled:", followingListState.page === 0)}
-                </button>
-              </div>
+            <PaginationButtons>
+              <PaginationButton onClick={handlePrevPage} disabled={followingListState.first}>
+                이전
+                {console.log("Previous button disabled:", followingListState.page === 0)}
+              </PaginationButton>
+              
               <UserCard onClick={() => handleFollowingUserClick(user?.id)} selected={user?.id === selectedUserId}>
                 <img
                   src={user?.profileImageUrl || defaultProfileImageUrl}
@@ -452,12 +452,11 @@ const handlePrevPage = () => {
                 </UserCard>
               ))}
               
-              <div className="pagination-buttons">
-              <button onClick={handleNextPage} disabled={followingListState.last}>
+              <PaginationButton onClick={handleNextPage} disabled={followingListState.last}>
                 다음
-                {console.log("last!!!!!!!!!!!!!!!", followingListState.last)}
-              </button>
-              </div>              
+                {console.log("Next button disabled:", followingListState.last)}
+              </PaginationButton>
+            </PaginationButtons>        
             </ProfileContainer>
       </div>
       <CalendarWrap ref={calendarContainerRef}>
@@ -667,6 +666,7 @@ const ProfileContainer = styled.div`
   padding: 16px;
   justify-content: flex-start;
   width: 100%;
+  margin-bottom: 16px; 
 
   & .item {
     display: flex;
@@ -714,5 +714,27 @@ const UserCard = styled.div`
   span {
     font-size: 14px;
     text-align: center;
+  }
+`;
+
+const PaginationButtons = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 16px;
+  gap: 10px;
+`;
+
+const PaginationButton = styled.button`
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+
+  &:disabled {
+    background-color: var(--light-gray);
+    cursor: not-allowed;
   }
 `;

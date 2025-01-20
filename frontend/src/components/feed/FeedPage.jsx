@@ -209,13 +209,12 @@ export default function FeedPage() {
       <FeedResultList>
         {feedType === "follow" && <>
           <FollowingListContainer>
+          <PaginationButtons>
           {followingList.length > 0 && (
-            <div className="pagination-buttons">
-              <button onClick={handlePrevPage} disabled={followingListState.first}>
-                이전
-                {console.log("Previous button disabled:", followingListState.page === 0)}
-              </button>
-            </div>
+            <PaginationButton onClick={handlePrevPage} disabled={followingListState.first}>
+            이전
+            {console.log("Previous button disabled:", followingListState.page === 0)}
+          </PaginationButton>
           )}
             {followingList.map((item) => (
               <div className="item" key={item.id} onClick={() => navigate(`/user/${item.id}`)}>
@@ -226,13 +225,12 @@ export default function FeedPage() {
               </div>
             ))}
             {followingList.length > 0 && (
-            <div className="pagination-buttons">
-              <button onClick={handleNextPage} disabled={followingListState.last}>
+              <PaginationButton onClick={handleNextPage} disabled={followingListState.last}>
                 다음
                 {console.log("Next button disabled:", followingListState.last)}
-              </button>
-            </div>
+              </PaginationButton>
           )}   
+                      </PaginationButtons>        
           </FollowingListContainer>
           {followFeed.map((item) => (
             <ScheduleListItem key={item.id} data={item} />
@@ -361,5 +359,27 @@ const FeedResultList = styled.div`
     font-size: 18px;
     text-align: center;
     color: var(--mid-gray);
+  }
+`;
+
+const PaginationButtons = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 16px;
+  gap: 10px;
+`;
+
+const PaginationButton = styled.button`
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+
+  &:disabled {
+    background-color: var(--light-gray);
+    cursor: not-allowed;
   }
 `;
