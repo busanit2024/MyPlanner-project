@@ -66,7 +66,7 @@ export default function CalendarPage() {
       params: {
         userId: userId,
         page: page,
-        size: 10, // 한 페이지에 가져올 팔로잉 유저의 수를 10으로 설정
+        size: 8, // 한 페이지에 가져올 팔로잉 유저의 수를 10으로 설정
       },
     })
       .then((res) => {
