@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useState } from "react";
 import ImageUploadModal from '../../../ui/ImageUploadModal';
+import MyScheduleModal from '../../../ui/MyScheduleModal';
 import { imageFileUpload } from "../../../firebase";
 
 const InputChatBox = styled.div`
@@ -87,8 +88,10 @@ const DropdownItem = styled.div`
 export default function InputChat({ onSendMessage, isLeft }) {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isImageModalOpen, setImageModalOpen] = useState(false);
+    const [isScheduleModalOpen, setScheduleModalOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [uploadedImages, setUploadedImages] = useState([]);
+    const [selectedSchedule, setSelectedSchedule] = useState(null);
 
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -98,6 +101,11 @@ export default function InputChat({ onSendMessage, isLeft }) {
 
     const attachImg = () => {
         setImageModalOpen(true);
+        setDropdownOpen(false);
+    };
+
+    const attachSchedule = () => {
+        setScheduleModalOpen(true);
         setDropdownOpen(false);
     };
 
@@ -114,6 +122,22 @@ export default function InputChat({ onSendMessage, isLeft }) {
             }
         } catch (error) {
             console.error('이미지 업로드 실패:', error);
+        }
+    };
+
+    const handleScheduleSelect = async (schedule) => {
+        setSelectedSchedule(schedule);
+        // 일정 데이터를 특별한 형식의 문자열로 변환
+        const scheduleMessage = JSON.stringify({
+            type: 'SCHEDULE',
+            data: schedule
+        });
+        
+        try {
+            await onSendMessage(scheduleMessage);
+            setScheduleModalOpen(false);
+        } catch (error) {
+            console.error('일정 전송 실패:', error);
         }
     };
 
@@ -170,7 +194,7 @@ export default function InputChat({ onSendMessage, isLeft }) {
                             <img src="images/icon/chatImage.png" alt="이미지 추가" />
                             <p>이미지 추가</p>
                         </DropdownItem>
-                        <DropdownItem>
+                        <DropdownItem onClick={attachSchedule}>
                             <img src="images/icon/chatCal.png" alt="일정 공유" />
                             <p>일정 공유</p>
                         </DropdownItem>
@@ -182,6 +206,11 @@ export default function InputChat({ onSendMessage, isLeft }) {
                 isOpen={isImageModalOpen}
                 onClose={() => setImageModalOpen(false)}
                 onUpload={handleImageUpload}
+            />
+            <MyScheduleModal
+                isOpen={isScheduleModalOpen}
+                onClose={() => setScheduleModalOpen(false)}
+                onScheduleSelect={handleScheduleSelect}
             />
         </>
     );

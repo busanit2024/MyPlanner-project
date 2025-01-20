@@ -157,6 +157,14 @@ const ChatListItem = ({ chatRooms: propsChatRooms, onSelectRoom, user }) => {
 
   const getDisplayMessage = (msg) => {
     if (!msg) return "새로운 채팅방이 생성되었습니다.";
+    
+    try {
+        const parsed = JSON.parse(msg);
+        if (parsed.type === 'SCHEDULE') {
+            return "일정이 공유되었습니다.";
+        }
+    } catch {}
+    
     return isImageMessage(msg) ? "사진을 보냈습니다." : msg;
   };
 
