@@ -22,7 +22,9 @@ export default function FeedPage() {
   const [followingList, setFollowingList] = useState([]);
   const [followingListState, setFollowingListState] = useState({
     page: 0,
-    hasNext: false
+    hasNext: false,
+    first: true,
+    last: false,
   });
   const userRef = useRef(user);
   const containerRef = useRef(null);
@@ -76,8 +78,11 @@ export default function FeedPage() {
         size: 10, // 한 페이지에 가져올 팔로잉 유저의 수를 10으로 설정
       },
     })
-      .then(res => {
-        setFollowingList(res.data.content);
+      .then((res) => {
+        console.log("Server Response:", res); // 서버 응답 전체를 출력
+        console.log("res.data", res.data); // 서버 응답 전체를 출력
+        console.log("Following List:", res.data.content); // 확인용 로그
+        setFollowingList(res.data.content); // 팔로잉 유저 리스트 저장        
         setFollowingListState({
           page: page,
           hasNext: res.data.hasNext,
@@ -85,16 +90,31 @@ export default function FeedPage() {
           first: res.data.first,
           last: res.data.last,
         });
+        console.log("Updated followingListState:", { page, hasNext: res.data.hasNext, total: res.data.totalElements });
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
-  }
-
+  };
   useEffect(() => {
-    console.log("followingListState updated:", followingListState);
-  }, [followingListState]);
+    const fetchData = async () => {
+      // 인증되지 않은 사용자는 로그인 페이지로 이동
+      if (!loading && !user) {
+        navigate("/login");
+      }
+      if (!loading && user && user.id) {
+        // 팔로잉 유저 리스트 가져오기
+        console.log("Fetching initial following list");
+        await fetchFollowingList(user.id, 0); // 초기 페이지를 0으로 설정하여 호출
+      } else if (!loading && user && !user.id) {
+        console.error("User ID is null or undefined");
+        // Handle the error case, e.g., show an error message or navigate to an error page
+      }
+    };
   
+    fetchData();
+  }, [user, loading]);
+  // 팔로잉 유저 다음 페이지지
   const handleNextPage = () => {
     console.log("Next page button clicked");
     if (!followingListState.last) {
@@ -102,7 +122,7 @@ export default function FeedPage() {
       fetchFollowingList(user.id, followingListState.page + 1);
     }
   };
-  
+  //팔로잉 유저 이전 페이지
   const handlePrevPage = () => {
     console.log("Previous page button clicked");
     if (!followingListState.first) {
@@ -110,7 +130,6 @@ export default function FeedPage() {
       fetchFollowingList(user.id, followingListState.page - 1);
     }
   };
-
   // 전체 피드 불러오기
   const fetchFeed = () => {
     setFeedState((prev) => ({ ...prev, loading: true }));
