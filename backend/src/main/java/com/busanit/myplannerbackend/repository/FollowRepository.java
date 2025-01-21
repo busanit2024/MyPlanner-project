@@ -19,4 +19,5 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
   //user가 팔로우하는 유저 목록
   Slice<Follow> findFollowToByFollowFrom(User user, Pageable pageable);
+
 }
