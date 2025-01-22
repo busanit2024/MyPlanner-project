@@ -213,22 +213,11 @@ const MyScheduleModal = ({ isOpen, onClose, onScheduleSelect }) => {
         return timeStr?.substring(0, 5) || '';
     };
 
-    const groupSchedulesByDate = (schedules) => {
-        return schedules
-            .filter(schedule => 
-                schedule.title?.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            .reduce((groups, schedule) => {
-                const date = schedule.startDate;
-                if (!groups[date]) groups[date] = [];
-                groups[date].push(schedule);
-                return groups;
-            }, {});
-    };
+    const filteredSchedules = schedules.filter(schedule => 
+        schedule.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     if (!isOpen) return null;
-
-    const groupedSchedules = groupSchedulesByDate(schedules);
 
     const handleScheduleClick = (schedule) => {
         // 이미 선택된 일정을 다시 클릭하면 선택 취소
@@ -282,31 +271,22 @@ const MyScheduleModal = ({ isOpen, onClose, onScheduleSelect }) => {
                 </SearchBar>
 
                 <ScheduleList>
-                {Object.entries(groupedSchedules).map(([date, schedules]) => (
-                    <DateSection 
-                        key={date} 
-                        isSelected={schedules.some(schedule => schedule.id === selectedSchedule?.id)}
-                        onClick={() => handleScheduleClick(schedules[0])} // 해당 날짜의 첫 번째 일정 선택
-                    >
-                        <DateRow onClick={(e) => {
-                            e.stopPropagation();
-                            handleScheduleClick(schedules[0]);
-                        }}>
-                            <span className="date">{formatDate(date)}</span>
-                            <span className="day">{getDayOfWeek(date)}요일</span>
-                        </DateRow>
-                        {schedules.map(schedule => (
-                            <ScheduleItem 
-                                key={schedule.id}
-                                onClick={() => handleScheduleClick(schedule)}
-                                isSelected={selectedSchedule?.id === schedule.id}
-                            >
+                    {filteredSchedules.map(schedule => (
+                        <DateSection 
+                            key={schedule.id}
+                            isSelected={schedule.id === selectedSchedule?.id}
+                            onClick={() => handleScheduleClick(schedule)}
+                        >
+                            <DateRow>
+                                <span className="date">{formatDate(schedule.startDate)}</span>
+                                <span className="day">{getDayOfWeek(schedule.startDate)}요일</span>
+                            </DateRow>
+                            <ScheduleItem>
                                 <span className="title">{schedule.title}</span>
                                 <span className="time">{formatTime(schedule.startTime)}</span>
                             </ScheduleItem>
-                        ))}
-                    </DateSection>
-                ))}
+                        </DateSection>
+                    ))}
                 </ScheduleList>
             </ModalContent>
         </ModalOverlay>
