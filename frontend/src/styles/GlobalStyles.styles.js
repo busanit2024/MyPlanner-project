@@ -30,6 +30,7 @@ const GlobalStyles = createGlobalStyle`
 
     ::-webkit-scrollbar {
     width: 8px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-thumb {

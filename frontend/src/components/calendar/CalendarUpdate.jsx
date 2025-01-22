@@ -830,6 +830,12 @@ const Container = styled.div`
   padding: 24px 128px;
   flex-grow: 1;
 
+  .loading {
+    font-size: 18px;
+    color: var(--mid-gray);
+    margin: auto;
+  }
+
 `;
 
 const PrivateContainer = styled.div`
