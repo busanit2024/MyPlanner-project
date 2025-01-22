@@ -132,21 +132,6 @@ const handlePrevPage = () => {
   }
 };
 
-// const handleNextPage = async () => {
-//   console.log("Next page button clicked");
-//   if (followingListState.hasNext) {
-//     console.log("Fetching next page");
-//     await fetchFollowingList(user.id, followingListState.page + 1);
-//   }
-// };
-
-// const handlePrevPage = async () => {
-//   console.log("Previous page button clicked");
-//   if (followingListState.page > 0) {
-//     console.log("Fetching previous page");
-//     await fetchFollowingList(user.id, followingListState.page - 1);
-//   }
-// };
 
   useEffect(() => {
     //컨테이너 사이즈 변경 시 캘린더 크기 업데이트
