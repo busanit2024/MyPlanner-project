@@ -58,6 +58,12 @@ export default function FeedPage() {
     }
   }, [feedState.page]);
 
+  useEffect(() => {
+    if (followingListState.page > 0) {
+      fetchFollowingList();
+    }
+  }, [followingListState.page]);
+
   const fetchFeedByType = () => {
     if (feedType === "follow") {
       if (userRef.current) {
@@ -96,6 +102,7 @@ export default function FeedPage() {
         console.error(err);
       });
   };
+
   useEffect(() => {
     const fetchData = async () => {
       // 인증되지 않은 사용자는 로그인 페이지로 이동
@@ -224,6 +231,7 @@ export default function FeedPage() {
                 <span className="username">{item.username}</span>
               </div>
             ))}
+            
             {followingList.length > 0 && (
               <PaginationButton onClick={handleNextPage} disabled={followingListState.last}>
                 다음
@@ -316,7 +324,9 @@ const FollowingListContainer = styled.div`
   box-sizing: border-box;
   display: flex;
   gap: 24px;
-  align-items: center;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding: 12px 0;
 
   & .item {
     display: flex;
@@ -326,7 +336,12 @@ const FollowingListContainer = styled.div`
     cursor: pointer;
 
     & .username {
-      font-size: 14px;
+      font-size: 12px;
+      -webkit-line-clamp: 1;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     & .avatar {
@@ -341,6 +356,14 @@ const FollowingListContainer = styled.div`
         object-fit: cover;
         border-radius: 50%;
       }
+    }
+
+    & .more {
+      background-color: var(--white);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid var(--light-gray);
     }
   }
   `;
