@@ -31,7 +31,7 @@ const TeamChatProfileImage = ({ participants, currentUserEmail }) => {
   
   return (
     <GroupImageContainer>
-      {otherParticipants.slice(0, 3).map((participant, index) => (
+      {otherParticipants.slice(0, 2).map((participant, index) => (
         <ParticipantImage
           key={participant.email}
           src={participant.profileImageUrl || '/images/default/defaultProfileImage.png'}
