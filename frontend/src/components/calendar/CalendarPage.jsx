@@ -309,10 +309,17 @@ const handlePrevPage = () => {
       if (targetUserId === user?.id) {
         participatedList = await fetchParticipatedEvents();
       }
+
+      // endDate를 하루 뒤로 조정
+      const adjustedEvents = newEvents.map(event => ({
+        ...event,
+        end: new Date(new Date(event.end).getTime() + 86400000).toISOString()
+      }));
   
       // 이벤트 목록 업데이트
       setEventList([...scheduleList, ...participatedList]);
-  
+      setEventList(adjustedEvents);
+
     } catch (error) {
       console.error('Error fetching user schedules:', error);
     }
