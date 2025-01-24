@@ -52,7 +52,7 @@ export default function CalendarPage() {
     if (selectedUserId) {
       console.log("Fetching calendar data for user:", selectedUserId);
       fetchCalendarData(selectedUserId);
-      setIsMine(user.id === selectedUserId);
+      setIsMine(user?.id === selectedUserId);
     }
   }, [selectedUserId, selectedCategory], );
   
@@ -120,7 +120,7 @@ const handleNextPage = () => {
   console.log("Next page button clicked");
   if (!followingListState.last) {
     console.log("Fetching next page");
-    fetchFollowingList(user.id, followingListState.page + 1);
+    fetchFollowingList(user?.id, followingListState.page + 1);
   }
 };
 
@@ -128,7 +128,7 @@ const handlePrevPage = () => {
   console.log("Previous page button clicked");
   if (!followingListState.first) {
     console.log("Fetching previous page");
-    fetchFollowingList(user.id, followingListState.page - 1);
+    fetchFollowingList(user?.id, followingListState.page - 1);
   }
 };
 
@@ -327,7 +327,7 @@ const handlePrevPage = () => {
 
   const fetchParticipatedEvents = async () => {
     try {
-      const response = await axios.get(`/api/schedules/${user.id}/participated`);
+      const response = await axios.get(`/api/schedules/${user?.id}/participated`);
       const newEvents = response.data.map((item) => ({
         id: item.id,
         editable: false,
@@ -470,7 +470,7 @@ const handlePrevPage = () => {
             </ProfileContainer>
       </div>
       <CalendarWrap ref={calendarContainerRef}>
-          {(selectedUserId == user.id) && (
+          {(selectedUserId == user?.id) && (
             <CategoryWrap className="category-wrap">
           {/* 카테고리 필터 */}
           <div className="filter-icon" onClick={() => setCategoryBoxOpen(!categoryBoxOpen)}>
