@@ -75,6 +75,9 @@ export const AuthProvider = ({ children }) => {
   // 사용자 재인증
   const reauthenticate = async (password) => {
     const currentUser = auth.currentUser;
+    if (!currentUser) {
+      return false;
+    }
     const credential = EmailAuthProvider.credential(currentUser.email, password);
     
     try {
