@@ -71,5 +71,7 @@
 - 채팅 시작 시 사용자의 팔로우 유저 중 선택하여 채팅을 시작할 수 있음.
 - 캘린더에 등록한 일정 목록을 채팅에 공유할 수 있음.
 
+## ⛓️ERD
+![erd](https://github.com/busanit2024/MyPlanner-project/blob/main/CircleERD.png)
 
   
